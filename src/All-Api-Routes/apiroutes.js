@@ -9,26 +9,6 @@ const API_ROUTES = {
     REFRESH_TOKEN: '/auth/refresh-token',
   },
 
-  // User Management Endpoints
-  USERS: {
-    LIST: '/users',
-    CREATE: '/users',
-    UPDATE: '/users/:id',
-    DELETE: '/users/:id',
-    DISABLE: '/users/:id/disable',
-    VIEW: '/users/:id',
-  },
-
-  // Role Management Endpoints
-  ROLES: {
-    LIST: '/roles',
-    CREATE: '/roles',
-    UPDATE: '/roles/:id',
-    DELETE: '/roles/:id',
-    VIEW: '/roles/:id',
-    ASSIGN: '/roles/:id/assign',
-  },
-
   // Event Management Endpoints
   EVENTS: {
     LIST: '/events',

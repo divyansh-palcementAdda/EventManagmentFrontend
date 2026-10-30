@@ -5,6 +5,7 @@ import MainLayout from '../Layouts/mainLayout'
 import Dashboard from '../pages/Admin/dashboard'
 import Attendees from '../pages/Admin/Attendees'
 import Events from '../pages/Admin/Events'
+import EventDetail from '../pages/Admin/eventDetail'
 import AllUsers from '../pages/Admin/allUsers'
 import RolesAndPermissions from '../pages/Admin/rolesAndPermissions'
 import Login from '../pages/auth/login'
@@ -33,6 +34,11 @@ const AppRoutes = () => {
         <Route path="/admin/events" element={
           <MainLayout>
             <Events />
+          </MainLayout>
+        } />
+        <Route path="/admin/events/:eventId" element={
+          <MainLayout>
+            <EventDetail />
           </MainLayout>
         } />
         <Route path="/admin/users" element={

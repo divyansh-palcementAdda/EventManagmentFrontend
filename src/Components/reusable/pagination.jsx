@@ -31,14 +31,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '' }) =
 
   return (
     <div className={`flex items-center justify-between gap-4 ${className}`}>
-      <div className="text-sm text-body">
-        Showing page {currentPage} of {totalPages}
+      <div className="text-sm text-gray-600 font-medium">
+        Showing page <span className="text-blue-600 font-semibold">{currentPage}</span> of <span className="text-blue-600 font-semibold">{totalPages}</span>
       </div>
       <div className="flex items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 text-sm font-medium rounded-base border border-default bg-neutral-primary hover:bg-neutral-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
         >
           Previous
         </button>
@@ -47,11 +47,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '' }) =
             key={index}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
-            className={`px-3 py-2 text-sm font-medium rounded-base border ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
               page === currentPage
-                ? 'bg-brand text-white border-brand'
-                : 'bg-neutral-primary border-default hover:bg-neutral-secondary'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                ? 'bg-blue-600 text-white border-blue-600 shadow-md hover:bg-blue-700'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700`}
           >
             {page}
           </button>
@@ -59,7 +59,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '' }) =
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-3 py-2 text-sm font-medium rounded-base border border-default bg-neutral-primary hover:bg-neutral-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
         >
           Next
         </button>

@@ -22,22 +22,15 @@ const Navbar = ({ onMenuClick }) => {
               <Menu className="w-6 h-6 text-gray-700" />
             </button>
 
-            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-4 py-2 w-64 lg:w-96">
-              <Search className="w-5 h-5 text-gray-500 mr-2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent border-none outline-none text-sm w-full text-gray-700 placeholder-gray-500"
-              />
-            </div>
+            <h1 className="text-xl font-bold text-gray-900">Event Management System</h1>
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Search button for mobile */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors sm:hidden">
+            {/* <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors sm:hidden">
               <Search className="w-5 h-5 text-gray-700" />
-            </button>
+            </button> */}
 
             {/* Notifications */}
             <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
@@ -46,9 +39,9 @@ const Navbar = ({ onMenuClick }) => {
             </button>
 
             {/* Theme Toggle */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            {/* <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
               <Sun className="w-5 h-5 text-yellow-500" />
-            </button>
+            </button> */}
 
             {/* User Profile */}
             <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-gray-200">

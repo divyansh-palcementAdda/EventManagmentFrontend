@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Searchbar, Table, Button, Pagination, DeleteModal } from '../../Components/reusable';
+import { useNavigate } from 'react-router-dom';
+import { Searchbar, Table, Button, DeleteModal } from '../../Components/reusable';
 import AddAndEditEvents from '../../Components/Modals/addEvents/addAndEditEvents';
 import eventsService from '../../Api-Services/eventsService';
-import { Plus, Edit, Trash2, Calendar, MapPin, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, MapPin, Users, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Events = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -22,7 +24,7 @@ const Events = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const response = await eventsService.getEvents(currentPage, pageSize, ['createdAt,desc']);
+      const response = await eventsService.getEvents(currentPage - 1, pageSize, ['createdAt,desc']);
       setEvents(response.data.content || []);
       setTotalPages(response.data.totalPages || 0);
       setTotalElements(response.data.totalElements || 0);
@@ -48,7 +50,7 @@ const Events = () => {
   };
 
   const handlePageChange = (page) => {
-    setCurrentPage(page - 1);
+    setCurrentPage(page);
   };
 
   const handleAddEvent = () => {
@@ -59,6 +61,10 @@ const Events = () => {
   const handleEditEvent = (event) => {
     setEditingEvent(event);
     setIsModalOpen(true);
+  };
+
+  const handleViewEvent = (eventId) => {
+    navigate(`/admin/events/${eventId}`);
   };
 
   const handleDeleteEvent = (id) => {
@@ -118,6 +124,13 @@ const Events = () => {
   };
 
   const columns = [
+    {
+      header: 'S.No',
+      accessor: 'id',
+      render: (id, row, index) => {
+        return (currentPage - 1) * pageSize + index + 1;
+      },
+    },
     { header: 'Event Name', accessor: 'name' },
     { header: 'Event Code', accessor: 'eventCode' },
     {
@@ -155,6 +168,13 @@ const Events = () => {
       accessor: 'id',
       render: (id, row) => (
         <div className="flex gap-2">
+          <button
+            onClick={() => handleViewEvent(id)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4 text-green-600" />
+          </button>
           <button
             onClick={() => handleEditEvent(row)}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
@@ -203,24 +223,16 @@ const Events = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <Table
-          columns={columns}
-          data={filteredEvents}
-          className="border-0 rounded-xl"
-        />
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <Pagination
-            currentPage={currentPage + 1}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={filteredEvents}
+        enablePagination={true}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={pageSize}
+        className="border-0 rounded-xl"
+      />
 
       {/* Add/Edit Modal */}
       <AddAndEditEvents

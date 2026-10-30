@@ -17,7 +17,7 @@ const Searchbar = ({ placeholder = 'Search...', value, onChange, onSubmit, class
           value={value}
           onChange={onChange}
           required
-          className="text-sm text-slate-900 dark:text-slate-50 w-full outline-none"
+          className="text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400 w-full outline-none"
         />
 
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" className="size-4 fill-slate-400 ml-auto" aria-hidden="true">

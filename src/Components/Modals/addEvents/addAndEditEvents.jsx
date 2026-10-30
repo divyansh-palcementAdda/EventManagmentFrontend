@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input, Button } from '../../../Components/reusable';
+import { X, FileText, Hash, MapPin, Clock, Globe, Settings, CheckSquare, Ticket, Save, XCircle } from 'lucide-react';
 
 const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
   const convertISOToDateTimeLocal = (isoString) => {
@@ -29,6 +30,41 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
   });
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (event) {
+      setFormData({
+        name: event.name || '',
+        description: event.description || '',
+        eventCode: event.eventCode || '',
+        venue: event.venue || '',
+        startsAt: event.startsAt ? convertISOToDateTimeLocal(event.startsAt) : '',
+        endsAt: event.endsAt ? convertISOToDateTimeLocal(event.endsAt) : '',
+        timezone: event.timezone || 'UTC',
+        activationPolicy: event.activationPolicy || 'SELF_SERVICE',
+        checkInPolicy: event.checkInPolicy || 'SINGLE_ENTRY',
+        maximumPasses: event.maximumPasses || '',
+        activationStartsAt: event.activationStartsAt ? convertISOToDateTimeLocal(event.activationStartsAt) : '',
+        activationEndsAt: event.activationEndsAt ? convertISOToDateTimeLocal(event.activationEndsAt) : '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        eventCode: '',
+        venue: '',
+        startsAt: '',
+        endsAt: '',
+        timezone: 'UTC',
+        activationPolicy: 'SELF_SERVICE',
+        checkInPolicy: 'SINGLE_ENTRY',
+        maximumPasses: '',
+        activationStartsAt: '',
+        activationEndsAt: '',
+      });
+    }
+    setErrors({});
+  }, [event]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,12 +127,18 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100 transform transition-all duration-300 scale-100 hover:scale-[1.01]">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl">
+          <h2 className="text-xl font-semibold text-white">
             {event ? 'Edit Event' : 'Add New Event'}
           </h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <Input
@@ -107,6 +149,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.name}
             required
+            icon={FileText}
           />
           <Input
             label="Event Code"
@@ -116,6 +159,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.eventCode}
             required
+            icon={Hash}
           />
           <Input
             label="Venue"
@@ -125,6 +169,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.venue}
             required
+            icon={MapPin}
           />
           <Input
             label="Start Date & Time"
@@ -135,6 +180,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.startsAt}
             required
+            icon={Clock}
           />
           <Input
             label="End Date & Time"
@@ -145,6 +191,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.endsAt}
             required
+            icon={Clock}
           />
           <Input
             label="Timezone"
@@ -154,9 +201,11 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.timezone}
             required
+            icon={Globe}
           />
           <div className="flex flex-col">
-            <label htmlFor="description" className="text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="description" className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-400" />
               Description
             </label>
             <textarea
@@ -165,12 +214,13 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
               value={formData.description}
               onChange={handleChange}
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
               placeholder="Event description..."
             />
           </div>
           <div className="flex flex-col">
-            <label htmlFor="activationPolicy" className="text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="activationPolicy" className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+              <Settings className="w-4 h-4 text-gray-400" />
               Activation Policy
             </label>
             <select
@@ -178,14 +228,15 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
               name="activationPolicy"
               value={formData.activationPolicy}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="SELF_SERVICE">Self Service</option>
               <option value="MANUAL">Manual</option>
             </select>
           </div>
           <div className="flex flex-col">
-            <label htmlFor="checkInPolicy" className="text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="checkInPolicy" className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-gray-400" />
               Check-in Policy
             </label>
             <select
@@ -193,7 +244,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
               name="checkInPolicy"
               value={formData.checkInPolicy}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="SINGLE_ENTRY">Single Entry</option>
               <option value="MULTIPLE_ENTRY">Multiple Entry</option>
@@ -208,6 +259,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.maximumPasses}
             required
+            icon={Ticket}
           />
           <Input
             label="Activation Start Date & Time"
@@ -218,6 +270,7 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.activationStartsAt}
             required
+            icon={Clock}
           />
           <Input
             label="Activation End Date & Time"
@@ -228,21 +281,24 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
             onChange={handleChange}
             error={errors.activationEndsAt}
             required
+            icon={Clock}
           />
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="neutral"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 flex items-center justify-center gap-2"
             >
+              <XCircle className="w-4 h-4" />
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
-              className="flex-1"
+              className="flex-1 flex items-center justify-center gap-2"
             >
+              <Save className="w-4 h-4" />
               {event ? 'Update' : 'Add Event'}
             </Button>
           </div>

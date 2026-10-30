@@ -13,7 +13,7 @@ const Button = ({ children, type = 'button', onClick, variant = 'success', class
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${variantClasses[variant] || variantClasses.primary} shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`${variantClasses[variant] || variantClasses.primary} shadow-xs font-medium leading-5 rounded-md text-sm px-4 py-2.5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       {...props}
     >
       {children}

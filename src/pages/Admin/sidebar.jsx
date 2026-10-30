@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
+  LayoutDashboard,
   Users,
   Calendar,
   Shield,
@@ -11,21 +12,23 @@ import {
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeItem, setActiveItem] = useState('attendees')
+  const [activeItem, setActiveItem] = useState('dashboard')
 
   useEffect(() => {
     const routeToItemMap = {
+      '/dashboard': 'dashboard',
+      '/admin': 'dashboard',
       '/admin/attendees': 'attendees',
       '/admin/events': 'events',
       '/admin/users': 'users',
-      '/admin/roles': 'roles',
-      '/admin': 'attendees'
+      '/admin/roles': 'roles'
     }
     const currentRoute = location.pathname
-    setActiveItem(routeToItemMap[currentRoute] || 'attendees')
+    setActiveItem(routeToItemMap[currentRoute] || 'dashboard')
   }, [location.pathname])
 
   const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#6366f1', route: '/dashboard' },
     { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees' },
     { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events' },
     { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users' },
@@ -57,7 +60,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             {/* Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+                <h1 className="text-xl font-bold text-gray-900">Event Management</h1>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-gray-100"
@@ -112,7 +115,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       <aside className="hidden lg:flex lg:flex-col fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 z-30">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+          <h1 className="text-xl font-bold text-gray-900">Event Management</h1>
         </div>
 
         {/* Navigation */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Searchbar, Table, Button, Pagination, DeleteModal } from '../../Components/reusable';
+import { Searchbar, Table, Button, DeleteModal } from '../../Components/reusable';
 import AddAndEditAttendees from '../../Components/Modals/addAttendees/addAndEditAttendees';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
@@ -34,10 +34,6 @@ const Attendees = () => {
   );
 
   const totalPages = Math.ceil(filteredAttendees.length / itemsPerPage);
-  const paginatedAttendees = filteredAttendees.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -152,24 +148,16 @@ const Attendees = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <Table
-          columns={columns}
-          data={paginatedAttendees}
-          className="border-0 rounded-xl"
-        />
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={filteredAttendees}
+        enablePagination={true}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+        className="border-0 rounded-xl"
+      />
 
       {/* Add/Edit Modal */}
       <AddAndEditAttendees
