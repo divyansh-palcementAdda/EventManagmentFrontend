@@ -12,6 +12,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const [error, setError] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannerError, setScannerError] = useState(null);
+  const [cameraPermission, setCameraPermission] = useState('unknown');
   const html5QrCodeRef = useRef(null);
 
   const generateRequestId = () => {
@@ -20,11 +21,37 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   // Initialize QR scanner on component mount
   useEffect(() => {
-    startScanner();
+    // Check camera permissions first
+    checkCameraPermission();
     return () => {
       stopScanner();
     };
   }, []);
+
+  const checkCameraPermission = async () => {
+    try {
+      // Check if running on HTTPS or localhost
+      const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      if (!isSecureContext) {
+        setScannerError('Camera access requires HTTPS. Please use HTTPS or localhost. Current connection is not secure.');
+        setIsScanning(false);
+        return;
+      }
+
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      stream.getTracks().forEach(track => track.stop());
+      setCameraPermission('granted');
+      // Start scanner after permission granted
+      startScanner();
+    } catch (err) {
+      console.error('Camera permission error:', err);
+      setCameraPermission('denied');
+      setScannerError('Camera permission denied. Please allow camera access in browser settings and try again.');
+      setIsScanning(false);
+    }
+  };
 
   // Initialize QR scanner
   const startScanner = async () => {
@@ -51,19 +78,24 @@ const CheckinScan = ({ eventId: propEventId }) => {
         facingMode: "environment",
       };
 
+      console.log('Starting scanner with config:', config);
       await html5QrCodeRef.current.start(
         cameraConfig,
         config,
         (decodedText, decodedResult) => {
+          console.log('QR code scanned:', decodedText);
           // QR code scanned successfully
           handleScanSuccess(decodedText);
         },
         (errorMessage) => {
           // Ignore scanning errors, they're normal during scanning
+          console.log('Scanning error (normal):', errorMessage);
         }
       );
+      console.log('Scanner started successfully');
     } catch (err) {
-      setScannerError("Unable to start camera. Please check camera permissions.");
+      console.error('Scanner start error:', err);
+      setScannerError("Unable to start camera. Please check camera permissions and try again.");
       setIsScanning(false);
       toast.error("Failed to start camera. Please allow camera access.");
     }
@@ -192,6 +224,32 @@ const CheckinScan = ({ eventId: propEventId }) => {
             <div className="p-3 bg-gray-800 text-gray-300 text-xs text-center">
               Point camera at QR code
             </div>
+          </div>
+        )}
+
+        {/* Fallback: Scanner not started or failed */}
+        {!isScanning && !scannedData && !result && !error && (
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
+            {scannerError ? (
+              <>
+                <XCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
+                <p className="text-sm text-red-800 mb-4">{scannerError}</p>
+              </>
+            ) : (
+              <>
+                <Loader2 className="h-12 w-12 text-purple-600 mx-auto mb-3 animate-spin" />
+                <p className="text-sm text-gray-600 mb-4">Initializing camera...</p>
+              </>
+            )}
+            <Button
+              type="button"
+              variant="success"
+              onClick={startScanner}
+              className="w-full py-3 text-base"
+            >
+              <QrCode className="mr-2 h-5 w-5" />
+              Start Scanner
+            </Button>
           </div>
         )}
 
