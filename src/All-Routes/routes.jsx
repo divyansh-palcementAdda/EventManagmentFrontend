@@ -16,7 +16,7 @@ const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<StudentFillForm />} />
+        <Route path="/student-fill-form" element={<StudentFillForm />} />
         <Route path="/dashboard" element={
           <MainLayout>
             <Dashboard />
@@ -61,7 +61,7 @@ const AppRoutes = () => {
             <RolesAndPermissions />
           </MainLayout>
         } />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
       </Routes>
       
     </BrowserRouter>

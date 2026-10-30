@@ -42,8 +42,9 @@ const StudentFillForm = () => {
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <h1 className="form-heading">Student Registration Form</h1>
-          <p className="form-subtitle">Fill all details carefully to receive your certificate</p>
+          <h1 className="form-heading">Event Pass Activation Form</h1>
+          <p className="form-subtitle">Fill all details carefully to receive your Event pass</p>
+          <p className="form-subtitle">Details not editable after submission</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="form-grid">
@@ -285,7 +286,7 @@ const StudentFillForm = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
-              Submit Information to Claim your Certificate
+              Submit
             </button>
           </div>
         </form>
