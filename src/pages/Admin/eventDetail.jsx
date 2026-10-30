@@ -107,19 +107,22 @@ const EventDetail = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* Header */}
+      {/* Header with Back Button and Heading */}
       <div className="mb-6">
-        <button
-          onClick={() => navigate('/admin/events')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back to Events
-        </button>
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => navigate('/admin/events')}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium text-gray-700">Back</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Event Details</h1>
+        </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{event.name}</h1>
-            <p className="text-gray-600">{event.description || 'No description provided'}</p>
+            <h2 className="text-xl font-semibold text-gray-900">{event.name}</h2>
+            <p className="text-gray-600 text-sm mt-1">{event.description || 'No description provided'}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {getStatusBadge(event.status)}
@@ -127,129 +130,131 @@ const EventDetail = () => {
         </div>
       </div>
 
-      {/* Event Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Basic Information */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-blue-600" />
-            Basic Information
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Event Code</label>
-              <p className="text-gray-900 font-mono mt-1">{event.eventCode || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Pass Series Code</label>
-              <p className="text-gray-900 font-mono mt-1">{event.passSeriesCode || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Venue</label>
-              <p className="text-gray-900 mt-1 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                {event.venue || '-'}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Timezone</label>
-              <p className="text-gray-900 mt-1">{event.timezone || '-'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Schedule */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            Schedule
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Start Date & Time</label>
-              <p className="text-gray-900 mt-1 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                {formatDate(event.startsAt)}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">End Date & Time</label>
-              <p className="text-gray-900 mt-1 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                {formatDate(event.endsAt)}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Created At</label>
-              <p className="text-gray-900 mt-1">{formatDate(event.createdAt)}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Last Updated</label>
-              <p className="text-gray-900 mt-1">{formatDate(event.updatedAt)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Pass Information */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            Pass Information
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Maximum Passes</label>
-              <p className="text-gray-900 mt-1 text-xl font-semibold">{event.maximumPasses || 0}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Total Passes Generated</label>
-              <p className="text-gray-900 mt-1 text-xl font-semibold">{event.totalPassesGenerated || 0}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Passes Available</label>
-              <p className="text-gray-900 mt-1 text-xl font-semibold">
-                {Math.max(0, (event.maximumPasses || 0) - (event.totalPassesGenerated || 0))}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Policies */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-blue-600" />
-            Policies
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Activation Policy</label>
-              <div className="mt-1">
-                {getActivationPolicyBadge(event.activationPolicy)}
+      {/* Single Card with All Details */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Basic Information */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-blue-600" />
+              Basic Information
+            </h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs font-medium text-gray-500">Event Code</label>
+                <p className="text-gray-900 font-mono text-sm">{event.eventCode || '-'}</p>
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Check-in Policy</label>
-              <div className="mt-1">
-                {getCheckInPolicyBadge(event.checkInPolicy)}
+              <div>
+                <label className="text-xs font-medium text-gray-500">Pass Series Code</label>
+                <p className="text-gray-900 font-mono text-sm">{event.passSeriesCode || '-'}</p>
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Event Status</label>
-              <div className="mt-1">
-                {getStatusBadge(event.status)}
+              <div>
+                <label className="text-xs font-medium text-gray-500">Venue</label>
+                <p className="text-gray-900 text-sm flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-gray-400" />
+                  {event.venue || '-'}
+                </p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Timezone</label>
+                <p className="text-gray-900 text-sm">{event.timezone || '-'}</p>
               </div>
             </div>
           </div>
+
+          {/* Schedule */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              Schedule
+            </h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs font-medium text-gray-500">Start Date & Time</label>
+                <p className="text-gray-900 text-sm flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-gray-400" />
+                  {formatDate(event.startsAt)}
+                </p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">End Date & Time</label>
+                <p className="text-gray-900 text-sm flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-gray-400" />
+                  {formatDate(event.endsAt)}
+                </p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Created At</label>
+                <p className="text-gray-900 text-sm">{formatDate(event.createdAt)}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Last Updated</label>
+                <p className="text-gray-900 text-sm">{formatDate(event.updatedAt)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pass Information */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-600" />
+              Pass Information
+            </h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs font-medium text-gray-500">Maximum Passes</label>
+                <p className="text-gray-900 text-lg font-semibold">{event.maximumPasses || 0}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Total Passes Generated</label>
+                <p className="text-gray-900 text-lg font-semibold">{event.totalPassesGenerated || 0}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Passes Available</label>
+                <p className="text-gray-900 text-lg font-semibold">
+                  {Math.max(0, (event.maximumPasses || 0) - (event.totalPassesGenerated || 0))}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Policies */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-600" />
+              Policies
+            </h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs font-medium text-gray-500">Activation Policy</label>
+                <div className="mt-1">
+                  {getActivationPolicyBadge(event.activationPolicy)}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Check-in Policy</label>
+                <div className="mt-1">
+                  {getCheckInPolicyBadge(event.checkInPolicy)}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Event Status</label>
+                <div className="mt-1">
+                  {getStatusBadge(event.status)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          {event.description && (
+            <div className="space-y-3 md:col-span-2 lg:col-span-2">
+              <h3 className="text-sm font-semibold text-gray-900">Description</h3>
+              <p className="text-gray-700 text-sm whitespace-pre-wrap">{event.description}</p>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Description Section */}
-      {event.description && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
-        </div>
-      )}
     </div>
   );
 };

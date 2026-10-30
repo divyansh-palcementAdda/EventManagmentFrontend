@@ -9,6 +9,7 @@ import EventDetail from '../pages/Admin/eventDetail'
 import AllUsers from '../pages/Admin/allUsers'
 import RolesAndPermissions from '../pages/Admin/rolesAndPermissions'
 import Login from '../pages/auth/login'
+import CheckinScan from '../Components/CheckinScan'
 
 
 const AppRoutes = () => {
@@ -40,6 +41,15 @@ const AppRoutes = () => {
           <MainLayout>
             <EventDetail />
           </MainLayout>
+        } />
+        <Route path="/admin/checkin" element={
+          
+            <CheckinScan />
+         
+        } />
+        <Route path="/admin/checkin/:eventId" element={
+         
+            <CheckinScan />
         } />
         <Route path="/admin/users" element={
           <MainLayout>

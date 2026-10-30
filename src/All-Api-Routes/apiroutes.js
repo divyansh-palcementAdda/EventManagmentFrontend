@@ -30,7 +30,7 @@ const API_ROUTES = {
 
   // Check-in Management Endpoints
   CHECKIN: {
-    SCAN: '/checkin/scan',
+    SCAN: '/checkin',
     VIEW: '/checkin/:eventId',
     LOGS: '/checkin/logs',
   },
