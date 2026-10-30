@@ -109,6 +109,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
       setIsScanning(false);
     } catch (err) {
       console.error("Failed to stop scanner:", err);
+      console.log("Failed to stop scanner:", err);
     }
   };
 
