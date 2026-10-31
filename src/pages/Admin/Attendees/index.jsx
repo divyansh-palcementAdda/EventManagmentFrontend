@@ -4,7 +4,7 @@ import { Searchbar, Table, Button, DeleteModal } from '../../../Components/reusa
 import AttendeeModal from '../../../Components/Modals/Attendees/AttendeeModal';
 import attendeesService from '../../../Api-Services/attendeesService';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Loader2, Ticket } from 'lucide-react';
 
 const Attendees = () => {
   const navigate = useNavigate();
@@ -144,6 +144,29 @@ const Attendees = () => {
     { header: 'Mobile', accessor: 'mobileNumber' },
     { header: 'Organization', accessor: 'organization' },
     { header: 'Designation', accessor: 'designation' },
+    {
+      header: 'Pass Status',
+      accessor: 'hasPass',
+      render: (hasPass, row) => {
+        const passAssigned = hasPass || Boolean(row?.passNumber) || Boolean(row?.passId) || Boolean(row?.linkedPass);
+        if (!passAssigned) {
+          return <span className="text-xs text-gray-400 font-medium">No Pass</span>;
+        }
+        const passNum = row.passNumber || row.linkedPass?.passNumber;
+        const passStatus = (row.passStatus || row.linkedPass?.status || 'ACTIVATED').toUpperCase();
+        return (
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <Ticket className="w-3.5 h-3.5 shrink-0" />
+              <span>{passNum || 'Assigned'}</span>
+            </div>
+            <div className="text-[10px] text-gray-500 font-medium">
+              {passStatus}
+            </div>
+          </div>
+        );
+      },
+    },
     { header: 'Status', accessor: 'registrationStatus', render: getStatusBadge },
     { header: 'Check-in', accessor: 'checkedIn', render: getCheckInBadge },
     {
