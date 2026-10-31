@@ -19,6 +19,11 @@ import {
   Clock,
   RefreshCw,
   Search,
+  GraduationCap,
+  BookOpen,
+  School,
+  Hash,
+  CheckCircle2,
 } from 'lucide-react';
 import passService from '../../Api-Services/passService';
 
@@ -35,13 +40,19 @@ const parseRawInput = (input) => {
   }
 
   // URL
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('/activate') || trimmed.includes('/pass/')) {
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.includes('/activate') ||
+    trimmed.includes('/pass/')
+  ) {
     try {
       const url = new URL(trimmed, window.location.origin);
-      const queryPass = url.searchParams.get('passNumber') ||
-                        url.searchParams.get('token') ||
-                        url.searchParams.get('rawToken') ||
-                        url.searchParams.get('passId');
+      const queryPass =
+        url.searchParams.get('passNumber') ||
+        url.searchParams.get('token') ||
+        url.searchParams.get('rawToken') ||
+        url.searchParams.get('passId');
       if (queryPass) return queryPass;
 
       const parts = url.pathname.split('/').filter(Boolean);
@@ -62,10 +73,11 @@ const parseRawInput = (input) => {
 const ActivatePass = () => {
   const { token: routeToken } = useParams();
   const [searchParams] = useSearchParams();
-  const queryToken = searchParams.get('token') ||
-                     searchParams.get('passNumber') ||
-                     searchParams.get('passId') ||
-                     searchParams.get('rawToken');
+  const queryToken =
+    searchParams.get('token') ||
+    searchParams.get('passNumber') ||
+    searchParams.get('passId') ||
+    searchParams.get('rawToken');
   const navigate = useNavigate();
 
   const rawParamToken = routeToken || queryToken || '';
@@ -79,11 +91,17 @@ const ActivatePass = () => {
   const [isActivatedSuccess, setIsActivatedSuccess] = useState(false);
   const [activationResult, setActivationResult] = useState(null);
 
-  // Form State
+  // Form State: supports both STUDENT and OTHER registration fields
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     mobileNumber: '',
+    // Student fields
+    college: '',
+    course: '',
+    yearSemester: '',
+    studentId: '',
+    // Other fields
     organization: '',
     designation: '',
   });
@@ -146,6 +164,8 @@ const ActivatePass = () => {
     }
   };
 
+  const isStudent = passData?.category === 'STUDENT';
+
   const validateForm = () => {
     const errors = {};
     if (!formData.fullName.trim()) {
@@ -161,6 +181,16 @@ const ActivatePass = () => {
     } else if (!/^\+?[0-9]{7,15}$/.test(formData.mobileNumber.trim())) {
       errors.mobileNumber = 'Please enter a valid mobile number (7 to 15 digits)';
     }
+
+    if (isStudent) {
+      if (!formData.college.trim()) {
+        errors.college = 'College or institution name is required';
+      }
+      if (!formData.course.trim()) {
+        errors.course = 'Course or program name is required';
+      }
+    }
+
     return errors;
   };
 
@@ -187,8 +217,17 @@ const ActivatePass = () => {
         attendeeFullName: formData.fullName.trim(),
         attendeeEmail: formData.email.trim().toLowerCase(),
         attendeeMobileNumber: formData.mobileNumber.trim(),
-        attendeeOrganization: formData.organization?.trim() || null,
-        attendeeDesignation: formData.designation?.trim() || null,
+        // Category specific fields
+        attendeeCollege: isStudent ? formData.college.trim() : null,
+        attendeeCourse: isStudent ? formData.course.trim() : null,
+        attendeeYearSemester: isStudent ? formData.yearSemester?.trim() || null : null,
+        attendeeStudentId: isStudent ? formData.studentId?.trim() || null : null,
+        attendeeOrganization: isStudent
+          ? formData.college.trim()
+          : formData.organization?.trim() || null,
+        attendeeDesignation: isStudent
+          ? formData.designation?.trim() || 'Student'
+          : formData.designation?.trim() || null,
       };
 
       const response = await passService.activatePass(payload);
@@ -197,7 +236,7 @@ const ActivatePass = () => {
       setIsActivatedSuccess(true);
       toast.success('Your event pass has been successfully activated!');
     } catch (err) {
-      // Preserve form data on error
+      // Preserve form data on error and highlight backend validation fields if returned
       if (err.errors && typeof err.errors === 'object') {
         setFormErrors(err.errors);
       }
@@ -228,18 +267,32 @@ const ActivatePass = () => {
     <div className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col justify-center items-center">
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         {/* Form Header */}
-        <div className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-6 sm:p-8 text-center relative">
+        <div
+          className={`p-6 sm:p-8 text-center relative text-white ${
+            isStudent
+              ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800'
+              : 'bg-gradient-to-r from-purple-700 via-indigo-800 to-purple-900'
+          }`}
+        >
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-            <Ticket className="w-8 h-8 text-white" />
+            {isStudent ? (
+              <GraduationCap className="w-8 h-8 text-white" />
+            ) : (
+              <Ticket className="w-8 h-8 text-white" />
+            )}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Event Pass Activation</h1>
-          <p className="text-purple-200 text-xs sm:text-sm mt-1 max-w-md mx-auto">
-            Link your personal attendee profile to your official event badge to enable gate entry.
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isStudent ? 'Student Pass Registration' : 'Event Pass Activation'}
+          </h1>
+          <p className="text-purple-100/90 text-xs sm:text-sm mt-1 max-w-md mx-auto">
+            {isStudent
+              ? 'Complete your verified student registration to link your badge for official campus/event admission.'
+              : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
           </p>
         </div>
 
         <div className="p-6 sm:p-8 space-y-6">
-          {/* Manual Token Search Bar (Shown when no token or searching another) */}
+          {/* Manual Token Search Bar (Shown when no token) */}
           {!initialToken && (
             <form onSubmit={handleManualSearch} className="space-y-2">
               <label className="text-xs font-semibold text-gray-700 block">
@@ -250,7 +303,7 @@ const ActivatePass = () => {
                   type="text"
                   value={inputToken}
                   onChange={(e) => setInputToken(e.target.value)}
-                  placeholder="e.g. TEST123-SZ83KSCE-0001"
+                  placeholder="e.g. RFC-F5EE57F3-0001"
                   className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
                 />
                 <button
@@ -283,14 +336,29 @@ const ActivatePass = () => {
               </div>
 
               <p className="text-xs text-gray-600 max-w-sm mx-auto">
-                This pass has been registered to <strong className="text-gray-900">{formData.fullName}</strong>.
-                A confirmation has been sent to <strong>{formData.email}</strong>.
+                This pass has been registered to{' '}
+                <strong className="text-gray-900">{formData.fullName}</strong>.
+                A confirmation has been queued for <strong>{formData.email}</strong>.
               </p>
 
               <div className="bg-white rounded-xl p-4 shadow-xs border border-emerald-100 text-left text-xs space-y-2 max-w-sm mx-auto">
                 <div className="flex justify-between items-center border-b pb-1.5">
                   <span className="text-gray-500">Pass Number:</span>
-                  <span className="font-mono font-bold text-purple-700 text-sm">{passData?.passNumber}</span>
+                  <span className="font-mono font-bold text-purple-700 text-sm">
+                    {passData?.passNumber}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-1.5">
+                  <span className="text-gray-500">Pass Category:</span>
+                  <span
+                    className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
+                      isStudent
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border border-purple-200'
+                    }`}
+                  >
+                    {passData?.category || 'STUDENT'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center border-b pb-1.5">
                   <span className="text-gray-500">Event:</span>
@@ -300,6 +368,18 @@ const ActivatePass = () => {
                   <div className="flex justify-between items-center border-b pb-1.5">
                     <span className="text-gray-500">Venue:</span>
                     <span className="text-gray-700">{passData.venue}</span>
+                  </div>
+                )}
+                {isStudent && formData.college && (
+                  <div className="flex justify-between items-center border-b pb-1.5">
+                    <span className="text-gray-500">College:</span>
+                    <span className="text-gray-800 font-medium">{formData.college}</span>
+                  </div>
+                )}
+                {isStudent && formData.course && (
+                  <div className="flex justify-between items-center border-b pb-1.5">
+                    <span className="text-gray-500">Course:</span>
+                    <span className="text-gray-800 font-medium">{formData.course}</span>
                   </div>
                 )}
                 {passData?.validDays && passData.validDays.length > 0 && (
@@ -313,7 +393,7 @@ const ActivatePass = () => {
               </div>
 
               <p className="text-[11px] text-gray-500 pt-2">
-                Present this physical pass card or your confirmation email to the gatekeeper on event day.
+                Present this pass badge or your confirmation email to the gatekeeper on event day for check-in.
               </p>
             </div>
           )}
@@ -321,30 +401,49 @@ const ActivatePass = () => {
           {/* PASS STATUS NOTICE (ALREADY ACTIVATED, REVOKED, OR INVALID) */}
           {!validating && !isActivatedSuccess && validationError && (
             <div className="space-y-4">
-              <div className="bg-rose-50 border border-rose-200 rounded-xl p-5">
+              <div
+                className={`rounded-xl p-5 border ${
+                  passData?.status === 'ACTIVATED'
+                    ? 'bg-blue-50 border-blue-200 text-blue-900'
+                    : 'bg-rose-50 border-rose-200 text-rose-900'
+                }`}
+              >
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  {passData?.status === 'ACTIVATED' ? (
+                    <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  )}
                   <div>
-                    <h3 className="font-semibold text-rose-900 text-sm">Pass Status Notice</h3>
-                    <p className="text-rose-700 text-xs mt-1 leading-relaxed">{validationError}</p>
+                    <h3 className="font-semibold text-sm">
+                      {passData?.status === 'ACTIVATED' ? 'Pass Already Claimed' : 'Pass Status Notice'}
+                    </h3>
+                    <p className="text-xs mt-1 leading-relaxed opacity-90">{validationError}</p>
                   </div>
                 </div>
 
                 {passData && (
-                  <div className="mt-4 pt-3 border-t border-rose-200 text-xs text-gray-700 space-y-1">
+                  <div className="mt-4 pt-3 border-t border-current/20 text-xs space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Pass Number:</span>
+                      <span className="opacity-70">Pass Number:</span>
                       <span className="font-mono font-bold">{passData.passNumber}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Event:</span>
-                      <span className="font-medium">{passData.eventName} ({passData.eventCode})</span>
-                    </div>
-                    {passData.attendeeName && (
+                    {passData.category && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Claimed By:</span>
-                        <span className="font-semibold text-purple-700">{passData.attendeeName}</span>
+                        <span className="opacity-70">Category:</span>
+                        <span className="font-semibold">{passData.category}</span>
                       </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Event:</span>
+                      <span className="font-medium">
+                        {passData.eventName} ({passData.eventCode})
+                      </span>
+                    </div>
+                    {passData.status === 'ACTIVATED' && (
+                      <p className="text-[11px] opacity-80 pt-1">
+                        This badge has already been activated and cannot be re-registered. If you own this pass, present it directly at the gate scanner.
+                      </p>
                     )}
                   </div>
                 )}
@@ -371,12 +470,33 @@ const ActivatePass = () => {
           {!validating && !isActivatedSuccess && passData && passData.isEligibleForActivation && (
             <div className="space-y-6">
               {/* Event Badge Summary */}
-              <div className="bg-purple-50/70 border border-purple-200/60 rounded-xl p-4 space-y-2">
+              <div
+                className={`border rounded-xl p-4 space-y-2 ${
+                  isStudent
+                    ? 'bg-blue-50/70 border-blue-200/60'
+                    : 'bg-purple-50/70 border-purple-200/60'
+                }`}
+              >
                 <div className="flex items-center justify-between flex-wrap gap-1">
-                  <span className="px-2 py-0.5 bg-purple-600 text-white text-[10px] font-black rounded-full uppercase tracking-wider">
-                    Eligible for Activation
-                  </span>
-                  <span className="font-mono text-xs font-bold text-purple-900 bg-white px-2 py-0.5 rounded border border-purple-200">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider ${
+                        isStudent ? 'bg-blue-600' : 'bg-purple-600'
+                      }`}
+                    >
+                      Eligible for Activation
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded border ${
+                        isStudent
+                          ? 'bg-blue-100 text-blue-800 border-blue-300'
+                          : 'bg-purple-100 text-purple-800 border-purple-300'
+                      }`}
+                    >
+                      {passData.category || 'STUDENT'} CATEGORY
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">
                     {passData.passNumber}
                   </span>
                 </div>
@@ -397,10 +517,13 @@ const ActivatePass = () => {
                 </div>
 
                 {passData.validDays && passData.validDays.length > 0 && (
-                  <div className="pt-2 border-t border-purple-200/60 text-xs text-gray-600 flex items-center gap-1.5 flex-wrap">
+                  <div className="pt-2 border-t border-gray-200/60 text-xs text-gray-600 flex items-center gap-1.5 flex-wrap">
                     <span className="font-medium">Valid Days:</span>
                     {passData.validDays.map((d) => (
-                      <span key={d.id} className="bg-white border border-purple-200 text-purple-800 font-semibold px-1.5 py-0.5 rounded text-[10px]">
+                      <span
+                        key={d.id}
+                        className="bg-white border border-gray-200 text-gray-800 font-semibold px-1.5 py-0.5 rounded text-[10px]"
+                      >
                         {d.label || `Day ${d.dayNumber}`}
                       </span>
                     ))}
@@ -408,8 +531,9 @@ const ActivatePass = () => {
                 )}
               </div>
 
-              {/* Form */}
+              {/* Form - Category Driven */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* 1. Full Name */}
                 <div>
                   <label className="text-xs font-semibold text-gray-700 block mb-1">
                     Full Name <span className="text-rose-500">*</span>
@@ -421,15 +545,18 @@ const ActivatePass = () => {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      placeholder="e.g. Alice Smith"
+                      placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
                       className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                   {formErrors.fullName && (
-                    <span className="text-[11px] text-rose-500 mt-1 block">{formErrors.fullName}</span>
+                    <span className="text-[11px] text-rose-500 mt-1 block">
+                      {formErrors.fullName}
+                    </span>
                   )}
                 </div>
 
+                {/* 2. Email & Mobile */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-gray-700 block mb-1">
@@ -442,12 +569,14 @@ const ActivatePass = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="alice@example.com"
+                        placeholder="you@example.com"
                         className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
                     {formErrors.email && (
-                      <span className="text-[11px] text-rose-500 mt-1 block">{formErrors.email}</span>
+                      <span className="text-[11px] text-rose-500 mt-1 block">
+                        {formErrors.email}
+                      </span>
                     )}
                   </div>
 
@@ -462,57 +591,152 @@ const ActivatePass = () => {
                         name="mobileNumber"
                         value={formData.mobileNumber}
                         onChange={handleChange}
-                        placeholder="10-digit number"
+                        placeholder="e.g. +919876543210"
                         className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
                     {formErrors.mobileNumber && (
-                      <span className="text-[11px] text-rose-500 mt-1 block">{formErrors.mobileNumber}</span>
+                      <span className="text-[11px] text-rose-500 mt-1 block">
+                        {formErrors.mobileNumber}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Organization / Company (Optional)
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        name="organization"
-                        value={formData.organization}
-                        onChange={handleChange}
-                        placeholder="e.g. Acme Corp"
-                        className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                    </div>
-                  </div>
+                {/* 3. Category Specific Fields */}
+                {isStudent ? (
+                  <>
+                    {/* Student Fields: College and Course */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          College / Institution <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <School className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            name="college"
+                            value={formData.college}
+                            onChange={handleChange}
+                            placeholder="e.g. Delhi University / MIT"
+                            className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        {formErrors.college && (
+                          <span className="text-[11px] text-rose-500 mt-1 block">
+                            {formErrors.college}
+                          </span>
+                        )}
+                      </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Designation / Role (Optional)
-                    </label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        name="designation"
-                        value={formData.designation}
-                        onChange={handleChange}
-                        placeholder="e.g. Developer, Guest"
-                        className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Course / Program <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            name="course"
+                            value={formData.course}
+                            onChange={handleChange}
+                            placeholder="e.g. B.Tech Computer Science"
+                            className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        {formErrors.course && (
+                          <span className="text-[11px] text-rose-500 mt-1 block">
+                            {formErrors.course}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+
+                    {/* Student Additional Fields: Year/Sem & Student ID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Year / Semester (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          name="yearSemester"
+                          value={formData.yearSemester}
+                          onChange={handleChange}
+                          placeholder="e.g. 3rd Year / 6th Sem"
+                          className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Student ID / Roll No (Optional)
+                        </label>
+                        <div className="relative">
+                          <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            name="studentId"
+                            value={formData.studentId}
+                            onChange={handleChange}
+                            placeholder="e.g. CS2024-042"
+                            className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* OTHER Fields: Organization and Designation */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Organization / Company (Optional)
+                        </label>
+                        <div className="relative">
+                          <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            name="organization"
+                            value={formData.organization}
+                            onChange={handleChange}
+                            placeholder="e.g. Acme Innovations"
+                            className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Designation / Role (Optional)
+                        </label>
+                        <div className="relative">
+                          <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            name="designation"
+                            value={formData.designation}
+                            onChange={handleChange}
+                            placeholder="e.g. Senior Architect"
+                            className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="pt-2">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    className={`w-full py-3 text-white rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 ${
+                      isStudent
+                        ? 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
+                        : 'bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500'
+                    }`}
                   >
                     {loading ? (
                       <>
@@ -522,7 +746,9 @@ const ActivatePass = () => {
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        <span>Activate & Claim Pass</span>
+                        <span>
+                          {isStudent ? 'Activate Student Pass' : 'Activate & Claim Pass'}
+                        </span>
                       </>
                     )}
                   </button>

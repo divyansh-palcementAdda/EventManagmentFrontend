@@ -10,12 +10,15 @@ import {
   AlertCircle,
   QrCode,
   Layers,
+  GraduationCap,
+  Users,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import toast from 'react-hot-toast';
 
 const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => {
   const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [useRange, setUseRange] = useState(false);
   const [fromSeq, setFromSeq] = useState('');
   const [toSeq, setToSeq] = useState('');
@@ -28,6 +31,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
   useEffect(() => {
     if (isOpen) {
       setStatusFilter('');
+      setCategoryFilter('ALL');
       setUseRange(false);
       setFromSeq('');
       setToSeq('');
@@ -44,6 +48,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
     try {
       const filters = {};
       if (statusFilter) filters.status = statusFilter;
+      if (categoryFilter && categoryFilter !== 'ALL') filters.category = categoryFilter;
       if (useRange) {
         if (!fromSeq || !toSeq) {
           toast.error('Please specify both starting and ending sequence numbers.');
@@ -87,10 +92,11 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
     if (!data || data.length === 0) return;
 
     // Build CSV content
-    const headers = ['Pass Number', 'Sequence', 'Status', 'Attendee Name', 'Attendee Email', 'Event Code', 'Event Name', 'Venue'];
+    const headers = ['Pass Number', 'Sequence', 'Category', 'Status', 'Attendee Name', 'Attendee Email', 'Event Code', 'Event Name', 'Venue'];
     const rows = data.map((p) => [
       `"${p.passNumber || ''}"`,
       p.sequenceNumber || '',
+      `"${p.category || 'STUDENT'}"`,
       `"${p.status || ''}"`,
       `"${p.attendeeName || ''}"`,
       `"${p.attendeeEmail || ''}"`,
@@ -103,7 +109,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `passes_${event.eventCode}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `passes_${event.eventCode}_${categoryFilter.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -111,7 +117,10 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
   };
 
   const getQrUrl = (tokenOrPass) => {
-    const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(tokenOrPass)}`;
+    const identifier = typeof tokenOrPass === 'string'
+      ? tokenOrPass
+      : (tokenOrPass?.passNumber || tokenOrPass?.qrData || '');
+    const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(identifier)}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(activationUrl)}`;
   };
 
@@ -142,6 +151,31 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
 
           {/* Form Filter Options */}
           <div className="p-6 space-y-4 text-xs text-gray-700">
+            {/* Category Filter */}
+            <div>
+              <label className="block font-semibold text-gray-800 mb-1.5">Pass Category</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 'ALL', label: 'All Categories' },
+                  { value: 'STUDENT', label: '🎓 Student' },
+                  { value: 'OTHER', label: '👥 Other' },
+                ].map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setCategoryFilter(cat.value)}
+                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition ${
+                      categoryFilter === cat.value
+                        ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Status Filter */}
             <div>
               <label className="block font-semibold text-gray-800 mb-1.5">Pass Status Filter</label>
@@ -223,7 +257,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
                 Print-Ready QR Passes
               </div>
               <p className="text-purple-700">
-                Generates high-resolution QR badges formatted with event title, pass ID, venue, and dates. Unactivated passes omit personal data for security.
+                Generates high-resolution QR badges formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.
               </p>
             </div>
           </div>
@@ -304,11 +338,18 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
               <div
                 key={p.passId || idx}
                 className="border-2 border-gray-300 rounded-2xl p-5 bg-white shadow-sm flex flex-col items-center justify-between text-center relative print:shadow-none print:border-gray-800 print:break-inside-avoid print:page-break-after-avoid"
-                style={{ minHeight: '340px' }}
+                style={{ minHeight: '360px' }}
               >
                 <div className="w-full border-b pb-2">
                   <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold tracking-wider">
                     <span className="text-purple-700 uppercase font-extrabold">{p.eventCode}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                      p.category === 'OTHER'
+                        ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
+                      {p.category === 'OTHER' ? '👥 OTHER PASS' : '🎓 STUDENT PASS'}
+                    </span>
                     <span>PASS #{p.sequenceNumber || idx + 1}</span>
                   </div>
                   <h4 className="font-extrabold text-sm text-gray-900 mt-1 truncate">{p.eventName}</h4>
@@ -355,4 +396,3 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
 };
 
 export default BulkDownloadPassesModal;
-

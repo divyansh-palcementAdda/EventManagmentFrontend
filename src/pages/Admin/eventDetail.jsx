@@ -69,6 +69,7 @@ const EventDetail = () => {
   const [dayFilter, setDayFilter] = useState('ALL');
   const [fromSeqFilter, setFromSeqFilter] = useState('');
   const [toSeqFilter, setToSeqFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('sequenceNumber');
   const [sortDir, setSortDir] = useState('asc');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -79,6 +80,7 @@ const EventDetail = () => {
   // Pass Generation Modal State
   const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const [batchSize, setBatchSize] = useState(5);
+  const [genCategory, setGenCategory] = useState('STUDENT');
   const [selectedGenDayIds, setSelectedGenDayIds] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [newlyGeneratedPasses, setNewlyGeneratedPasses] = useState([]);
@@ -128,6 +130,7 @@ const EventDetail = () => {
     dayFilter,
     fromSeqFilter,
     toSeqFilter,
+    categoryFilter,
     sortBy,
     sortDir,
   ]);
@@ -188,6 +191,7 @@ const EventDetail = () => {
 
       if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (statusFilter !== 'ALL') params.status = statusFilter;
+      if (categoryFilter !== 'ALL') params.category = categoryFilter;
       if (checkInFilter !== 'ALL') params.checkInStatus = checkInFilter;
       if (dayFilter !== 'ALL') params.eventDayId = dayFilter;
       if (fromSeqFilter && !isNaN(parseInt(fromSeqFilter))) {
@@ -247,6 +251,7 @@ const EventDetail = () => {
       const payload = {
         eventId,
         batchSize: parseInt(batchSize),
+        category: genCategory,
         validDayIds: selectedGenDayIds.length > 0 ? selectedGenDayIds : null,
       };
 
@@ -781,6 +786,25 @@ const EventDetail = () => {
             {/* Advanced Filters Expandable Drawer */}
             {showAdvancedFilters && (
               <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                {/* Pass Category Filter */}
+                <div>
+                  <label className="text-[11px] font-semibold text-gray-600 block mb-1">
+                    Pass Category
+                  </label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => {
+                      setCategoryFilter(e.target.value);
+                      setPage(0);
+                    }}
+                    className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-purple-500 focus:outline-none"
+                  >
+                    <option value="ALL">All Categories</option>
+                    <option value="STUDENT">STUDENT</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
+                </div>
+
                 {/* Check-In Filter */}
                 <div>
                   <label className="text-[11px] font-semibold text-gray-600 block mb-1">
@@ -854,11 +878,12 @@ const EventDetail = () => {
                       className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs"
                     />
                   </div>
-                  {(checkInFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter || toSeqFilter) && (
+                  {(checkInFilter !== 'ALL' || categoryFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter || toSeqFilter) && (
                     <button
                       type="button"
                       onClick={() => {
                         setCheckInFilter('ALL');
+                        setCategoryFilter('ALL');
                         setDayFilter('ALL');
                         setFromSeqFilter('');
                         setToSeqFilter('');
@@ -935,6 +960,7 @@ const EventDetail = () => {
                     />
                   </th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3">Pass ID</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Category</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3">Status</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3">Check-in</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3">Attendee</th>
@@ -968,6 +994,17 @@ const EventDetail = () => {
                             Seq #{String(p.sequenceNumber).padStart(4, '0')}
                           </div>
                         )}
+                      </td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            p.category === 'STUDENT'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-purple-50 text-purple-700 border-purple-200'
+                          }`}
+                        >
+                          {p.category || 'STUDENT'}
+                        </span>
                       </td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">{getPassStatusBadge(p.status)}</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">
@@ -1146,6 +1183,7 @@ const EventDetail = () => {
                   <p className="text-xs text-green-700 mt-1">
                     Raw QR tokens have been generated. Below is the batch preview.
                   </p>
+  
                 </div>
 
                 <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
@@ -1184,6 +1222,23 @@ const EventDetail = () => {
               <form onSubmit={handleGeneratePasses} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Pass Category
+                  </label>
+                  <select
+                    value={genCategory}
+                    onChange={(e) => setGenCategory(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  >
+                    <option value="STUDENT">STUDENT (Student Registration)</option>
+                    <option value="OTHER">OTHER (General Attendee Registration)</option>
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Determines the registration fields presented to attendees upon scanning.
+                  </p>
+  
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Batch Size (Number of passes to generate)
                   </label>
                   <input
@@ -1198,6 +1253,7 @@ const EventDetail = () => {
                   <p className="text-[11px] text-gray-400 mt-1">
                     Format: {event.eventCode}-{event.passSeriesCode}-000001
                   </p>
+  
                 </div>
 
                 {/* Day Selection Checkboxes */}
@@ -1296,6 +1352,20 @@ const EventDetail = () => {
                 <p className="font-mono font-black text-lg sm:text-xl text-purple-800 tracking-wider break-all">
                   {activePrintPass.passNumber}
                 </p>
+
+                <div className="mt-1">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      activePrintPass.category === 'STUDENT'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200'
+                    }`}
+                  >
+                    {activePrintPass.category || 'STUDENT'} PASS
+                  </span>
+                </div>
+
+
               </div>
 
               {activePrintPass.attendeeName ? (
