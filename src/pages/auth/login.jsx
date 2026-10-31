@@ -34,7 +34,12 @@ export default function Login() {
       sessionStorage.setItem("userId", response.data.userId)
       sessionStorage.setItem("email", response.data.email)
       sessionStorage.setItem("fullName", response.data.fullName)
-      sessionStorage.setItem("permissions", JSON.stringify(response.data.permissions || []))
+      if (response.data.roleId) {
+        sessionStorage.setItem("roleId", response.data.roleId)
+      }
+      if (response.data.roleName) {
+        sessionStorage.setItem("roleName", response.data.roleName)
+      }
       if (response.data.roles) {
         sessionStorage.setItem("roles", JSON.stringify(response.data.roles))
       }
