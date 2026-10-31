@@ -317,7 +317,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
 
                 <div className="my-3 p-2 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
                   <img
-                    src={getQrUrl(p.passNumber)}
+                    src={getQrUrl(p)}
                     alt={`QR for ${p.passNumber}`}
                     className="w-36 h-36 object-contain mx-auto"
                     loading="lazy"

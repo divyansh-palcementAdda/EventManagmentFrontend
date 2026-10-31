@@ -28,6 +28,8 @@ const AppRoutes = () => {
         {/* Public Attendee Activation Endpoints */}
         <Route path="/activate/:token" element={<ActivatePass />} />
         <Route path="/activate" element={<ActivatePass />} />
+        <Route path="/pass/scan/:token" element={<ActivatePass />} />
+        <Route path="/pass/scan" element={<ActivatePass />} />
         <Route path="/student-fill-form" element={<ActivatePass />} />
 
         {/* Authentication Endpoints */}

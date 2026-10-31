@@ -1285,7 +1285,7 @@ const EventDetail = () => {
               {/* QR Code Container */}
               <div className="bg-gray-50 p-3 rounded-xl border inline-block mx-auto shadow-inner">
                 <img
-                  src={getQrImageUrl(activePrintPass.rawToken || activePrintPass.passNumber)}
+                  src={getQrImageUrl(activePrintPass.passNumber || activePrintPass.rawToken, event?.id || eventId)}
                   alt="QR Pass"
                   className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
                 />
