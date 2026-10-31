@@ -65,6 +65,17 @@ export const roleService = {
     }
   },
 
+  // Get permissions currently assigned to a role
+  getRolePermissions: async (id) => {
+    try {
+      const url = API_ROUTES.ROLES.PERMISSIONS.replace(':id', id);
+      const response = await axiosInstance.get(url);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Atomically replace permissions for a role
   assignPermissions: async (id, permissionIds) => {
     try {

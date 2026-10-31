@@ -14,6 +14,9 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
       // RoleResponse can have permissionNames or permissionIds
       if (role.permissionIds && role.permissionIds.length > 0) {
         setSelectedPermissionIds(role.permissionIds);
+      } else if (role.permissions && role.permissions.length > 0) {
+        const ids = role.permissions.map((p) => (typeof p === 'object' && p !== null ? p.id : p));
+        setSelectedPermissionIds(ids);
       } else if (role.permissionNames && allPermissions.length > 0) {
         const ids = allPermissions
           .filter((p) => role.permissionNames.includes(p.name))
