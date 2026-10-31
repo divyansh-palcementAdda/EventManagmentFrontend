@@ -3,9 +3,12 @@ import API_ROUTES from '../All-Api-Routes/apiroutes.js';
 
 export const eventsService = {
   // Get all events with pagination
-  getEvents: async (page = 0, size = 10, sort = ['createdAt,desc']) => {
+  getEvents: async (page = 0, size = 10, sort = ['createdAt,desc'], search = '') => {
     try {
-      const params = { page, size, sort };
+      const params = { page, size, sort: sort[0] };
+      if (search) {
+        params.search = search;
+      }
       const response = await axiosInstance.get(API_ROUTES.EVENTS.LIST, { params });
       return response.data;
     } catch (error) {
@@ -26,7 +29,10 @@ export const eventsService = {
   // Update an event
   updateEvent: async (eventId, eventData) => {
     try {
-      const response = await axiosInstance.put(`/events/${eventId}`, eventData);
+      const response = await axiosInstance.put(
+        API_ROUTES.EVENTS.UPDATE.replace(':id', eventId),
+        eventData
+      );
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

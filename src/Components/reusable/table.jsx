@@ -1,8 +1,8 @@
 import React from 'react';
 import Pagination from './pagination';
 
-const Table = ({ columns, data, onRowClick, className = '', enablePagination = false, currentPage = 1, totalPages = 1, onPageChange, itemsPerPage = 5 }) => {
-  const paginatedData = enablePagination
+const Table = ({ columns, data, onRowClick, className = '', enablePagination = false, currentPage = 1, totalPages = 1, onPageChange, itemsPerPage = 5, useBackendPagination = false }) => {
+  const paginatedData = (enablePagination && !useBackendPagination)
     ? data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : data;
 
