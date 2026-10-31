@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../Layouts/mainLayout';
 import Dashboard from '../pages/Admin/dashboard';
 import Attendees from '../pages/Admin/Attendees';
+import AttendeeDetail from '../pages/Admin/Attendees/AttendeeDetail';
 import Events from '../pages/Admin/Events';
 import EventDetail from '../pages/Admin/eventDetail';
 import AllUsers from '../pages/Admin/allUsers';
@@ -80,6 +81,16 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <MainLayout>
                 <Attendees />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/attendees/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AttendeeDetail />
               </MainLayout>
             </ProtectedRoute>
           }

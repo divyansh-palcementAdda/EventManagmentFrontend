@@ -28,6 +28,7 @@ export default function Login() {
       
       // Store token and user data in session storage
       sessionStorage.setItem("accessToken", response.data.accessToken)
+      sessionStorage.setItem("refreshToken", response.data.refreshToken)
       sessionStorage.setItem("tokenType", response.data.tokenType)
       sessionStorage.setItem("userId", response.data.userId)
       sessionStorage.setItem("email", response.data.email)
