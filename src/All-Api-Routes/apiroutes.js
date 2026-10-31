@@ -3,62 +3,42 @@ const API_ROUTES = {
   // Authentication Endpoints
   AUTH: {
     LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    PROFILE: '/auth/profile',
-    REFRESH_TOKEN: '/auth/refresh-token',
+    REFRESH_TOKEN: '/auth/refresh',
+    ME: '/auth/me',
   },
 
   // Event Management Endpoints
   EVENTS: {
     LIST: '/events',
     CREATE: '/events',
-    UPDATE: '/events/:id',
-    DELETE: '/events/:id',
     VIEW: '/events/:id',
-    CANCEL: '/events/:id/cancel',
+    UPDATE_STATUS: '/events/:id/status',
+    DELETE: '/events/:id',
+    DAYS: '/events/:id/days',
+    DASHBOARD_STATS: '/events/dashboard-stats',
+    GATEKEEPERS: '/events/:id/gatekeepers',
+    ASSIGN_GATEKEEPER: '/events/:id/gatekeepers',
+    REMOVE_GATEKEEPER: '/events/:id/gatekeepers/:userId',
   },
 
   // Pass Management Endpoints
   PASSES: {
-    LIST: '/passes',
+    LIST_BY_EVENT: '/passes/event/:eventId',
     GENERATE: '/passes/generate',
-    REVOKE: '/passes/:id/revoke',
-    ACTIVATE: '/passes/:id/activate',
+    VALIDATE: '/passes/validate',
+    ACTIVATE: '/passes/activate',
     VIEW: '/passes/:id',
+    REVOKE: '/passes/:id/revoke',
+    STATS: '/passes/event/:eventId/stats',
+    EXPORT: '/passes/event/:eventId/export',
+    TEMPLATE: '/passes/bulk-activation/template',
+    BULK_PREVIEW: '/passes/event/:eventId/bulk-activation/preview',
+    BULK_CONFIRM: '/passes/event/:eventId/bulk-activation/confirm',
   },
 
   // Check-in Management Endpoints
   CHECKIN: {
     SCAN: '/checkin',
-    VIEW: '/checkin/:eventId',
-    LOGS: '/checkin/logs',
-  },
-
-  // Gatekeeper Management Endpoints
-  GATEKEEPERS: {
-    LIST: '/gatekeepers',
-    ASSIGN: '/gatekeepers/assign',
-    REMOVE: '/gatekeepers/:id/remove',
-  },
-
-  // Notification Endpoints
-  NOTIFICATIONS: {
-    LIST: '/notifications',
-    MARK_READ: '/notifications/:id/read',
-  },
-
-  // Audit Log Endpoints
-  AUDIT_LOGS: {
-    LIST: '/audit-logs',
-    VIEW: '/audit-logs/:id',
-  },
-
-  // Reports Endpoints
-  REPORTS: {
-    VIEW: '/reports',
-    EVENT_REPORT: '/reports/event/:id',
-    ATTENDEE_REPORT: '/reports/attendee/:id',
   },
 };
 

@@ -88,18 +88,21 @@ const Events = () => {
 
   const handleSaveEvent = async (formData) => {
     try {
+      let result;
       if (editingEvent) {
-        await eventsService.updateEvent(editingEvent.id, formData);
+        result = await eventsService.updateEvent(editingEvent.id, formData);
         toast.success('Event updated successfully');
       } else {
-        await eventsService.createEvent(formData);
+        result = await eventsService.createEvent(formData);
         toast.success('Event created successfully');
       }
       fetchEvents();
       setIsModalOpen(false);
+      return result;
     } catch (error) {
-      toast.error(editingEvent ? 'Failed to update event' : 'Failed to create event');
       console.error('Error saving event:', error);
+      // Re-throw so AddAndEditEvents modal can map fieldErrors without wiping form state
+      throw error;
     }
   };
 

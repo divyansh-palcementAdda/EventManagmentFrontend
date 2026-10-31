@@ -1,84 +1,133 @@
-import React from 'react'
-import { 
-  Users, 
-  Calendar as CalendarIcon, 
-  TrendingUp, 
-  DollarSign,
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Users,
+  Calendar,
+  Ticket,
+  CheckCircle2,
+  TrendingUp,
   ArrowUpRight,
-  ArrowDownRight,
   Plus,
-  MoreVertical,
-  Calendar
-} from 'lucide-react'
+  QrCode,
+  MapPin,
+  Clock,
+  Loader2,
+} from 'lucide-react';
+import eventsService from '../../Api-Services/eventsService';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [statsData, setStatsData] = useState(null);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const [statsRes, eventsRes] = await Promise.all([
+          eventsService.getDashboardStats().catch(() => null),
+          eventsService.getEvents(0, 5, ['startsAt,asc']).catch(() => null),
+        ]);
+
+        if (statsRes?.data) {
+          setStatsData(statsRes.data);
+        }
+        if (eventsRes?.data?.content) {
+          setUpcomingEvents(eventsRes.data.content);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   const stats = [
     {
-      title: 'Total Students',
-      value: '1,234',
-      change: '+12.5%',
-      trend: 'up',
-      icon: Users,
-      color: '#3b82f6',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Active Events',
-      value: '45',
-      change: '+8.2%',
-      trend: 'up',
+      title: 'Total Events',
+      value: statsData?.totalEvents ?? 0,
+      subtext: `${statsData?.activeEvents ?? 0} active / ${statsData?.upcomingEvents ?? 0} draft`,
       icon: Calendar,
+      color: '#3b82f6',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      title: 'Passes Generated',
+      value: statsData?.totalPassesGenerated ?? 0,
+      subtext: 'Across all registered events',
+      icon: Ticket,
+      color: '#8b5cf6',
+      bgColor: 'bg-purple-50',
+    },
+    {
+      title: 'Activated Passes',
+      value: statsData?.totalPassesActivated ?? 0,
+      subtext: `${statsData?.totalAttendees ?? 0} confirmed attendees`,
+      icon: Users,
       color: '#10b981',
-      bgColor: 'bg-green-50'
+      bgColor: 'bg-green-50',
     },
     {
-      title: 'Revenue',
-      value: '$45,678',
-      change: '+23.1%',
-      trend: 'up',
-      icon: DollarSign,
+      title: 'Total Check-Ins',
+      value: statsData?.totalCheckIns ?? 0,
+      subtext: 'Verified gate entries',
+      icon: CheckCircle2,
       color: '#f59e0b',
-      bgColor: 'bg-yellow-50'
+      bgColor: 'bg-amber-50',
     },
-    {
-      title: 'Engagement',
-      value: '89.2%',
-      change: '-2.4%',
-      trend: 'down',
-      icon: TrendingUp,
-      color: '#ef4444',
-      bgColor: 'bg-red-50'
+  ];
+
+  const formatDate = (iso) => {
+    if (!iso) return '-';
+    try {
+      return new Date(iso).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return iso;
     }
-  ]
-
-  const recentActivities = [
-    { id: 1, action: 'New student registered', user: 'John Doe', time: '2 min ago', color: 'bg-blue-500' },
-    { id: 2, action: 'Event created', user: 'Admin', time: '15 min ago', color: 'bg-green-500' },
-    { id: 3, action: 'Payment received', user: 'Jane Smith', time: '1 hour ago', color: 'bg-yellow-500' },
-    { id: 4, action: 'Event updated', user: 'Admin', time: '2 hours ago', color: 'bg-purple-500' },
-    { id: 5, action: 'Student enrolled', user: 'Mike Johnson', time: '3 hours ago', color: 'bg-pink-500' }
-  ]
-
-  const upcomingEvents = [
-    { id: 1, name: 'Tech Conference 2024', date: 'Nov 15, 2024', attendees: 250, status: 'Active', color: 'bg-purple-500' },
-    { id: 2, name: 'Workshop Series', date: 'Nov 20, 2024', attendees: 100, status: 'Upcoming', color: 'bg-blue-500' },
-    { id: 3, name: 'Networking Event', date: 'Nov 25, 2024', attendees: 150, status: 'Upcoming', color: 'bg-green-500' }
-  ]
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Pass & Event Dashboard</h1>
+          <p className="text-gray-600">
+            Real-time overview of events, pass generation, activations, and gate check-in activity.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/checkin')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition shadow-sm"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Launch Scanner</span>
+          </button>
+          <button
+            onClick={() => navigate('/admin/events')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Manage Events</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         {stats.map((stat) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
-            <div 
+            <div
               key={stat.title}
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
             >
@@ -86,123 +135,141 @@ const Dashboard = () => {
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <Icon className="w-6 h-6" style={{ color: stat.color }} />
                 </div>
-                <div className={`flex items-center gap-1 text-sm font-medium ${
-                  stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {stat.trend === 'up' ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
-                  {stat.change}
-                </div>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                  Live
+                </span>
               </div>
-              <h3 className="text-gray-600 text-sm mb-1">{stat.title}</h3>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <h3 className="text-gray-500 text-sm font-medium">{stat.title}</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 my-1">
+                {loading ? '...' : stat.value.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">{stat.subtext}</p>
             </div>
-          )
+          );
         })}
       </div>
 
-      {/* Content Grid */}
+      {/* Events & Quick Navigation Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-              <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                View All
-              </button>
-            </div>
+        {/* Events Overview */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Current & Upcoming Events</h2>
+            <button
+              onClick={() => navigate('/admin/events')}
+              className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+            >
+              View All
+            </button>
           </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className={`w-10 h-10 rounded-full ${activity.color} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white font-semibold text-sm">
-                      {activity.user.charAt(0)}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.action}
-                    </p>
-                    <p className="text-xs text-gray-500">by {activity.user}</p>
-                  </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">{activity.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Upcoming Events */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Plus className="w-5 h-5 text-purple-600" />
-              </button>
+          {loading ? (
+            <div className="py-12 flex justify-center text-gray-400">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
             </div>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
+          ) : upcomingEvents.length === 0 ? (
+            <div className="text-center py-10 text-gray-500 text-sm">
+              <Calendar className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+              No events registered yet. Click "Manage Events" to create your first event.
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
               {upcomingEvents.map((event) => (
-                <div 
+                <div
                   key={event.id}
-                  className="p-4 rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer"
+                  onClick={() => navigate(`/admin/events/${event.id}`)}
+                  className="py-3.5 flex items-center justify-between hover:bg-gray-50/80 rounded-lg px-2 cursor-pointer transition"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-gray-900 text-sm">{event.name}</h3>
-                    <button className="p-1 rounded hover:bg-gray-100">
-                      <MoreVertical className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <CalendarIcon className="w-3 h-3" />
-                    {event.date}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Users className="w-3 h-3" />
-                      {event.attendees} attendees
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900 text-sm">{event.name}</span>
+                      <span className="text-xs font-mono bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 font-semibold">
+                        {event.eventCode}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      event.status === 'Active' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      {event.venue && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-gray-400" /> {event.venue}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-gray-400" /> {formatDate(event.startsAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                        event.status === 'ACTIVE' || event.status === 'PUBLISHED'
+                          ? 'bg-green-100 text-green-700'
+                          : event.status === 'DRAFT'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {event.status}
                     </span>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {event.totalPassesGenerated || 0} passes generated
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="mt-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold mb-2">Create New Event</h2>
-            <p className="text-purple-100 text-sm">Start organizing your next event in just a few clicks</p>
+        {/* Quick Actions & Policy summary */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
+          <h2 className="text-lg font-bold text-gray-900">System Workflow</h2>
+
+          <div className="space-y-3 text-xs text-gray-600">
+            <div className="flex items-start gap-3 p-3 bg-purple-50/60 rounded-lg border border-purple-100">
+              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                1
+              </span>
+              <div>
+                <strong className="text-gray-900 block font-semibold">Create Event & Configure Days</strong>
+                Define dates, auto-derive sequential days (Day 1, Day 2), and set check-in policies.
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-purple-50/60 rounded-lg border border-purple-100">
+              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                2
+              </span>
+              <div>
+                <strong className="text-gray-900 block font-semibold">Generate Passes</strong>
+                Generate sequential pass batches bound to specific event days. Download printable cards with QR codes.
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-purple-50/60 rounded-lg border border-purple-100">
+              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                3
+              </span>
+              <div>
+                <strong className="text-gray-900 block font-semibold">Attendee Public Activation</strong>
+                Attendees scan the pass QR code, submit their name & email, and receive transactional email confirmation.
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-purple-50/60 rounded-lg border border-purple-100">
+              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                4
+              </span>
+              <div>
+                <strong className="text-gray-900 block font-semibold">Gatekeeper Entry Check-In</strong>
+                Gatekeepers scan QR pass at entrance. Multi-day rules permit Day 1 & Day 2 entries separately while blocking duplicates.
+              </div>
+            </div>
           </div>
-          <button className="px-6 py-3 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-colors flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            Create Event
-          </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

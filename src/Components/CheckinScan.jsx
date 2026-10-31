@@ -1,28 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { QrCode, CheckCircle, XCircle, Loader2, X, User, Calendar, Tag } from 'lucide-react';
-import Button from './reusable/button';
-import checkinService from '../Api-Services/checkinService';
-import toast from 'react-hot-toast';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  QrCode,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  User,
+  Calendar,
+  Clock,
+  RefreshCw,
+  ArrowLeft,
+  ShieldAlert,
+  ShieldCheck,
+  Building,
+} from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
+import toast, { Toaster } from 'react-hot-toast';
+import checkinService from '../Api-Services/checkinService';
+import eventsService from '../Api-Services/eventsService';
 
 const CheckinScan = ({ eventId: propEventId }) => {
-  const [scannedData, setScannedData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const { eventId: paramEventId } = useParams();
+  const navigate = useNavigate();
+
+  const [events, setEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState(propEventId || paramEventId || '');
+  const [eventDays, setEventDays] = useState([]);
+  const [selectedDayId, setSelectedDayId] = useState('');
+
   const [isScanning, setIsScanning] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [scannerError, setScannerError] = useState(null);
   const [cameraPermission, setCameraPermission] = useState('unknown');
+
+  const [scanResult, setScanResult] = useState(null); // { success: boolean, data: ..., error: ... }
   const html5QrCodeRef = useRef(null);
 
   const generateRequestId = () => {
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   };
 
-  // Initialize QR scanner on component mount
+  // Load events list for selection if not pre-provided
   useEffect(() => {
-    // Check camera permissions first
-    checkCameraPermission();
+    const fetchEvents = async () => {
+      try {
+        const res = await eventsService.getEvents(0, 50);
+        const list = res.data?.content || [];
+        setEvents(list);
+        if (!selectedEventId && list.length > 0) {
+          setSelectedEventId(list[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load events for check-in:', err);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  // When selected event changes, load its event days
+  useEffect(() => {
+    if (!selectedEventId) {
+      setEventDays([]);
+      setSelectedDayId('');
+      return;
+    }
+
+    const fetchDays = async () => {
+      try {
+        const res = await eventsService.getEventDays(selectedEventId);
+        const days = res.data || [];
+        setEventDays(days);
+
+        if (days.length > 0) {
+          // Try to select today's day if date matches, else default to first day
+          const todayStr = new Date().toISOString().split('T')[0];
+          const matchingDay = days.find((d) => d.eventDate === todayStr);
+          setSelectedDayId(matchingDay ? matchingDay.id : days[0].id);
+        } else {
+          setSelectedDayId('');
+        }
+      } catch (err) {
+        console.error('Failed to load event days:', err);
+      }
+    };
+
+    fetchDays();
+  }, [selectedEventId]);
+
+  // Cleanup scanner on unmount
+  useEffect(() => {
     return () => {
       stopScanner();
     };
@@ -30,74 +97,64 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   const checkCameraPermission = async () => {
     try {
-      // Check if running on HTTPS or localhost
-      const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isSecure =
+        window.isSecureContext ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
 
-      if (!isSecureContext) {
-        setScannerError('Camera access requires HTTPS. Please use HTTPS or localhost. Current connection is not secure.');
-        setIsScanning(false);
-        return;
+      if (!isSecure) {
+        setScannerError('Camera access requires HTTPS or localhost context.');
+        return false;
       }
 
-      // Request camera permission
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      stream.getTracks().forEach(track => track.stop());
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
+      stream.getTracks().forEach((t) => t.stop());
       setCameraPermission('granted');
-      // Start scanner after permission granted
-      startScanner();
+      return true;
     } catch (err) {
       console.error('Camera permission error:', err);
       setCameraPermission('denied');
-      setScannerError('Camera permission denied. Please allow camera access in browser settings and try again.');
-      setIsScanning(false);
+      setScannerError('Camera permission denied. Please allow camera permissions.');
+      return false;
     }
   };
 
-  // Initialize QR scanner
   const startScanner = async () => {
+    setScanResult(null);
+    setScannerError(null);
+
+    const hasPermission = await checkCameraPermission();
+    if (!hasPermission) return;
+
     try {
       setIsScanning(true);
-      setScannerError(null);
-      setScannedData(null);
-      setResult(null);
-      setError(null);
 
       if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode("qr-reader");
+        html5QrCodeRef.current = new Html5Qrcode('qr-reader');
       }
 
-      // Mobile-optimized camera configuration
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
+      const qrConfig = {
+        fps: 12,
+        qrbox: { width: 260, height: 260 },
         aspectRatio: 1.0,
       };
 
-      // Use rear camera (environment) for mobile devices
-      const cameraConfig = {
-        facingMode: "environment",
-      };
-
-      console.log('Starting scanner with config:', config);
       await html5QrCodeRef.current.start(
-        cameraConfig,
-        config,
-        (decodedText, decodedResult) => {
-          console.log('QR code scanned:', decodedText);
-          // QR code scanned successfully
-          handleScanSuccess(decodedText);
+        { facingMode: 'environment' },
+        qrConfig,
+        (decodedText) => {
+          handleScannedData(decodedText);
         },
-        (errorMessage) => {
-          // Ignore scanning errors, they're normal during scanning
-          console.log('Scanning error (normal):', errorMessage);
+        () => {
+          // normal frame scan error, ignore
         }
       );
-      console.log('Scanner started successfully');
     } catch (err) {
       console.error('Scanner start error:', err);
-      setScannerError("Unable to start camera. Please check camera permissions and try again.");
+      setScannerError('Failed to start camera. Please verify device camera.');
       setIsScanning(false);
-      toast.error("Failed to start camera. Please allow camera access.");
     }
   };
 
@@ -108,269 +165,327 @@ const CheckinScan = ({ eventId: propEventId }) => {
       }
       setIsScanning(false);
     } catch (err) {
-      console.error("Failed to stop scanner:", err);
-      console.log("Failed to stop scanner:", err);
+      console.error('Error stopping scanner:', err);
+      setIsScanning(false);
     }
   };
 
-  const handleScanSuccess = (decodedText) => {
-    // Stop scanning after successful scan
-    stopScanner();
+  // Extract rawToken from URL, JSON, or plain text
+  const extractToken = (text) => {
+    if (!text) return '';
+    const trimmed = text.trim();
 
-    // Parse QR code data - expecting JSON with rawToken, eventId
+    // Check if JSON
     try {
-      let parsedData;
-      if (typeof decodedText === 'string') {
-        // Try to parse as JSON
-        try {
-          parsedData = JSON.parse(decodedText);
-        } catch {
-          // If not JSON, treat as raw token
-          parsedData = { rawToken: decodedText };
+      const parsed = JSON.parse(trimmed);
+      if (parsed.rawToken) return parsed.rawToken;
+      if (parsed.token) return parsed.token;
+    } catch {}
+
+    // Check if URL with /activate/:token or ?token=...
+    if (trimmed.includes('http://') || trimmed.includes('https://') || trimmed.includes('/activate')) {
+      try {
+        const url = new URL(trimmed, window.location.origin);
+        const searchToken = url.searchParams.get('token');
+        if (searchToken) return searchToken;
+
+        const pathParts = url.pathname.split('/').filter(Boolean);
+        const activateIdx = pathParts.indexOf('activate');
+        if (activateIdx !== -1 && pathParts[activateIdx + 1]) {
+          return pathParts[activateIdx + 1];
         }
-      } else {
-        parsedData = decodedText;
-      }
-
-      setScannedData({
-        rawToken: parsedData.rawToken || parsedData.token || decodedText,
-        eventId: parsedData.eventId || propEventId || '',
-        requestId: generateRequestId(),
-      });
-
-      toast.success("QR code scanned successfully!");
-    } catch (err) {
-      setError({ message: "Invalid QR code format" });
-      toast.error("Invalid QR code format");
+      } catch {}
     }
+
+    return trimmed;
   };
 
-  const handleCheckIn = async () => {
-    if (!scannedData) return;
+  const handleScannedData = async (rawDecoded) => {
+    // Immediately stop scanner to prevent multiple triggers
+    await stopScanner();
+
+    const token = extractToken(rawDecoded);
+    if (!token) {
+      toast.error('Scanned QR does not contain a valid token');
+      setScanResult({
+        success: false,
+        errorCode: 'INVALID_TOKEN',
+        message: 'Scanned QR code does not contain a recognizable token.',
+      });
+      return;
+    }
+
+    if (!selectedEventId) {
+      toast.error('Please select an event before scanning');
+      setScanResult({
+        success: false,
+        errorCode: 'NO_EVENT',
+        message: 'No event selected. Please choose the event you are scanning for.',
+      });
+      return;
+    }
 
     setLoading(true);
-    setError(null);
-    setResult(null);
 
     try {
       const response = await checkinService.scanCheckin(
-        scannedData.rawToken,
-        scannedData.eventId,
-        scannedData.requestId
+        token,
+        selectedEventId,
+        selectedDayId || null,
+        generateRequestId()
       );
 
-      setResult(response);
-      toast.success('Check-in successful!');
-
-      // Prepare for next student after 2 seconds
-      setTimeout(() => {
-        setScannedData(null);
-        setResult(null);
-        setError(null);
-        startScanner();
-      }, 2000);
+      const checkInData = response.data || response;
+      setScanResult({
+        success: true,
+        data: checkInData,
+      });
+      toast.success(`Check-in Approved: ${checkInData.attendeeName || 'Attendee'}`);
     } catch (err) {
-      setError(err);
-      toast.error(err.message || 'Check-in failed');
+      console.error('Check-in rejected:', err);
+      const code = err.errorCode || err.response?.data?.errorCode || 'CHECKIN_REJECTED';
+      const msg = err.message || err.response?.data?.message || 'Check-in failed.';
+      setScanResult({
+        success: false,
+        errorCode: code,
+        message: msg,
+      });
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRescan = () => {
-    setScannedData(null);
-    setResult(null);
-    setError(null);
+  const handleNextScan = () => {
+    setScanResult(null);
     startScanner();
   };
 
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4 md:p-6">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-center gap-3 mb-4 md:mb-6">
-          <div className="p-2 md:p-3 bg-purple-100 rounded-lg">
-            <QrCode className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 md:p-6 flex flex-col items-center">
+      <Toaster position="top-right" />
+
+      {/* Header */}
+      <div className="w-full max-w-lg flex items-center justify-between mb-4">
+        <button
+          onClick={() => navigate('/admin')}
+          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-white/10 px-3 py-1.5 rounded-lg transition"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Admin</span>
+        </button>
+        <div className="text-center">
+          <h1 className="text-xl font-bold flex items-center justify-center gap-2">
+            <QrCode className="w-6 h-6 text-purple-400" /> Gate Check-In
+          </h1>
+          <p className="text-xs text-gray-400">Mobile Scanner & Verification</p>
+        </div>
+        <div className="w-16"></div>
+      </div>
+
+      <div className="w-full max-w-lg space-y-4">
+        {/* Controls: Event & Day Selection */}
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Check-in Scan</h1>
-            <p className="text-xs md:text-sm text-gray-600">Scan QR code to check in</p>
+            <label className="text-xs text-gray-300 font-semibold block mb-1">
+              Select Event
+            </label>
+            <select
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+              disabled={isScanning || loading}
+              className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.name} ({ev.eventCode})
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Event Day Selector for Multi-day Check-in */}
+          {eventDays.length > 0 && (
+            <div>
+              <label className="text-xs text-gray-300 font-semibold block mb-1">
+                Checking In For Day
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {eventDays.map((day) => {
+                  const isSelected = selectedDayId === day.id;
+                  return (
+                    <button
+                      key={day.id}
+                      type="button"
+                      disabled={isScanning || loading}
+                      onClick={() => setSelectedDayId(day.id)}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition border ${
+                        isSelected
+                          ? 'bg-purple-600 text-white border-purple-400 shadow-md ring-2 ring-purple-300'
+                          : 'bg-slate-800/80 text-gray-300 border-slate-700 hover:bg-slate-700'
+                      }`}
+                    >
+                      <div>Day {day.dayNumber}</div>
+                      <div className="text-[10px] opacity-75 font-normal truncate">
+                        {day.eventDate || day.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* QR Scanner - Shows when scanning */}
-        {isScanning && (
-          <div className="bg-gray-900 rounded-xl overflow-hidden shadow-lg">
-            <div className="flex justify-between items-center p-3 bg-gray-800">
-              <h3 className="font-semibold text-white text-sm md:text-base">Scanning...</h3>
-              <Button
-                type="button"
-                variant="danger"
-                onClick={stopScanner}
-                className="px-3 py-1 md:px-4 md:py-2 text-sm"
-              >
-                <X className="h-4 w-4 mr-1" />
-              </Button>
-            </div>
+        {/* SCANNER VIEWPORT */}
+        {!scanResult && (
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-col items-center">
+            {/* The html5-qrcode reader div */}
             <div
               id="qr-reader"
-              className="w-full"
-              style={{ minHeight: '300px', maxHeight: '500px' }}
-            ></div>
+              className={`w-full max-w-[320px] aspect-square rounded-xl overflow-hidden bg-black/40 border-2 ${
+                isScanning ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-dashed border-gray-600'
+              } flex items-center justify-center`}
+            >
+              {!isScanning && (
+                <div className="text-center p-6 text-gray-400">
+                  <QrCode className="w-16 h-16 mx-auto mb-3 opacity-40 text-purple-300" />
+                  <p className="text-sm font-medium">Camera is ready</p>
+                  <p className="text-xs text-gray-500 mt-1">Tap below to activate camera scanner</p>
+                </div>
+              )}
+            </div>
+
             {scannerError && (
-              <div className="p-3 bg-red-900 text-red-100 text-sm">
-                {scannerError}
+              <div className="mt-3 text-red-400 text-xs flex items-center gap-1.5 text-center">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{scannerError}</span>
               </div>
             )}
-            <div className="p-3 bg-gray-800 text-gray-300 text-xs text-center">
-              Point camera at QR code
-            </div>
-          </div>
-        )}
 
-        {/* Fallback: Scanner not started or failed */}
-        {!isScanning && !scannedData && !result && !error && (
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
-            {scannerError ? (
-              <>
-                <XCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
-                <p className="text-sm text-red-800 mb-4">{scannerError}</p>
-              </>
-            ) : (
-              <>
-                <Loader2 className="h-12 w-12 text-purple-600 mx-auto mb-3 animate-spin" />
-                <p className="text-sm text-gray-600 mb-4">Initializing camera...</p>
-              </>
-            )}
-            <Button
-              type="button"
-              variant="success"
-              onClick={startScanner}
-              className="w-full py-3 text-base"
-            >
-              <QrCode className="mr-2 h-5 w-5" />
-              Start Scanner
-            </Button>
-          </div>
-        )}
-
-        {/* Scanned Data Display - Shows after successful scan */}
-        {scannedData && !result && !error && (
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <User className="h-5 w-5 text-purple-600" />
-              <h3 className="font-semibold text-gray-900">Scanned Pass Details</h3>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <Tag className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500">QR Token</p>
-                  <p className="text-sm font-mono text-gray-900 break-all">
-                    {scannedData.rawToken.substring(0, 20)}...
-                  </p>
-                </div>
-              </div>
-
-              {scannedData.eventId && (
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Event ID</p>
-                    <p className="text-sm font-mono text-gray-900 break-all">
-                      {scannedData.eventId}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Button
-              type="button"
-              variant="success"
-              onClick={handleCheckIn}
-              disabled={loading}
-              className="w-full py-3 text-base"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  Check In
-                </>
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="neutral"
-              onClick={handleRescan}
-              disabled={loading}
-              className="w-full mt-3 py-3 text-base"
-            >
-              Rescan
-            </Button>
-          </div>
-        )}
-
-        {/* Success Result */}
-        {result && (
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-green-900 text-lg mb-2">Check-in Successful!</h3>
-                <div className="text-sm text-green-800 space-y-1">
-                  {result.data && (
-                    <>
-                      {result.data.attendeeName && (
-                        <p><strong>Attendee:</strong> {result.data.attendeeName}</p>
-                      )}
-                      {result.data.passType && (
-                        <p><strong>Pass Type:</strong> {result.data.passType}</p>
-                      )}
-                      {result.data.timestamp && (
-                        <p><strong>Time:</strong> {new Date(result.data.timestamp).toLocaleString()}</p>
-                      )}
-                    </>
-                  )}
-                </div>
-                <p className="mt-3 text-xs text-green-600">Preparing for next student...</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Result */}
-        {error && (
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-            <div className="flex items-start gap-3">
-              <XCircle className="h-8 w-8 text-red-600 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-red-900 text-lg mb-2">Check-in Failed</h3>
-                <p className="text-sm text-red-800 mb-3">
-                  {error.message || 'An error occurred during check-in'}
-                </p>
-                {error.error && (
-                  <p className="text-xs text-red-600 font-mono break-all mb-4">
-                    Error: {error.error}
-                  </p>
-                )}
-                <Button
+            <div className="mt-4 w-full">
+              {!isScanning ? (
+                <button
                   type="button"
-                  variant="neutral"
-                  onClick={handleRescan}
-                  className="w-full py-3 text-base"
+                  onClick={startScanner}
+                  disabled={loading || !selectedEventId}
+                  className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2"
                 >
-                  Try Again
-                </Button>
+                  <QrCode className="w-5 h-5" /> Start QR Scanner
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stopScanner}
+                  className="w-full py-3 px-6 bg-red-600/80 hover:bg-red-700 text-white font-semibold rounded-xl transition"
+                >
+                  Stop Scanner
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* LOADING INDICATOR */}
+        {loading && (
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/10 text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-purple-400 mx-auto mb-3" />
+            <h3 className="font-bold text-lg text-white">Validating Pass...</h3>
+            <p className="text-sm text-gray-300">Checking authorization, token authenticity, and day validity.</p>
+          </div>
+        )}
+
+        {/* SCAN RESULT: SUCCESS */}
+        {scanResult && scanResult.success && (
+          <div className="bg-emerald-950/90 border-2 border-emerald-400 rounded-2xl p-6 text-center space-y-4 shadow-2xl shadow-emerald-900/50">
+            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-400">
+              <CheckCircle className="w-10 h-10" />
+            </div>
+
+            <div>
+              <span className="bg-emerald-500 text-black text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                APPROVED ENTRY
+              </span>
+              <h2 className="text-2xl font-black text-white mt-2">
+                {scanResult.data?.attendeeName || 'Attendee'}
+              </h2>
+              <p className="text-emerald-300 text-xs">{scanResult.data?.attendeeEmail}</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 text-left text-xs space-y-2 border border-emerald-500/30">
+              <div className="flex justify-between items-center pb-2 border-b border-emerald-500/20">
+                <span className="text-gray-400">Pass Number:</span>
+                <span className="font-mono font-bold text-white text-sm">{scanResult.data?.passNumber}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-emerald-500/20">
+                <span className="text-gray-400">Permitted Entry:</span>
+                <span className="font-bold text-emerald-300">
+                  {scanResult.data?.eventDayLabel || `Day ${scanResult.data?.dayNumber || 1}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-emerald-500/20">
+                <span className="text-gray-400">Check-in Time:</span>
+                <span className="text-white">
+                  {scanResult.data?.checkedInAt
+                    ? new Date(scanResult.data.checkedInAt).toLocaleTimeString()
+                    : new Date().toLocaleTimeString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Verified By:</span>
+                <span className="text-gray-300">{scanResult.data?.checkedInByName || 'Gatekeeper'}</span>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleNextScan}
+              className="w-full py-3.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-5 h-5" /> Scan Next Attendee
+            </button>
+          </div>
+        )}
+
+        {/* SCAN RESULT: REJECTED */}
+        {scanResult && !scanResult.success && (
+          <div className="bg-rose-950/90 border-2 border-rose-500 rounded-2xl p-6 text-center space-y-4 shadow-2xl shadow-rose-900/50">
+            <div className="w-16 h-16 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto border border-rose-400">
+              <XCircle className="w-10 h-10" />
+            </div>
+
+            <div>
+              <span className="bg-rose-500 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                ENTRY REJECTED
+              </span>
+              <h2 className="text-xl font-bold text-white mt-2">
+                {scanResult.errorCode === 'PASS_ALREADY_CHECKED_IN'
+                  ? 'Already Checked In!'
+                  : scanResult.errorCode === 'PASS_NOT_ACTIVATED'
+                  ? 'Pass Not Activated'
+                  : scanResult.errorCode === 'PASS_NOT_VALID_FOR_DAY'
+                  ? 'Pass Invalid For This Day'
+                  : 'Check-In Denied'}
+              </h2>
+              <p className="text-rose-300 text-xs mt-1 max-w-xs mx-auto">
+                {scanResult.message}
+              </p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-3 text-left text-xs border border-rose-500/30">
+              <span className="text-gray-400">Error Code: </span>
+              <span className="font-mono text-rose-300 font-bold">{scanResult.errorCode}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNextScan}
+              className="w-full py-3.5 px-6 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-5 h-5" /> Try Scanning Again
+            </button>
           </div>
         )}
       </div>
