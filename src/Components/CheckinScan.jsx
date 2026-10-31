@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   QrCode,
@@ -19,6 +19,9 @@ import {
   Camera,
   CameraOff,
   Check,
+  HelpCircle,
+  Lightbulb,
+  ExternalLink,
 } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import toast from 'react-hot-toast';
@@ -43,6 +46,138 @@ const SCAN_STATES = {
   ERROR: 'ERROR',
 };
 
+const ERROR_CONFIGS = {
+  EVENT_ACCESS_DENIED: {
+    title: 'Event Access Denied',
+    explanation: 'You do not have permission or an active gatekeeper assignment for this event.',
+    action: 'Please select an event you are assigned to, or request a Super Admin to assign you as a gatekeeper.',
+    severity: 'warning',
+    color: 'amber',
+  },
+  PASS_EVENT_MISMATCH: {
+    title: 'Pass Belongs to Different Event',
+    explanation: 'This pass was generated for a different event than the one currently selected in the scanner.',
+    action: 'Check the event name printed on the physical pass and choose that event from the dropdown selector.',
+    severity: 'danger',
+    color: 'rose',
+  },
+  PASS_NOT_ACTIVATED: {
+    title: 'Pass Not Activated',
+    explanation: 'The attendee has not completed registration or activated this pass yet.',
+    action: 'Ask the attendee to scan the pass QR code with their mobile camera to complete registration.',
+    severity: 'warning',
+    color: 'amber',
+  },
+  PASS_ALREADY_CHECKED_IN: {
+    title: 'Pass Already Checked In',
+    explanation: 'This pass has already been admitted for this day or session. Duplicate entry is not permitted.',
+    action: 'Check the admission timestamp or verify attendee identity if re-entry assistance is needed.',
+    severity: 'warning',
+    color: 'orange',
+  },
+  PASS_REVOKED: {
+    title: 'Pass Revoked',
+    explanation: 'This pass has been cancelled or invalidated by event administration.',
+    action: 'Entry cannot be granted. Direct the attendee to event support or customer helpdesk.',
+    severity: 'danger',
+    color: 'red',
+  },
+  PASS_NOT_VALID_FOR_DAY: {
+    title: 'Not Valid for Today',
+    explanation: 'This pass does not include entry permission for this specific day or session.',
+    action: 'Review the permitted event days listed on the pass or switch the active check-in day if appropriate.',
+    severity: 'warning',
+    color: 'amber',
+  },
+  INVALID_QR_TOKEN: {
+    title: 'Invalid Pass QR Code',
+    explanation: 'The scanned code is not recognized as a valid EventPass credential.',
+    action: 'Ensure the QR code is clearly lit and undamaged, or manually enter the pass identifier.',
+    severity: 'danger',
+    color: 'rose',
+  },
+  NO_EVENT_SELECTED: {
+    title: 'No Event Selected',
+    explanation: 'An active event must be chosen before scanning passes.',
+    action: 'Select an event from the top event selector.',
+    severity: 'info',
+    color: 'blue',
+  },
+  VERIFICATION_FAILED: {
+    title: 'Verification Failed',
+    explanation: 'The pass could not be verified against the server.',
+    action: 'Check network connectivity and scan the pass again.',
+    severity: 'danger',
+    color: 'rose',
+  },
+};
+
+const getScanErrorDisplay = (code, rawMessage) => {
+  const normalizedCode = (code || '').toUpperCase().trim();
+  if (ERROR_CONFIGS[normalizedCode]) {
+    return {
+      code: normalizedCode,
+      ...ERROR_CONFIGS[normalizedCode],
+      rawMessage,
+    };
+  }
+
+  // Fallback heuristic detection if raw server message matches known patterns
+  const lowerMsg = (rawMessage || '').toLowerCase();
+  if (lowerMsg.includes('not authorized') || lowerMsg.includes('access denied')) {
+    return {
+      code: 'EVENT_ACCESS_DENIED',
+      ...ERROR_CONFIGS.EVENT_ACCESS_DENIED,
+      rawMessage,
+    };
+  }
+  if (lowerMsg.includes('different event') || lowerMsg.includes('mismatch')) {
+    return {
+      code: 'PASS_EVENT_MISMATCH',
+      ...ERROR_CONFIGS.PASS_EVENT_MISMATCH,
+      rawMessage,
+    };
+  }
+  if (lowerMsg.includes('not activated')) {
+    return {
+      code: 'PASS_NOT_ACTIVATED',
+      ...ERROR_CONFIGS.PASS_NOT_ACTIVATED,
+      rawMessage,
+    };
+  }
+  if (lowerMsg.includes('already checked in')) {
+    return {
+      code: 'PASS_ALREADY_CHECKED_IN',
+      ...ERROR_CONFIGS.PASS_ALREADY_CHECKED_IN,
+      rawMessage,
+    };
+  }
+  if (lowerMsg.includes('revoked')) {
+    return {
+      code: 'PASS_REVOKED',
+      ...ERROR_CONFIGS.PASS_REVOKED,
+      rawMessage,
+    };
+  }
+  if (lowerMsg.includes('not valid for') || lowerMsg.includes('day')) {
+    return {
+      code: 'PASS_NOT_VALID_FOR_DAY',
+      ...ERROR_CONFIGS.PASS_NOT_VALID_FOR_DAY,
+      rawMessage,
+    };
+  }
+
+  return {
+    code: normalizedCode || 'VERIFICATION_FAILED',
+    title: 'Scan Notice',
+    explanation: rawMessage || 'Pass verification could not be completed.',
+    action: 'Please verify the pass details and try scanning again.',
+    severity: 'danger',
+    color: 'rose',
+    rawMessage,
+  };
+};
+
 const CheckinScan = ({ eventId: propEventId }) => {
   const { eventId: paramEventId } = useParams();
   const navigate = useNavigate();
@@ -52,6 +187,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const [selectedEventId, setSelectedEventId] = useState(propEventId || paramEventId || '');
   const [eventDays, setEventDays] = useState([]);
   const [selectedDayId, setSelectedDayId] = useState('');
+  const [eventSearch, setEventSearch] = useState('');
 
   // State Machine
   const [scanState, setScanState] = useState(SCAN_STATES.IDLE);
@@ -59,6 +195,23 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const [checkInResult, setCheckInResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [errorCode, setErrorCode] = useState(null);
+
+  // Computed error presentation
+  const errorDisplay = useMemo(() => {
+    if (!errorCode && !errorMessage) return null;
+    return getScanErrorDisplay(errorCode, errorMessage);
+  }, [errorCode, errorMessage]);
+
+  // Filtered events for quick searchable dropdown
+  const filteredEvents = useMemo(() => {
+    if (!eventSearch.trim()) return events;
+    const q = eventSearch.toLowerCase().trim();
+    return events.filter(
+      (ev) =>
+        ev.name?.toLowerCase().includes(q) ||
+        ev.eventCode?.toLowerCase().includes(q)
+    );
+  }, [events, eventSearch]);
 
   // Scanner UI & Camera
   const [isScanning, setIsScanning] = useState(false);
@@ -96,7 +249,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
       try {
         const parsed = JSON.parse(trimmed);
         return parsed.passNumber || parsed.token || parsed.rawToken || parsed.passId || trimmed;
-      } catch {}
+      } catch { }
     }
 
     // 2. URL
@@ -105,9 +258,9 @@ const CheckinScan = ({ eventId: propEventId }) => {
         const url = new URL(trimmed, window.location.origin);
         // Query param
         const queryPass = url.searchParams.get('passNumber') ||
-                          url.searchParams.get('token') ||
-                          url.searchParams.get('rawToken') ||
-                          url.searchParams.get('passId');
+          url.searchParams.get('token') ||
+          url.searchParams.get('rawToken') ||
+          url.searchParams.get('passId');
         if (queryPass) return queryPass;
 
         // Path /activate/{token}
@@ -120,7 +273,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
         if (passIdx !== -1 && parts[passIdx + 1]) {
           return decodeURIComponent(parts[passIdx + 1]);
         }
-      } catch {}
+      } catch { }
     }
 
     return trimmed;
@@ -444,7 +597,28 @@ const CheckinScan = ({ eventId: propEventId }) => {
         {/* Controls: Event & Day Selection */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3">
           <div>
-            <label className="text-xs text-gray-300 font-semibold block mb-1">Select Event</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs text-gray-300 font-semibold block">Select Event</label>
+              {events.length > 5 && (
+                <span className="text-[10px] text-gray-400">
+                  {filteredEvents.length} of {events.length} events
+                </span>
+              )}
+            </div>
+
+            {events.length > 5 && (
+              <div className="relative mb-2">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Filter events by name or code..."
+                  value={eventSearch}
+                  onChange={(e) => setEventSearch(e.target.value)}
+                  className="w-full bg-slate-900/80 text-white placeholder-gray-500 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+            )}
+
             <select
               value={selectedEventId}
               onChange={(e) => {
@@ -456,7 +630,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
               disabled={scanState === SCAN_STATES.PROCESSING || scanState === SCAN_STATES.CHECKING_IN}
               className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              {events.map((ev) => (
+              {filteredEvents.map((ev) => (
                 <option key={ev.id} value={ev.id}>
                   {ev.name} ({ev.eventCode})
                 </option>
@@ -467,9 +641,16 @@ const CheckinScan = ({ eventId: propEventId }) => {
           {/* Event Day Selector for Multi-day Check-in */}
           {eventDays.length > 0 && (
             <div>
-              <label className="text-xs text-gray-300 font-semibold block mb-1">
-                Active Check-In Day
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-gray-300 font-semibold block">
+                  Active Check-In Day
+                </label>
+                {selectedEvent?.timezone && (
+                  <span className="text-[10px] text-gray-400 font-mono">
+                    TZ: {selectedEvent.timezone}
+                  </span>
+                )}
+              </div>
               <select
                 value={selectedDayId}
                 onChange={(e) => setSelectedDayId(e.target.value)}
@@ -491,14 +672,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
             <button
               type="button"
               onClick={() => setAutoCheckIn(!autoCheckIn)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                autoCheckIn ? 'bg-purple-600' : 'bg-slate-700'
-              }`}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${autoCheckIn ? 'bg-purple-600' : 'bg-slate-700'
+                }`}
             >
               <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                  autoCheckIn ? 'translate-x-4' : 'translate-x-1'
-                }`}
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${autoCheckIn ? 'translate-x-4' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>
@@ -608,15 +787,14 @@ const CheckinScan = ({ eventId: propEventId }) => {
           <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl animate-fade-in">
             {/* Header Status Banner */}
             <div
-              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${
-                verificationResult.eligibleForCheckIn
+              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${verificationResult.eligibleForCheckIn
                   ? 'bg-emerald-600 text-white'
                   : verificationResult.status === 'NOT_ACTIVATED'
-                  ? 'bg-amber-600 text-white'
-                  : verificationResult.status === 'ALREADY_CHECKED_IN'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-rose-600 text-white'
-              }`}
+                    ? 'bg-amber-600 text-white'
+                    : verificationResult.status === 'ALREADY_CHECKED_IN'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-rose-600 text-white'
+                }`}
             >
               {verificationResult.eligibleForCheckIn ? (
                 <>
@@ -765,30 +943,89 @@ const CheckinScan = ({ eventId: propEventId }) => {
         )}
 
         {/* ERROR STATE */}
-        {scanState === SCAN_STATES.ERROR && (
-          <div className="bg-slate-800 rounded-2xl border border-red-500/50 p-6 text-center space-y-4 shadow-2xl animate-fade-in">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-400">
-              <XCircle className="w-10 h-10" />
+        {scanState === SCAN_STATES.ERROR && errorDisplay && (
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 text-center space-y-4 shadow-2xl animate-fade-in">
+            {/* Status Icon */}
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${errorDisplay.severity === 'danger'
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                  : errorDisplay.severity === 'warning'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                }`}
+            >
+              {errorDisplay.severity === 'danger' ? (
+                <XCircle className="w-9 h-9" />
+              ) : errorDisplay.severity === 'warning' ? (
+                <AlertTriangle className="w-9 h-9" />
+              ) : (
+                <HelpCircle className="w-9 h-9" />
+              )}
             </div>
 
+            {/* Title & Code Badge */}
             <div>
-              <h2 className="text-lg font-bold text-white">Scan Notice</h2>
-              <span className="text-[11px] text-red-400 font-mono block mt-1">
-                [{errorCode || 'ERROR'}]
+              <h2 className="text-lg font-bold text-white">{errorDisplay.title}</h2>
+              <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-900 border border-slate-700 text-purple-300">
+                [{errorDisplay.code}]
               </span>
             </div>
 
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-xs text-red-200 text-left">
-              {errorMessage || 'Unable to complete pass scan.'}
+            {/* Explanation Card */}
+            <div
+              className={`rounded-xl p-3.5 text-xs text-left ${errorDisplay.severity === 'danger'
+                  ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
+                  : errorDisplay.severity === 'warning'
+                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                    : 'bg-blue-500/10 border border-blue-500/20 text-blue-200'
+                }`}
+            >
+              <p className="leading-relaxed">{errorDisplay.explanation}</p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleResetScanner}
-              className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Try Again / Scan Next Pass
-            </button>
+            {/* Action Guidance Card */}
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 text-left text-xs space-y-1">
+              <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-xs">
+                <Lightbulb className="w-4 h-4 shrink-0" />
+                <span>Recommended Action</span>
+              </div>
+              <p className="text-gray-300 pl-5 leading-relaxed">{errorDisplay.action}</p>
+            </div>
+
+            {/* Contextual Action Shortcut */}
+            {errorDisplay.code === 'PASS_NOT_ACTIVATED' && (
+              <a
+                href="/activate"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 bg-amber-600/30 hover:bg-amber-600/40 border border-amber-500/40 text-amber-200 rounded-xl text-xs font-semibold transition"
+              >
+                <span>Open Pass Activation Portal</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+
+            {/* Reset / Retry Button */}
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handleResetScanner}
+                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-lg"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Try Again / Scan Next Pass
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetScanner();
+                  // Scroll to manual input
+                }}
+                className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-gray-300 rounded-xl text-xs transition"
+              >
+                Manual Entry
+              </button>
+            </div>
           </div>
         )}
       </div>
