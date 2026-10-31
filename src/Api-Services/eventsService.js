@@ -105,6 +105,34 @@ export const eventsService = {
     }
   },
 
+  // Search eligible gatekeeper users to assign
+  searchEligibleGatekeepers: async (eventId, query = '', page = 0, size = 10) => {
+    try {
+      const params = { query, page, size };
+      const response = await axiosInstance.get(
+        API_ROUTES.EVENTS.ELIGIBLE_GATEKEEPERS.replace(':id', eventId),
+        { params }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Create and immediately assign a new gatekeeper
+  createAndAssignGatekeeper: async (eventId, gatekeeperData) => {
+    try {
+      const response = await axiosInstance.post(
+        API_ROUTES.EVENTS.CREATE_AND_ASSIGN_GATEKEEPER.replace(':id', eventId),
+        gatekeeperData
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Assign existing user as gatekeeper
   assignGatekeeper: async (eventId, userId) => {
     try {
       const response = await axiosInstance.post(
@@ -117,6 +145,7 @@ export const eventsService = {
     }
   },
 
+  // Remove gatekeeper
   removeGatekeeper: async (eventId, userId) => {
     try {
       const response = await axiosInstance.delete(

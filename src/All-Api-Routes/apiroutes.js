@@ -19,6 +19,8 @@ const API_ROUTES = {
     GATEKEEPERS: '/events/:id/gatekeepers',
     ASSIGN_GATEKEEPER: '/events/:id/gatekeepers',
     REMOVE_GATEKEEPER: '/events/:id/gatekeepers/:userId',
+    ELIGIBLE_GATEKEEPERS: '/events/:id/gatekeepers/eligible',
+    CREATE_AND_ASSIGN_GATEKEEPER: '/events/:id/gatekeepers/create-and-assign',
   },
 
   // Pass Management Endpoints
@@ -34,6 +36,8 @@ const API_ROUTES = {
     TEMPLATE: '/passes/bulk-activation/template',
     BULK_PREVIEW: '/passes/event/:eventId/bulk-activation/preview',
     BULK_CONFIRM: '/passes/event/:eventId/bulk-activation/confirm',
+    VALIDITY: '/passes/event/:eventId/validity',
+    SINGLE_VALIDITY: '/passes/:id/validity',
   },
 
   // Check-in Management Endpoints

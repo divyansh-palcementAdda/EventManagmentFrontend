@@ -487,11 +487,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.name}
                     aria-describedby={errors.name ? 'name-error' : undefined}
-                    className={`w-full text-sm rounded-lg transition-colors border ${
-                      errors.name
+                    className={`w-full text-sm rounded-lg transition-colors border ${errors.name
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.name && (
@@ -521,11 +520,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.eventCode}
                     aria-describedby={errors.eventCode ? 'eventCode-error' : 'eventCode-helper'}
-                    className={`w-full font-mono text-sm uppercase rounded-lg transition-colors border ${
-                      errors.eventCode
+                    className={`w-full font-mono text-sm uppercase rounded-lg transition-colors border ${errors.eventCode
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.eventCode ? (
@@ -558,11 +556,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     maxLength={300}
                     disabled={isSubmitting}
                     aria-invalid={!!errors.venue}
-                    className={`w-full text-sm rounded-lg transition-colors border ${
-                      errors.venue
+                    className={`w-full text-sm rounded-lg transition-colors border ${errors.venue
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.venue && (
@@ -591,11 +588,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                   maxLength={2000}
                   disabled={isSubmitting}
                   placeholder="Provide brief details about this event..."
-                  className={`w-full text-sm rounded-lg transition-colors border ${
-                    errors.description
+                  className={`w-full text-sm rounded-lg transition-colors border ${errors.description
                       ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                       : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                  } p-3 shadow-xs resize-y min-h-[72px]`}
+                    } p-3 shadow-xs resize-y min-h-[72px]`}
                 />
                 {errors.description && (
                   <p id="description-error" className="mt-1 text-xs text-red-600 font-medium">
@@ -632,11 +628,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.startsAt}
                     aria-describedby={errors.startsAt ? 'startsAt-error' : undefined}
-                    className={`w-full text-sm rounded-lg transition-colors border ${
-                      errors.startsAt
+                    className={`w-full text-sm rounded-lg transition-colors border ${errors.startsAt
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.startsAt && (
@@ -665,11 +660,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.endsAt}
                     aria-describedby={errors.endsAt ? 'endsAt-error' : undefined}
-                    className={`w-full text-sm rounded-lg transition-colors border ${
-                      errors.endsAt
+                    className={`w-full text-sm rounded-lg transition-colors border ${errors.endsAt
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.endsAt && (
@@ -776,11 +770,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.maximumPasses}
                     aria-describedby={errors.maximumPasses ? 'maximumPasses-error' : undefined}
-                    className={`w-full text-sm rounded-lg transition-colors border ${
-                      errors.maximumPasses
+                    className={`w-full text-sm rounded-lg transition-colors border ${errors.maximumPasses
                         ? 'border-red-400 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                         : 'border-gray-300 bg-white text-gray-900 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 hover:border-gray-400'
-                    } pl-10 pr-3.5 py-2.5 shadow-xs`}
+                      } pl-10 pr-3.5 py-2.5 shadow-xs`}
                   />
                 </div>
                 {errors.maximumPasses && (
@@ -817,9 +810,8 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                       value={formData.activationStartsAt}
                       onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`w-full text-xs rounded-lg border ${
-                        errors.activationStartsAt ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
-                      } px-3 py-2 shadow-xs`}
+                      className={`w-full text-xs rounded-lg border ${errors.activationStartsAt ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
+                        } px-3 py-2 shadow-xs`}
                     />
                     {errors.activationStartsAt && (
                       <p className="mt-1 text-xs text-red-600 font-medium">{errors.activationStartsAt}</p>
@@ -838,9 +830,8 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
                       onChange={handleChange}
                       min={formData.activationStartsAt || undefined}
                       disabled={isSubmitting}
-                      className={`w-full text-xs rounded-lg border ${
-                        errors.activationEndsAt ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
-                      } px-3 py-2 shadow-xs`}
+                      className={`w-full text-xs rounded-lg border ${errors.activationEndsAt ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
+                        } px-3 py-2 shadow-xs`}
                     />
                     {errors.activationEndsAt && (
                       <p className="mt-1 text-xs text-red-600 font-medium">{errors.activationEndsAt}</p>

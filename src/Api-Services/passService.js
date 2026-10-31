@@ -15,10 +15,15 @@ export const passService = {
     }
   },
 
-  // List passes for an event
-  getPassesByEvent: async (eventId, page = 0, size = 20) => {
+  // List passes for an event with support for full server-side search, filters, and pagination
+  getPassesByEvent: async (eventId, pageOrParams = 0, maybeSize = 20) => {
     try {
-      const params = { page, size };
+      let params = {};
+      if (typeof pageOrParams === 'object' && pageOrParams !== null) {
+        params = pageOrParams;
+      } else {
+        params = { page: pageOrParams, size: maybeSize };
+      }
       const response = await axiosInstance.get(
         API_ROUTES.PASSES.LIST_BY_EVENT.replace(':eventId', eventId),
         { params }
@@ -73,6 +78,32 @@ export const passService = {
         API_ROUTES.PASSES.REVOKE.replace(':id', passId),
         null,
         { params: { reason } }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update pass validity in bulk / range / all
+  updatePassValidity: async (eventId, validityData) => {
+    try {
+      const response = await axiosInstance.post(
+        API_ROUTES.PASSES.VALIDITY.replace(':eventId', eventId),
+        validityData
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update single pass validity
+  updateSinglePassValidity: async (passId, validDayIds) => {
+    try {
+      const response = await axiosInstance.put(
+        API_ROUTES.PASSES.SINGLE_VALIDITY.replace(':id', passId),
+        validDayIds
       );
       return response.data;
     } catch (error) {
@@ -151,4 +182,3 @@ export const passService = {
 };
 
 export default passService;
-
