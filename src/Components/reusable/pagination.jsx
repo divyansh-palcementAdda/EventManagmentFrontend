@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange, className = '' }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, className = '', totalElements = 0 }) => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -32,7 +32,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '' }) =
   return (
     <div className={`flex items-center justify-between gap-4 ${className}`}>
       <div className="text-sm text-gray-600 font-medium">
-        Showing page <span className="text-blue-600 font-semibold">{currentPage}</span> of <span className="text-blue-600 font-semibold">{totalPages}</span>
+        {totalElements > 0 ? (
+          <>Total <span className="text-blue-600 font-semibold">{totalElements}</span> attendees</>
+        ) : (
+          <>Showing page <span className="text-blue-600 font-semibold">{currentPage}</span> of <span className="text-blue-600 font-semibold">{totalPages}</span></>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button

@@ -1,47 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Searchbar, Table, Button, DeleteModal } from '../../Components/reusable';
 import AddAndEditUsers from '../../Components/Modals/addUsers/addAndEditUsers';
-import { Plus, Edit, Trash2, Mail, Phone, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Mail, Phone, Shield, RefreshCw, KeyRound } from 'lucide-react';
+import userService from '../../Api-Services/userService';
+import roleService from '../../Api-Services/roleService';
+import toast from 'react-hot-toast';
 
 const AllUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+
+  const [users, setUsers] = useState([]);
+  const [rolesList, setRolesList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+1234567890', role: 'admin', status: 'active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+1234567891', role: 'user', status: 'active' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', phone: '+1234567892', role: 'moderator', status: 'active' },
-    { id: 4, name: 'Sarah Williams', email: 'sarah@example.com', phone: '+1234567893', role: 'user', status: 'inactive' },
-    { id: 5, name: 'David Brown', email: 'david@example.com', phone: '+1234567894', role: 'user', status: 'active' },
-    { id: 6, name: 'Emily Davis', email: 'emily@example.com', phone: '+1234567895', role: 'user', status: 'suspended' },
-    { id: 7, name: 'Robert Wilson', email: 'robert@example.com', phone: '+1234567896', role: 'admin', status: 'active' },
-    { id: 8, name: 'Lisa Anderson', email: 'lisa@example.com', phone: '+1234567897', role: 'moderator', status: 'active' },
-    { id: 9, name: 'James Taylor', email: 'james@example.com', phone: '+1234567898', role: 'user', status: 'active' },
-    { id: 10, name: 'Amanda Martinez', email: 'amanda@example.com', phone: '+1234567899', role: 'user', status: 'inactive' },
-    { id: 11, name: 'Christopher Lee', email: 'chris@example.com', phone: '+1234567800', role: 'user', status: 'active' },
-    { id: 12, name: 'Jessica Garcia', email: 'jessica@example.com', phone: '+1234567801', role: 'moderator', status: 'active' },
-  ]);
 
-  const itemsPerPage = 5;
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const itemsPerPage = 10;
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  // Fetch available roles for filter dropdown
+  useEffect(() => {
+    roleService.getAllRoles()
+      .then((res) => {
+        setRolesList(res?.data || res || []);
+      })
+      .catch((err) => console.error('Failed to load roles list', err));
+  }, []);
+
+  // Fetch users from backend with pagination and filters
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage - 1, // backend is 0-indexed
+        size: itemsPerPage,
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+      };
+      if (searchTerm.trim()) params.search = searchTerm.trim();
+      if (selectedStatus) params.status = selectedStatus;
+      if (selectedRole) params.roleId = selectedRole;
+
+      const res = await userService.getUsers(params);
+      const data = res?.data || res;
+      const content = data?.content || [];
+      const totalPgs = data?.totalPages ?? data?.page?.totalPages ?? 1;
+      const totalEls = data?.totalElements ?? data?.page?.totalElements ?? content.length;
+
+      setUsers(content);
+      setTotalPages(totalPgs > 0 ? totalPgs : 1);
+      setTotalElements(totalEls);
+    } catch (err) {
+      console.error('Failed to fetch users', err);
+      toast.error(err?.message || 'Failed to load system users');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchTerm, selectedStatus, selectedRole]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const handleStatusFilterChange = (e) => {
+    setSelectedStatus(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleRoleFilterChange = (e) => {
+    setSelectedRole(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleAddUser = () => {
@@ -54,96 +99,165 @@ const AllUsers = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = (id) => {
-    setUserToDelete(id);
+  const handleDeleteUser = (user) => {
+    setUserToDelete(user);
     setDeleteModalOpen(true);
   };
 
-  const confirmDeleteUser = () => {
-    setUsers(prev => prev.filter(u => u.id !== userToDelete));
-    setDeleteModalOpen(false);
-    setUserToDelete(null);
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      setActionLoading(true);
+      await userService.deleteUser(userToDelete.id);
+      toast.success('User deleted successfully');
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err) {
+      console.error('Failed to delete user', err);
+      toast.error(err?.message || 'Failed to delete user');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleSaveUser = (formData) => {
-    if (editingUser) {
-      setUsers(prev =>
-        prev.map(u => (u.id === editingUser.id ? { ...formData, id: editingUser.id } : u))
-      );
-    } else {
-      setUsers(prev => [...prev, { ...formData, id: prev.length + 1 }]);
+  const handleSaveUser = async (formData) => {
+    try {
+      setActionLoading(true);
+      if (editingUser) {
+        await userService.updateUser(editingUser.id, {
+          fullName: formData.fullName,
+          mobileNumber: formData.mobileNumber,
+          accountStatus: formData.accountStatus,
+          roleIds: formData.roleIds,
+        });
+        toast.success('User updated successfully');
+      } else {
+        await userService.createUser(formData);
+        toast.success('User created successfully');
+      }
+      setIsModalOpen(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      console.error('Failed to save user', err);
+      toast.error(err?.message || 'Failed to save user');
+    } finally {
+      setActionLoading(false);
     }
-    setIsModalOpen(false);
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await userService.resetPassword(resetPasswordUser.id, newPassword);
+      toast.success(`Password reset for ${resetPasswordUser.fullName}`);
+      setResetPasswordUser(null);
+      setNewPassword('');
+    } catch (err) {
+      console.error('Failed to reset password', err);
+      toast.error(err?.message || 'Failed to reset password');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const getStatusBadge = (status) => {
     const statusStyles = {
-      active: 'bg-green-100 text-green-700',
-      inactive: 'bg-gray-100 text-gray-700',
-      suspended: 'bg-red-100 text-red-700',
+      ACTIVE: 'bg-green-100 text-green-700 border border-green-200',
+      INACTIVE: 'bg-gray-100 text-gray-700 border border-gray-200',
+      SUSPENDED: 'bg-red-100 text-red-700 border border-red-200',
+      DEACTIVATED: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
     };
+    const s = (status || 'ACTIVE').toUpperCase();
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || statusStyles.inactive}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
-  };
-
-  const getRoleBadge = (role) => {
-    const roleStyles = {
-      admin: 'bg-purple-100 text-purple-700',
-      moderator: 'bg-blue-100 text-blue-700',
-      user: 'bg-gray-100 text-gray-700',
-    };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleStyles[role] || roleStyles.user}`}>
-        {role.charAt(0).toUpperCase() + role.slice(1)}
+      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusStyles[s] || statusStyles.INACTIVE}`}>
+        {s}
       </span>
     );
   };
 
   const columns = [
-    { header: 'Name', accessor: 'name' },
     {
-      header: 'Email',
-      accessor: 'email',
-      render: (email) => (
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4 text-gray-400" />
-          {email}
+      header: 'Full Name',
+      accessor: 'fullName',
+      render: (val, row) => (
+        <div>
+          <div className="font-semibold text-gray-900">{val || row.name || 'Unnamed'}</div>
+          <div className="text-xs text-gray-500">{row.email}</div>
         </div>
       ),
     },
     {
-      header: 'Phone',
-      accessor: 'phone',
+      header: 'Mobile',
+      accessor: 'mobileNumber',
       render: (phone) => (
-        <div className="flex items-center gap-2">
-          <Phone className="w-4 h-4 text-gray-400" />
-          {phone}
+        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+          <Phone className="w-3.5 h-3.5 text-gray-400" />
+          {phone || '—'}
         </div>
       ),
     },
-    { header: 'Role', accessor: 'role', render: getRoleBadge },
-    { header: 'Status', accessor: 'status', render: getStatusBadge },
+    {
+      header: 'Roles',
+      accessor: 'roles',
+      render: (roles) => {
+        if (!roles || roles.length === 0) {
+          return <span className="text-xs text-gray-400">None</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {roles.map((r) => (
+              <span
+                key={r.id || r.name}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
+              >
+                <Shield className="w-3 h-3" />
+                {r.name}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Status',
+      accessor: 'accountStatus',
+      render: (status) => getStatusBadge(status),
+    },
     {
       header: 'Actions',
       accessor: 'id',
       render: (id, row) => (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => handleEditUser(row)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Edit"
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Edit User"
           >
-            <Edit className="w-4 h-4 text-blue-600" />
+            <Edit className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleDeleteUser(id)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Delete"
+            onClick={() => {
+              setResetPasswordUser(row);
+              setNewPassword('');
+            }}
+            className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+            title="Reset Password"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <KeyRound className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteUser(row)}
+            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete User"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -151,61 +265,163 @@ const AllUsers = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">All Users</h1>
-        <p className="text-gray-600">Manage and view all users</p>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">System Users</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage system operators, event administrators, and gatekeeper accounts ({totalElements} total)
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="neutral"
+            onClick={fetchUsers}
+            disabled={loading}
+            className="flex items-center gap-2 border border-gray-300"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleAddUser}
+            className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white"
+          >
+            <Plus className="w-4 h-4" />
+            Add User
+          </Button>
+        </div>
       </div>
 
-      {/* Search and Add Button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="w-full sm:w-auto">
+      {/* Filter and Search Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="md:col-span-2">
           <Searchbar
-            placeholder="Search users..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="max-w-md"
+            placeholder="Search by full name or email..."
           />
         </div>
-        <Button
-          variant="primary"
-          onClick={handleAddUser}
-          className="flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Add User
-        </Button>
+        <div>
+          <select
+            value={selectedStatus}
+            onChange={handleStatusFilterChange}
+            className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 text-sm text-gray-700"
+          >
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="SUSPENDED">SUSPENDED</option>
+            <option value="DEACTIVATED">DEACTIVATED</option>
+          </select>
+        </div>
+        <div>
+          <select
+            value={selectedRole}
+            onChange={handleRoleFilterChange}
+            className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 text-sm text-gray-700"
+          >
+            <option value="">All Roles</option>
+            {rolesList.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={filteredUsers}
-        enablePagination={true}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        itemsPerPage={itemsPerPage}
-        className="border-0 rounded-xl"
-      />
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-8 h-8 animate-spin text-green-700" />
+            <p className="text-sm">Loading users from backend...</p>
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            data={users}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            emptyMessage="No system users found matching current criteria"
+          />
+        )}
+      </div>
 
-      {/* Add/Edit Modal */}
+      {/* Add / Edit Modal */}
       <AddAndEditUsers
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingUser(null);
+        }}
         user={editingUser}
         onSave={handleSaveUser}
+        loading={actionLoading}
       />
 
-      {/* Delete Modal */}
+      {/* Delete Confirmation Modal */}
       <DeleteModal
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setUserToDelete(null);
+        }}
         onConfirm={confirmDeleteUser}
         title="Delete User"
-        message="Are you sure you want to delete this user? This action cannot be undone."
+        message={`Are you sure you want to permanently delete user "${userToDelete?.fullName || userToDelete?.email}"? This action cannot be undone.`}
+        loading={actionLoading}
       />
+
+      {/* Reset Password Modal */}
+      {resetPasswordUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-amber-600" />
+              Reset Password
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Set a new password for <span className="font-semibold text-gray-800">{resetPasswordUser.fullName}</span> ({resetPasswordUser.email}).
+            </p>
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 characters"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="neutral"
+                  onClick={() => setResetPasswordUser(null)}
+                  disabled={actionLoading}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={actionLoading}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  {actionLoading ? 'Resetting...' : 'Update Password'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,57 +1,88 @@
-import React, { useState, useEffect } from 'react'
-import { X, Save, Shield, FileText, CheckSquare, XCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { X, Save, Shield, FileText, CheckSquare, XCircle, AlertCircle } from 'lucide-react';
 
-const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    permissions: []
-  })
+const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], loading }) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (role) {
-      setFormData({
-        name: role.name,
-        description: role.description,
-        permissions: role.permissions || []
-      })
+      setName(role.name || '');
+      setDescription(role.description || '');
+      // RoleResponse can have permissionNames or permissionIds
+      if (role.permissionIds && role.permissionIds.length > 0) {
+        setSelectedPermissionIds(role.permissionIds);
+      } else if (role.permissionNames && allPermissions.length > 0) {
+        const ids = allPermissions
+          .filter((p) => role.permissionNames.includes(p.name))
+          .map((p) => p.id);
+        setSelectedPermissionIds(ids);
+      } else {
+        setSelectedPermissionIds([]);
+      }
     } else {
-      setFormData({
-        name: '',
-        description: '',
-        permissions: []
-      })
+      setName('');
+      setDescription('');
+      setSelectedPermissionIds([]);
     }
-  }, [role])
+    setError('');
+  }, [role, isOpen, allPermissions]);
 
-  const togglePermission = (permission) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter(p => p !== permission)
-        : [...prev.permissions, permission]
-    }))
-  }
+  const togglePermission = (id) => {
+    setSelectedPermissionIds((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllInResource = (resourcePermissions) => {
+    const resourceIds = resourcePermissions.map((p) => p.id);
+    const allSelected = resourceIds.every((id) => selectedPermissionIds.includes(id));
+    if (allSelected) {
+      setSelectedPermissionIds((prev) => prev.filter((id) => !resourceIds.includes(id)));
+    } else {
+      setSelectedPermissionIds((prev) => Array.from(new Set([...prev, ...resourceIds])));
+    }
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.name.trim()) {
-      alert('Please enter a role name')
-      return
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('Role name is required');
+      return;
     }
-    onSave(formData)
-  }
 
-  if (!isOpen) return null
+    onSave({
+      name: name.trim().toUpperCase(),
+      description: description.trim(),
+      permissionIds: selectedPermissionIds,
+    });
+  };
+
+  if (!isOpen) return null;
+
+  // Group permissions by resource
+  const groupedPermissions = allPermissions.reduce((acc, p) => {
+    const res = p.resource || 'GENERAL';
+    if (!acc[res]) acc[res] = [];
+    acc[res].push(p);
+    return acc;
+  }, {});
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100 transform transition-all duration-300 scale-100 hover:scale-[1.01]">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
         {/* Modal Header */}
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl">
-          <h2 className="text-xl font-semibold text-white">
-            {role ? 'Edit Role' : 'Add New Role'}
-          </h2>
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-700 to-green-800 rounded-t-xl text-white">
+          <div>
+            <h2 className="text-xl font-semibold">
+              {role ? `Edit Role: ${role.name}` : 'Create New Dynamic Role'}
+            </h2>
+            <p className="text-xs text-green-100 mt-0.5">
+              Define permissions and access boundaries for this role
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-white/20 transition-colors"
@@ -61,108 +92,148 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions }) => {
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-6">
-            {/* Role Name */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-center gap-2 border border-red-200">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {role?.systemDefined && (
+            <div className="p-3 bg-amber-50 text-amber-800 text-xs rounded-lg border border-amber-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600" />
+              <span>This is a system-defined role. Core privileges are maintained automatically.</span>
+            </div>
+          )}
+
+          {/* Role Name & Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-gray-400" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                 Role Name *
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Shield className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Admin, Manager, Viewer"
-                  className="w-full pl-10 px-4 py-2 border border-purple-500 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-                  required
-                />
-              </div>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError('');
+                }}
+                disabled={role?.systemDefined}
+                placeholder="e.g. TICKET_SCANNER"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 uppercase font-mono disabled:bg-gray-100"
+                required
+              />
             </div>
-
-            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-400" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                 Description
               </label>
-              <div className="relative">
-                <div className="absolute top-3 left-0 pl-3 pointer-events-none">
-                  <FileText className="h-5 w-5 text-gray-400" />
-                </div>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Describe what this role can do"
-                  rows="3"
-                  className="w-full pl-10 px-4 py-2 border border-purple-500 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none resize-none"
-                />
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description of responsibilities"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+              />
+            </div>
+          </div>
+
+          {/* Permissions Matrix grouped by resource */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <label className="block text-sm font-bold text-gray-900">
+                  Assigned Permissions ({selectedPermissionIds.length} selected)
+                </label>
+                <p className="text-xs text-gray-500">
+                  Select permissions to grant members with this role
+                </p>
               </div>
             </div>
 
-            {/* Permissions */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-gray-400" />
-                Permissions
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {allPermissions.map((permission) => (
-                  <div
-                    key={permission}
-                    onClick={() => togglePermission(permission)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      formData.permissions.includes(permission)
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-purple-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          formData.permissions.includes(permission)
-                            ? 'border-purple-600 bg-purple-600'
-                            : 'border-gray-300'
-                        }`}
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+              {Object.entries(groupedPermissions).map(([resource, perms]) => {
+                const resourceIds = perms.map((p) => p.id);
+                const allSelected = resourceIds.every((id) => selectedPermissionIds.includes(id));
+                const someSelected =
+                  !allSelected && resourceIds.some((id) => selectedPermissionIds.includes(id));
+
+                return (
+                  <div key={resource} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                      <span className="font-semibold text-xs tracking-wider uppercase text-gray-700">
+                        {resource} ({perms.length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectAllInResource(perms)}
+                        className="text-xs text-green-700 hover:text-green-800 font-medium"
                       >
-                        {formData.permissions.includes(permission) && (
-                          <span className="text-white text-xs">✓</span>
-                        )}
-                      </div>
-                      <span className="font-medium text-gray-900">{permission}</span>
+                        {allSelected ? 'Deselect All' : 'Select All'}
+                      </button>
+                    </div>
+                    <div className="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {perms.map((perm) => {
+                        const isChecked = selectedPermissionIds.includes(perm.id);
+                        return (
+                          <label
+                            key={perm.id}
+                            className={`flex items-start gap-2 p-2 rounded border cursor-pointer text-xs transition-colors ${
+                              isChecked
+                                ? 'bg-green-50/70 border-green-500 text-green-900'
+                                : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => togglePermission(perm.id)}
+                              className="mt-0.5 rounded text-green-700 focus:ring-green-700"
+                            />
+                            <div>
+                              <div className="font-mono font-semibold">{perm.name}</div>
+                              {perm.description && (
+                                <div className="text-[11px] text-gray-500 leading-tight">
+                                  {perm.description}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Modal Footer */}
-          <div className="mt-8 flex items-center justify-end gap-3">
+          <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               <XCircle className="w-4 h-4" />
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors text-sm font-semibold shadow-sm"
             >
               <Save className="w-4 h-4" />
-              {role ? 'Update Role' : 'Create Role'}
+              {loading ? 'Saving...' : role ? 'Update Role' : 'Create Role'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AddAndEditRole
+export default AddAndEditRole;

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Searchbar, Table, Button, DeleteModal } from '../../Components/reusable';
 import AddAndEditEvents from '../../Components/Modals/addEvents/addAndEditEvents';
 import eventsService from '../../Api-Services/eventsService';
-import { Plus, Edit, Trash2, Calendar, MapPin, Users, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, MapPin, Users, Eye, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Events = () => {
@@ -21,10 +21,18 @@ const Events = () => {
 
   const pageSize = 5;
 
-  const fetchEvents = async () => {
+  const statusOptions = [
+    { label: 'DRAFT', value: 'DRAFT' },
+    { label: 'PUBLISHED', value: 'PUBLISHED' },
+    { label: 'ACTIVE', value: 'ACTIVE' },
+    { label: 'COMPLETED', value: 'COMPLETED' },
+    { label: 'CANCELLED', value: 'CANCELLED' },
+  ];
+
+  const fetchEvents = async (search = '', page) => {
     setLoading(true);
     try {
-      const response = await eventsService.getEvents(currentPage - 1, pageSize, ['createdAt,desc']);
+      const response = await eventsService.getEvents(page - 1, pageSize, ['createdAt,desc'], search);
       setEvents(response.data.content || []);
       setTotalPages(response.data.totalPages || 0);
       setTotalElements(response.data.totalElements || 0);
@@ -37,16 +45,16 @@ const Events = () => {
   };
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentPage]);
-
-  const filteredEvents = events.filter(event =>
-    event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.venue?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    fetchEvents(searchTerm, currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, searchTerm]);
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
   };
 
   const handlePageChange = (page) => {
@@ -76,7 +84,8 @@ const Events = () => {
     try {
       await eventsService.deleteEvent(eventToDelete);
       toast.success('Event deleted successfully');
-      fetchEvents();
+      setCurrentPage(1);
+      await fetchEvents(searchTerm, 1);
     } catch (error) {
       toast.error('Failed to delete event');
       console.error('Error deleting event:', error);
@@ -96,7 +105,8 @@ const Events = () => {
         result = await eventsService.createEvent(formData);
         toast.success('Event created successfully');
       }
-      fetchEvents();
+      setCurrentPage(1);
+      await fetchEvents(searchTerm, 1);
       setIsModalOpen(false);
       return result;
     } catch (error) {
@@ -106,16 +116,78 @@ const Events = () => {
     }
   };
 
+  const handleStatusChange = async (eventId, newStatus) => {
+    try {
+      await eventsService.updateEventStatus(eventId, newStatus);
+      toast.success('Event status updated successfully');
+      await fetchEvents(searchTerm, currentPage);
+    } catch (error) {
+      toast.error('Failed to update event status');
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const StatusDropdown = ({ currentStatus, eventId }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSelect = (newStatus) => {
+      handleStatusChange(eventId, newStatus);
+      setIsOpen(false);
+    };
+
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          {getStatusBadge(currentStatus)}
+          <ChevronDown className="w-3 h-3 text-gray-400" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg w-32 mt-1 left-0">
+            <ul className="py-1 text-sm">
+              {statusOptions.map((option) => (
+                <li key={option.value}>
+                  <button
+                    onClick={() => handleSelect(option.value)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 transition-colors"
+                  >
+                    {option.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const getStatusBadge = (status) => {
     const statusStyles = {
-      upcoming: 'bg-blue-100 text-blue-700',
-      active: 'bg-green-100 text-green-700',
-      completed: 'bg-gray-100 text-gray-700',
-      cancelled: 'bg-red-100 text-red-700',
+      DRAFT: 'bg-gray-100 text-gray-700',
+      PUBLISHED: 'bg-blue-100 text-blue-700',
+      ACTIVE: 'bg-green-100 text-green-700',
+      COMPLETED: 'bg-purple-100 text-purple-700',
+      CANCELLED: 'bg-red-100 text-red-700',
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || statusStyles.upcoming}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || statusStyles.DRAFT}`}>
+        {status}
       </span>
     );
   };
@@ -136,6 +208,13 @@ const Events = () => {
     },
     { header: 'Event Name', accessor: 'name' },
     { header: 'Event Code', accessor: 'eventCode' },
+    {
+      header: 'Status',
+      accessor: 'status',
+      render: (status, row) => (
+        <StatusDropdown currentStatus={status} eventId={row.id} />
+      ),
+    },
     {
       header: 'Start Date',
       accessor: 'startsAt',
@@ -228,12 +307,13 @@ const Events = () => {
       {/* Table */}
       <Table
         columns={columns}
-        data={filteredEvents}
+        data={events}
         enablePagination={true}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
         itemsPerPage={pageSize}
+        useBackendPagination={true}
         className="border-0 rounded-xl"
       />
 

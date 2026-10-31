@@ -15,8 +15,8 @@ import {
   ShieldCheck,
   Building,
 } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
-import toast, { Toaster } from 'react-hot-toast';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import toast from 'react-hot-toast';
 import checkinService from '../Api-Services/checkinService';
 import eventsService from '../Api-Services/eventsService';
 
@@ -35,7 +35,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const [cameraPermission, setCameraPermission] = useState('unknown');
 
   const [scanResult, setScanResult] = useState(null); // { success: boolean, data: ..., error: ... }
-  const html5QrCodeRef = useRef(null);
+  const browserReaderRef = useRef(null);
+  const videoRef = useRef(null);
 
   const generateRequestId = () => {
     return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -91,7 +92,9 @@ const CheckinScan = ({ eventId: propEventId }) => {
   // Cleanup scanner on unmount
   useEffect(() => {
     return () => {
-      stopScanner();
+      if (browserReaderRef.current) {
+        browserReaderRef.current.reset();
+      }
     };
   }, []);
 
@@ -107,6 +110,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
         return false;
       }
 
+      // Check if browser supports media devices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setScannerError('Browser does not support camera access.');
+        return false;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
       });
@@ -116,7 +125,15 @@ const CheckinScan = ({ eventId: propEventId }) => {
     } catch (err) {
       console.error('Camera permission error:', err);
       setCameraPermission('denied');
-      setScannerError('Camera permission denied. Please allow camera permissions.');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setScannerError('Camera permission denied. Please allow camera permissions.');
+      } else if (err.name === 'NotFoundError') {
+        setScannerError('No camera found on this device.');
+      } else if (err.name === 'NotReadableError') {
+        setScannerError('Camera is already in use by another application.');
+      } else {
+        setScannerError('Camera access failed. Please check your device settings.');
+      }
       return false;
     }
   };
@@ -131,26 +148,49 @@ const CheckinScan = ({ eventId: propEventId }) => {
     try {
       setIsScanning(true);
 
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode('qr-reader');
+      // Create BrowserMultiFormatReader instance if not exists
+      if (!browserReaderRef.current) {
+        browserReaderRef.current = new BrowserMultiFormatReader();
       }
 
-      const qrConfig = {
-        fps: 12,
-        qrbox: { width: 260, height: 260 },
-        aspectRatio: 1.0,
-      };
+      // Get available video devices
+      const videoDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+      
+      if (videoDevices.length === 0) {
+        setScannerError('No camera devices found on this device.');
+        setIsScanning(false);
+        return;
+      }
 
-      await html5QrCodeRef.current.start(
-        { facingMode: 'environment' },
-        qrConfig,
-        (decodedText) => {
-          handleScannedData(decodedText);
-        },
-        () => {
-          // normal frame scan error, ignore
-        }
+      // Prefer back camera (environment facing) on mobile
+      let selectedDeviceId = videoDevices[0].deviceId;
+      const backCamera = videoDevices.find(device =>
+        device.label.toLowerCase().includes('back') ||
+        device.label.toLowerCase().includes('environment') ||
+        device.label.toLowerCase().includes('rear')
       );
+      
+      if (backCamera) {
+        selectedDeviceId = backCamera.deviceId;
+      }
+
+      // Start decoding from the selected camera
+      browserReaderRef.current.decodeFromVideoDevice(
+        selectedDeviceId,
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            // QR code detected successfully
+            handleScannedData(result.text);
+          }
+          // Ignore scan errors - they're normal during continuous scanning
+        }
+      ).catch(err => {
+        console.error('Camera start error:', err);
+        setScannerError('Failed to start camera. Please verify device camera.');
+        setIsScanning(false);
+      });
+
     } catch (err) {
       console.error('Scanner start error:', err);
       setScannerError('Failed to start camera. Please verify device camera.');
@@ -160,8 +200,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   const stopScanner = async () => {
     try {
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        await html5QrCodeRef.current.stop();
+      if (browserReaderRef.current) {
+        await browserReaderRef.current.reset();
       }
       setIsScanning(false);
     } catch (err) {
@@ -265,8 +305,6 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 md:p-6 flex flex-col items-center">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="w-full max-w-lg flex items-center justify-between mb-4">
         <button
@@ -342,18 +380,25 @@ const CheckinScan = ({ eventId: propEventId }) => {
         {/* SCANNER VIEWPORT */}
         {!scanResult && (
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-col items-center">
-            {/* The html5-qrcode reader div */}
+            {/* Video element for camera feed */}
             <div
-              id="qr-reader"
               className={`w-full max-w-[320px] aspect-square rounded-xl overflow-hidden bg-black/40 border-2 ${
                 isScanning ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-dashed border-gray-600'
-              } flex items-center justify-center`}
+              } flex items-center justify-center relative`}
             >
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+              />
               {!isScanning && (
-                <div className="text-center p-6 text-gray-400">
-                  <QrCode className="w-16 h-16 mx-auto mb-3 opacity-40 text-purple-300" />
-                  <p className="text-sm font-medium">Camera is ready</p>
-                  <p className="text-xs text-gray-500 mt-1">Tap below to activate camera scanner</p>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                  <div className="text-center p-6 text-gray-400">
+                    <QrCode className="w-16 h-16 mx-auto mb-3 opacity-40 text-purple-300" />
+                    <p className="text-sm font-medium">Camera is ready</p>
+                    <p className="text-xs text-gray-500 mt-1">Tap below to activate camera scanner</p>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock, Eye, EyeOff, ArrowRight, CalendarDays } from "lucide-react"
@@ -28,17 +27,30 @@ export default function Login() {
       
       // Store token and user data in session storage
       sessionStorage.setItem("accessToken", response.data.accessToken)
+      if (response.data.refreshToken) {
+        sessionStorage.setItem("refreshToken", response.data.refreshToken)
+      }
       sessionStorage.setItem("tokenType", response.data.tokenType)
       sessionStorage.setItem("userId", response.data.userId)
       sessionStorage.setItem("email", response.data.email)
       sessionStorage.setItem("fullName", response.data.fullName)
-      sessionStorage.setItem("permissions", JSON.stringify(response.data.permissions))
+      if (response.data.roleId) {
+        sessionStorage.setItem("roleId", response.data.roleId)
+      }
+      if (response.data.roleName) {
+        sessionStorage.setItem("roleName", response.data.roleName)
+      }
+      if (response.data.roles) {
+        sessionStorage.setItem("roles", JSON.stringify(response.data.roles))
+      }
       sessionStorage.setItem("expiresIn", response.data.expiresIn)
       
       toast.success("Login successful!")
       navigate("/admin")
     } catch (error) {
-      toast.error(error.message || "Login failed. Please try again.")
+      console.error("Login error:", error)
+      const errorMessage = error.response?.data?.message || error.message || "Login failed. Please try again."
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

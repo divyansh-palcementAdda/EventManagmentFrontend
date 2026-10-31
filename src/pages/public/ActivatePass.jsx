@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { Toaster, toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import {
   Ticket,
   Calendar,
@@ -178,8 +178,6 @@ const ActivatePass = () => {
 
   return (
     <div className="registration-page">
-      <Toaster position="top-right" />
-
       <div className="form-card max-w-2xl">
         {/* Header Icon */}
         <div className="form-header">
