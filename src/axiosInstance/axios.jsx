@@ -57,7 +57,9 @@ axiosInstance.interceptors.response.use(
 
       const isAuthEndpoint =
         originalRequest.url?.includes('/auth/login') ||
-        originalRequest.url?.includes('/auth/refresh');
+        originalRequest.url?.includes('/auth/refresh') ||
+        originalRequest.url?.includes('/passes/validate') ||
+        originalRequest.url?.includes('/passes/activate');
 
       if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
         const refreshToken = sessionStorage.getItem('refreshToken');
