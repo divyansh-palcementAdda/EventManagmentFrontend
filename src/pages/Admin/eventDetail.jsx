@@ -37,7 +37,7 @@ import {
   ArrowUpDown,
   SlidersHorizontal,
 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const EventDetail = () => {
   const { eventId } = useParams();
@@ -431,26 +431,24 @@ const EventDetail = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <Toaster position="top-right" />
-
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/admin/events')}
-            className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm"
+            className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm shrink-0"
           >
             <ArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{event.name}</h1>
-              <span className="font-mono text-sm font-bold bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{event.name}</h1>
+              <span className="font-mono text-xs sm:text-sm font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded shrink-0">
                 {event.eventCode}
               </span>
               {getStatusBadge(event.status)}
             </div>
-            <p className="text-gray-500 text-sm mt-0.5">{event.description || 'No description provided'}</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-0.5 truncate">{event.description || 'No description provided'}</p>
           </div>
         </div>
 
@@ -459,7 +457,7 @@ const EventDetail = () => {
           {event.status === 'DRAFT' && (
             <button
               onClick={() => handleStatusChange('ACTIVE')}
-              className="px-3.5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-green-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
             >
               Activate Event
             </button>
@@ -467,7 +465,7 @@ const EventDetail = () => {
           {event.status === 'ACTIVE' && (
             <button
               onClick={() => handleStatusChange('COMPLETED')}
-              className="px-3.5 py-2 bg-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition shadow-sm"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gray-700 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-gray-800 transition shadow-sm"
             >
               Complete Event
             </button>
@@ -475,9 +473,9 @@ const EventDetail = () => {
 
           <button
             onClick={() => setIsGatekeeperModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-bold rounded-lg hover:bg-indigo-100 transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs sm:text-sm font-bold rounded-lg hover:bg-indigo-100 transition shadow-sm"
           >
-            <ShieldCheck className="w-4 h-4 text-indigo-600" /> Gatekeepers
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Gatekeepers
             <span className="bg-indigo-200 text-indigo-900 text-xs px-1.5 py-0.2 rounded-full font-mono">
               {gatekeeperCount}
             </span>
@@ -485,34 +483,34 @@ const EventDetail = () => {
 
           <button
             onClick={() => navigate(`/admin/checkin/${event.id}`)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm"
           >
-            <QrCode className="w-4 h-4" /> Gate Scanner
+            <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Gate Scanner
           </button>
         </div>
       </div>
 
       {/* Overview Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Basic Info */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-3">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 space-y-3">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
             <Ticket className="w-4 h-4 text-purple-600" /> Event Details
           </h3>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-xs sm:text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Pass Series:</span>
               <span className="font-mono font-semibold text-gray-900">{event.passSeriesCode}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Venue:</span>
-              <span className="text-gray-900 font-medium">{event.venue || 'TBD'}</span>
+              <span className="text-gray-900 font-medium truncate ml-2">{event.venue || 'TBD'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Timezone:</span>
               <span className="text-gray-900">{event.timezone || 'UTC'}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
               <span className="text-gray-500">Dates:</span>
               <span className="text-gray-900 font-medium">
                 {formatDate(event.startsAt)} - {formatDate(event.endsAt)}
@@ -522,11 +520,11 @@ const EventDetail = () => {
         </div>
 
         {/* Pass Capacity */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-3">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 space-y-3">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
             <Users className="w-4 h-4 text-purple-600" /> Pass Capacity
           </h3>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-xs sm:text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Maximum Allowed:</span>
               <span className="font-bold text-gray-900">{event.maximumPasses || 0}</span>
@@ -546,9 +544,9 @@ const EventDetail = () => {
                 )}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-500">Check-in Policy:</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+              <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
                 {event.checkInPolicy?.replace('_', ' ')}
               </span>
             </div>
@@ -556,7 +554,7 @@ const EventDetail = () => {
         </div>
 
         {/* Event Days */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-3">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 space-y-3 sm:col-span-2 lg:col-span-1">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-purple-600" /> Event Days ({eventDays.length})
           </h3>
@@ -581,11 +579,11 @@ const EventDetail = () => {
       {/* Enhanced Passes for This Event Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Section Header & Live Metric Chips */}
-        <div className="p-5 border-b border-gray-200 space-y-4 bg-gradient-to-r from-gray-50/50 to-purple-50/20">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="p-4 sm:p-5 border-b border-gray-200 space-y-4 bg-gradient-to-r from-gray-50/50 to-purple-50/20">
+          <div className="flex flex-col gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">Passes for this Event</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Passes for this Event</h2>
                 <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
                   {event.eventCode}
                 </span>
@@ -603,41 +601,41 @@ const EventDetail = () => {
                   setNewlyGeneratedPasses([]);
                   setIsGenModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <Plus className="w-4 h-4" /> Generate Passes
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Generate Passes
               </button>
 
               <button
                 type="button"
                 onClick={handleOpenValidityBulk}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <Layers className="w-4 h-4 text-purple-600" /> Manage Validity
+                <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" /> Manage Validity
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsBulkDownloadOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <Download className="w-4 h-4 text-purple-600" /> Bulk Download QR Passes
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" /> Bulk Download
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsBulkActivateOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <FileSpreadsheet className="w-4 h-4 text-indigo-600" /> Bulk Activate from Excel
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Bulk Activate
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsGatekeeperModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <ShieldCheck className="w-4 h-4 text-indigo-600" /> Gatekeepers ({gatekeeperCount})
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Gatekeepers ({gatekeeperCount})
               </button>
 
               <button
@@ -652,51 +650,51 @@ const EventDetail = () => {
           </div>
 
           {/* Live Statistics Counter Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
-            <div className="p-2.5 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
-              <span className="text-[11px] text-gray-500 font-medium">Total Passes</span>
-              <div className="text-base font-black text-gray-900">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5 pt-1">
+            <div className="p-2 sm:p-2.5 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Total Passes</span>
+              <div className="text-sm sm:text-base font-black text-gray-900">
                 {statsLoading ? '...' : passStats?.totalPasses ?? totalElements}
               </div>
             </div>
-            <div className="p-2.5 bg-green-50/70 rounded-xl border border-green-200 text-center shadow-xs">
-              <span className="text-[11px] text-green-700 font-medium">Available (Unactivated)</span>
-              <div className="text-base font-black text-green-800">
+            <div className="p-2 sm:p-2.5 bg-green-50/70 rounded-xl border border-green-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-green-700 font-medium">Available</span>
+              <div className="text-sm sm:text-base font-black text-green-800">
                 {statsLoading ? '...' : passStats?.availablePasses ?? 0}
               </div>
             </div>
-            <div className="p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs">
-              <span className="text-[11px] text-purple-700 font-medium">Activated Passes</span>
-              <div className="text-base font-black text-purple-800">
+            <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Activated</span>
+              <div className="text-sm sm:text-base font-black text-purple-800">
                 {statsLoading ? '...' : passStats?.activatedPasses ?? 0}
               </div>
             </div>
-            <div className="p-2.5 bg-red-50/70 rounded-xl border border-red-200 text-center shadow-xs">
-              <span className="text-[11px] text-red-700 font-medium">Revoked Passes</span>
-              <div className="text-base font-black text-red-800">
+            <div className="p-2 sm:p-2.5 bg-red-50/70 rounded-xl border border-red-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-red-700 font-medium">Revoked</span>
+              <div className="text-sm sm:text-base font-black text-red-800">
                 {statsLoading ? '...' : passStats?.revokedPasses ?? 0}
               </div>
             </div>
-            <div className="p-2.5 bg-blue-50/70 rounded-xl border border-blue-200 text-center shadow-xs col-span-2 sm:col-span-1">
-              <span className="text-[11px] text-blue-700 font-medium">Gate Checked-In</span>
-              <div className="text-base font-black text-blue-800">
+            <div className="p-2 sm:p-2.5 bg-blue-50/70 rounded-xl border border-blue-200 text-center shadow-xs col-span-2 sm:col-span-3 lg:col-span-1">
+              <span className="text-[10px] sm:text-[11px] text-blue-700 font-medium">Checked-In</span>
+              <div className="text-sm sm:text-base font-black text-blue-800">
                 {statsLoading ? '...' : passStats?.checkedInCount ?? 0}
               </div>
             </div>
           </div>
 
           {/* Search, Filter Toolbar & Advanced Filters */}
-          <div className="space-y-2 pt-2 border-t border-gray-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="space-y-2 sm:space-y-3 pt-2 border-t border-gray-100">
+            <div className="flex flex-col gap-3">
               {/* Status Filter Tabs */}
-              <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold">
+              <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold pb-1 -mx-1 px-1">
                 <button
                   type="button"
                   onClick={() => {
                     setStatusFilter('ALL');
                     setPage(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'ALL'
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${statusFilter === 'ALL'
                     ? 'bg-purple-600 text-white shadow-xs'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -709,7 +707,7 @@ const EventDetail = () => {
                     setStatusFilter('NOT_ACTIVATED');
                     setPage(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'NOT_ACTIVATED'
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${statusFilter === 'NOT_ACTIVATED'
                     ? 'bg-yellow-600 text-white shadow-xs'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -722,7 +720,7 @@ const EventDetail = () => {
                     setStatusFilter('ACTIVATED');
                     setPage(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'ACTIVATED'
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${statusFilter === 'ACTIVATED'
                     ? 'bg-green-600 text-white shadow-xs'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -735,7 +733,7 @@ const EventDetail = () => {
                     setStatusFilter('REVOKED');
                     setPage(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'REVOKED'
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${statusFilter === 'REVOKED'
                     ? 'bg-red-600 text-white shadow-xs'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -746,7 +744,7 @@ const EventDetail = () => {
 
               {/* Search Bar & Advanced Filter Toggle */}
               <div className="flex items-center gap-2">
-                <div className="relative min-w-[240px] flex-1 sm:w-72">
+                <div className="relative flex-1 min-w-0">
                   <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
@@ -768,7 +766,7 @@ const EventDetail = () => {
                 <button
                   type="button"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className={`p-2 border rounded-lg text-xs font-semibold transition flex items-center gap-1 ${showAdvancedFilters || checkInFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter
+                  className={`p-2 border rounded-lg text-xs font-semibold transition flex items-center gap-1 shrink-0 ${showAdvancedFilters || checkInFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter
                     ? 'bg-purple-100 text-purple-800 border-purple-300'
                     : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
                     }`}
@@ -782,7 +780,7 @@ const EventDetail = () => {
 
             {/* Advanced Filters Expandable Drawer */}
             {showAdvancedFilters && (
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 {/* Check-In Filter */}
                 <div>
                   <label className="text-[11px] font-semibold text-gray-600 block mb-1">
@@ -825,8 +823,8 @@ const EventDetail = () => {
                 </div>
 
                 {/* Sequence Range Filters */}
-                <div className="sm:col-span-2 flex items-center gap-2">
-                  <div className="flex-1">
+                <div className="sm:col-span-2 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <div className="flex-1 w-full">
                     <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                       From Sequence #
                     </label>
@@ -841,7 +839,7 @@ const EventDetail = () => {
                       className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs"
                     />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                       To Sequence #
                     </label>
@@ -866,7 +864,7 @@ const EventDetail = () => {
                         setToSeqFilter('');
                         setPage(0);
                       }}
-                      className="mt-4 px-2 py-1.5 text-xs text-red-600 hover:underline"
+                      className="mt-4 sm:mt-5 px-2 py-1.5 text-xs text-red-600 hover:underline whitespace-nowrap"
                     >
                       Clear
                     </button>
@@ -877,7 +875,7 @@ const EventDetail = () => {
 
             {/* Bulk Selection Notification Bar */}
             {selectedPassesList.length > 0 && (
-              <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+              <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 text-xs text-purple-900">
                 <div className="flex items-center gap-2">
                   <span className="font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full text-[11px]">
                     {selectedPassesList.length}
@@ -890,14 +888,14 @@ const EventDetail = () => {
                     onClick={handleOpenValidityBulk}
                     className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs flex items-center gap-1 shadow-xs"
                   >
-                    <Layers className="w-3.5 h-3.5" /> Set Validity for {selectedPassesList.length} Selected
+                    <Layers className="w-3.5 h-3.5" /> Set Validity
                   </button>
                   <button
                     type="button"
                     onClick={clearSelection}
                     className="px-2 py-1 text-gray-500 hover:text-gray-700 font-semibold"
                   >
-                    Clear Selection
+                    Clear
                   </button>
                 </div>
               </div>
@@ -907,14 +905,14 @@ const EventDetail = () => {
 
         {/* Passes Table Body */}
         {passesLoading ? (
-          <div className="p-12 text-center text-gray-400">
+          <div className="p-8 sm:p-12 text-center text-gray-400">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
             <p className="text-sm mt-2">Loading passes from server...</p>
           </div>
         ) : passes.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 space-y-2">
-            <Ticket className="w-12 h-12 mx-auto text-gray-300" />
-            <p className="font-bold text-gray-700">
+          <div className="p-8 sm:p-12 text-center text-gray-500 space-y-2">
+            <Ticket className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-300" />
+            <p className="font-bold text-gray-700 text-sm sm:text-base">
               {totalElements === 0 ? 'No passes generated yet.' : 'No passes match your filter criteria.'}
             </p>
             <p className="text-xs text-gray-400 max-w-sm mx-auto">
@@ -924,11 +922,11 @@ const EventDetail = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="bg-gray-50 text-gray-600 text-[10px] sm:text-xs uppercase tracking-wider border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 w-8">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 w-8">
                     <input
                       type="checkbox"
                       checked={passes.length > 0 && passes.every((p) => !!selectedPassMap[p.id])}
@@ -936,12 +934,12 @@ const EventDetail = () => {
                       className="rounded text-purple-600 focus:ring-purple-500"
                     />
                   </th>
-                  <th className="px-4 py-3">Pass Identifier</th>
-                  <th className="px-4 py-3">Activation</th>
-                  <th className="px-4 py-3">Gate Check-in</th>
-                  <th className="px-4 py-3">Attendee Information</th>
-                  <th className="px-4 py-3">Permitted Days</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Pass ID</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Status</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Check-in</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Attendee</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3">Days</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -953,7 +951,7 @@ const EventDetail = () => {
                       className={`hover:bg-gray-50/80 transition ${isSelected ? 'bg-purple-50/40' : ''
                         }`}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -961,85 +959,87 @@ const EventDetail = () => {
                           className="rounded text-purple-600 focus:ring-purple-500"
                         />
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="font-mono font-bold text-purple-700 text-sm">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
+                        <div className="font-mono font-bold text-purple-700 text-xs sm:text-sm">
                           {p.passNumber}
                         </div>
                         {p.sequenceNumber && (
-                          <div className="text-[10px] text-gray-400 font-mono">
+                          <div className="text-[9px] sm:text-[10px] text-gray-400 font-mono">
                             Seq #{String(p.sequenceNumber).padStart(4, '0')}
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3">{getPassStatusBadge(p.status)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">{getPassStatusBadge(p.status)}</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
                         {p.checkedIn ? (
                           <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              Checked In {p.checkInCount > 1 ? `(${p.checkInCount}x)` : ''}
+                            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600" />
+                              <span className="hidden sm:inline">Checked In</span>
+                              <span className="sm:hidden">In</span>
+                              {p.checkInCount > 1 ? `(${p.checkInCount}x)` : ''}
                             </span>
                             {p.lastCheckedInAt && (
-                              <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                                <Clock className="w-2.5 h-2.5" />
+                              <div className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 hidden sm:flex">
+                                <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                                 {formatDateTime(p.lastCheckedInAt)}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
-                            <Clock className="w-3 h-3 text-gray-400" /> Not Checked In
+                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" /> <span className="hidden sm:inline">Not Checked In</span><span className="sm:hidden">No</span>
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
                         {p.attendeeName ? (
                           <div>
-                            <div className="font-semibold text-gray-900">{p.attendeeName}</div>
-                            <div className="text-xs text-gray-500">{p.attendeeEmail}</div>
+                            <div className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{p.attendeeName}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">{p.attendeeEmail}</div>
                             {p.attendeeMobileNumber && (
-                              <div className="text-[10px] text-gray-400">{p.attendeeMobileNumber}</div>
+                              <div className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">{p.attendeeMobileNumber}</div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Unclaimed (Pending Activation)</span>
+                          <span className="text-[10px] sm:text-xs text-gray-400 italic">Unclaimed</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">
                         {p.validDays && p.validDays.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 max-w-xs">
+                          <div className="flex flex-wrap gap-0.5 sm:gap-1 max-w-[100px] sm:max-w-xs">
                             {p.validDays.map((d) => (
                               <span
                                 key={d.id}
-                                className="bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                                className="bg-purple-50 text-purple-700 border border-purple-200 px-1 sm:px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold"
                                 title={d.eventDate}
                               >
-                                Day {d.dayNumber}
+                                D{d.dayNumber}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            All Days
+                          <span className="text-[10px] sm:text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
+                            All
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 text-right space-x-0.5 sm:space-x-1.5 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => handleOpenValidityForSingle(p)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-md text-xs font-semibold transition"
+                          className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded text-[10px] sm:text-xs font-semibold transition"
                           title="Manage Event-Day Validity"
                         >
-                          <Layers className="w-3 h-3" /> Validity
+                          <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Validity</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => setActivePrintPass(p)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
+                          className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-white border border-gray-300 rounded text-[10px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
                         >
-                          <Printer className="w-3 h-3" /> Pass
+                          <Printer className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Pass</span>
                         </button>
 
                         {p.status !== 'REVOKED' && (
@@ -1049,9 +1049,10 @@ const EventDetail = () => {
                               setPassToRevoke(p);
                               setRevokeModalOpen(true);
                             }}
-                            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition font-medium"
+                            className="px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs text-red-600 hover:bg-red-50 rounded transition font-medium"
                           >
-                            Revoke
+                            <span className="hidden sm:inline">Revoke</span>
+                            <span className="sm:hidden">×</span>
                           </button>
                         )}
                       </td>
@@ -1065,25 +1066,24 @@ const EventDetail = () => {
 
         {/* Server-Side Pagination Footer */}
         {totalElements > 0 && (
-          <div className="px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
-            <div className="flex items-center gap-2">
-              <span>
+          <div className="px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <span className="text-[10px] sm:text-xs">
                 Showing <strong className="text-gray-900">{page * pageSize + 1}</strong> to{' '}
                 <strong className="text-gray-900">
                   {Math.min((page + 1) * pageSize, totalElements)}
                 </strong>{' '}
                 of <strong className="text-gray-900">{totalElements}</strong> passes
               </span>
-              <span className="text-gray-300">|</span>
-              <div className="flex items-center gap-1">
-                <span>Per page:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] sm:text-xs">Per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(parseInt(e.target.value));
                     setPage(0);
                   }}
-                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs font-medium focus:outline-none"
+                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-[10px] sm:text-xs font-medium focus:outline-none"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -1103,8 +1103,8 @@ const EventDetail = () => {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="px-3 py-1 font-semibold text-gray-900">
-                Page {page + 1} of {Math.max(1, totalPages)}
+              <span className="px-2 sm:px-3 py-1 font-semibold text-gray-900 text-[10px] sm:text-xs">
+                {page + 1} / {Math.max(1, totalPages)}
               </span>
               <button
                 type="button"
@@ -1122,15 +1122,15 @@ const EventDetail = () => {
       {/* GENERATE PASSES MODAL */}
       {isGenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 p-6 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Generate Unique Passes</h2>
-                <p className="text-xs text-gray-500">Event: {event.name}</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">Generate Unique Passes</h2>
+                <p className="text-xs text-gray-500 truncate">Event: {event.name}</p>
               </div>
               <button
                 onClick={() => setIsGenModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 shrink-0 ml-2"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1138,9 +1138,9 @@ const EventDetail = () => {
 
             {newlyGeneratedPasses.length > 0 ? (
               <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                  <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <h3 className="font-bold text-green-900">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 text-center">
+                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <h3 className="font-bold text-green-900 text-sm sm:text-base">
                     {newlyGeneratedPasses.length} Passes Generated!
                   </h3>
                   <p className="text-xs text-green-700 mt-1">
@@ -1151,7 +1151,7 @@ const EventDetail = () => {
                 <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
                   {newlyGeneratedPasses.map((p) => (
                     <div key={p.id} className="p-2.5 flex items-center justify-between">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <span className="font-mono font-bold text-purple-700">{p.passNumber}</span>
                         {p.rawToken && (
                           <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">
@@ -1164,7 +1164,7 @@ const EventDetail = () => {
                           setActivePrintPass(p);
                           setIsGenModalOpen(false);
                         }}
-                        className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1"
+                        className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1 shrink-0 ml-2"
                       >
                         <Printer className="w-3.5 h-3.5" /> View Pass
                       </button>
@@ -1221,7 +1221,7 @@ const EventDetail = () => {
                               className="rounded text-purple-600 focus:ring-purple-500"
                             />
                             <span className="font-semibold">Day {day.dayNumber}:</span>
-                            <span>{day.eventDate || day.label}</span>
+                            <span className="truncate">{day.eventDate || day.label}</span>
                           </label>
                         );
                       })}
@@ -1229,7 +1229,7 @@ const EventDetail = () => {
                   </div>
                 )}
 
-                <div className="pt-2 flex justify-end gap-2">
+                <div className="pt-2 flex flex-col sm:flex-row justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setIsGenModalOpen(false)}
@@ -1240,7 +1240,7 @@ const EventDetail = () => {
                   <button
                     type="submit"
                     disabled={generating}
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     {generating ? (
                       <>
@@ -1260,7 +1260,7 @@ const EventDetail = () => {
       {/* PRINTABLE PASS MODAL */}
       {activePrintPass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto">
             {/* Header / Close */}
             <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-xs font-semibold text-gray-700">
               <span>Printable Event Pass Card</span>
@@ -1273,13 +1273,13 @@ const EventDetail = () => {
             </div>
 
             {/* The Pass Card (Printable Area) */}
-            <div id="printable-card" className="p-6 text-center space-y-4 bg-white">
+            <div id="printable-card" className="p-4 sm:p-6 text-center space-y-4 bg-white">
               <div className="border-b pb-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
                   OFFICIAL EVENT PASS
                 </span>
-                <h3 className="text-lg font-black text-gray-900 mt-2">{event.name}</h3>
-                <p className="text-xs text-gray-500">{event.venue || 'Event Venue'}</p>
+                <h3 className="text-base sm:text-lg font-black text-gray-900 mt-2 truncate">{event.name}</h3>
+                <p className="text-xs text-gray-500 truncate">{event.venue || 'Event Venue'}</p>
               </div>
 
               {/* QR Code Container */}
@@ -1287,13 +1287,13 @@ const EventDetail = () => {
                 <img
                   src={getQrImageUrl(activePrintPass.rawToken || activePrintPass.passNumber)}
                   alt="QR Pass"
-                  className="w-44 h-44 object-contain mx-auto"
+                  className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
                 />
               </div>
 
               <div>
                 <p className="text-xs text-gray-400 font-medium">Pass Identifier</p>
-                <p className="font-mono font-black text-xl text-purple-800 tracking-wider">
+                <p className="font-mono font-black text-lg sm:text-xl text-purple-800 tracking-wider break-all">
                   {activePrintPass.passNumber}
                 </p>
               </div>
@@ -1348,14 +1348,14 @@ const EventDetail = () => {
       {/* REVOKE PASS MODAL */}
       {revokeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-3 text-red-600">
-              <AlertTriangle className="w-6 h-6 shrink-0" />
-              <h3 className="font-bold text-lg text-gray-900">Revoke Pass</h3>
+              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+              <h3 className="font-bold text-base sm:text-lg text-gray-900">Revoke Pass</h3>
             </div>
             <p className="text-xs text-gray-600">
               Are you sure you want to revoke pass{' '}
-              <strong className="font-mono text-gray-900">{passToRevoke?.passNumber}</strong>? Once
+              <strong className="font-mono text-gray-900 break-all">{passToRevoke?.passNumber}</strong>? Once
               revoked, it cannot be used for gate check-in or reactivation.
             </p>
             <div>
@@ -1370,7 +1370,7 @@ const EventDetail = () => {
                 className="w-full p-2.5 border rounded-lg text-xs focus:ring-2 focus:ring-red-500 focus:outline-none"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRevokeModalOpen(false)}

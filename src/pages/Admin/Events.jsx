@@ -85,6 +85,7 @@ const Events = () => {
       await eventsService.deleteEvent(eventToDelete);
       toast.success('Event deleted successfully');
       setCurrentPage(1);
+      await fetchEvents(searchTerm, 1);
     } catch (error) {
       toast.error('Failed to delete event');
       console.error('Error deleting event:', error);
@@ -105,6 +106,7 @@ const Events = () => {
         toast.success('Event created successfully');
       }
       setCurrentPage(1);
+      await fetchEvents(searchTerm, 1);
       setIsModalOpen(false);
       return result;
     } catch (error) {
@@ -118,6 +120,7 @@ const Events = () => {
     try {
       await eventsService.updateEventStatus(eventId, newStatus);
       toast.success('Event status updated successfully');
+      await fetchEvents(searchTerm, currentPage);
     } catch (error) {
       toast.error('Failed to update event status');
       console.error('Error updating status:', error);

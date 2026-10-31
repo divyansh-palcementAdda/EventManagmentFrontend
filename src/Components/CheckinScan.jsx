@@ -16,7 +16,7 @@ import {
   Building,
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import checkinService from '../Api-Services/checkinService';
 import eventsService from '../Api-Services/eventsService';
 
@@ -265,8 +265,6 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 md:p-6 flex flex-col items-center">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="w-full max-w-lg flex items-center justify-between mb-4">
         <button

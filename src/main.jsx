@@ -7,6 +7,21 @@ import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
-    <Toaster position="top-right" reverseOrder={false} />
+    <Toaster
+      position="top-right"
+      reverseOrder={false}
+      toastOptions={{
+        duration: 3000,
+        success: {
+          duration: 3000,
+        },
+        error: {
+          duration: 3000,
+        },
+        loading: {
+          duration: 3000,
+        },
+      }}
+    />
   </StrictMode>,
 )

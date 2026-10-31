@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Toaster } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -31,8 +30,6 @@ const StudentFillForm = () => {
 
   return (
     <div className="registration-page">
-      <Toaster position="top-right" />
-
       <div className="form-card">
         {/* Form Header */}
         <div className="form-header">
