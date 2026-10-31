@@ -10,10 +10,12 @@ import {
   X
 } from 'lucide-react'
 import authService from '../../Api-Services/authService.js'
+import { usePermissions } from '../../permissionContext/permissionContext.jsx'
 
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { canRead, clearPermissions } = usePermissions()
   const [activeItem, setActiveItem] = useState('dashboard')
 
   useEffect(() => {
@@ -31,13 +33,19 @@ const Sidebar = ({ isOpen, onClose }) => {
   }, [location.pathname])
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#6366f1', route: '/dashboard' },
-    { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events' },
-    { id: 'checkin', label: 'Gate Scanner', icon: QrCode, color: '#ec4899', route: '/admin/checkin' },
-    { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees' },
-    { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users' },
-    { id: 'roles', label: 'Roles & Permissions', icon: Shield, color: '#f59e0b', route: '/admin/roles' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#6366f1', route: '/dashboard', permission: null },
+    { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events', permission: 'events' },
+    { id: 'checkin', label: 'Gate Scanner', icon: QrCode, color: '#ec4899', route: '/admin/checkin', permission: 'checkin' },
+    { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees', permission: 'attendees' },
+    { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users', permission: 'users' },
+    { id: 'roles', label: 'Roles & Permissions', icon: Shield, color: '#f59e0b', route: '/admin/roles', permission: 'roles' },
   ]
+
+  // Filter menu items based on permissions
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!item.permission) return true
+    return canRead(item.permission)
+  })
 
   const handleItemClick = (item) => {
     setActiveItem(item.id)
@@ -46,6 +54,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   }
 
   const handleLogout = () => {
+    clearPermissions()
     authService.logout()
   }
 
@@ -81,7 +90,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             {/* Navigation */}
             <nav className="flex-1 p-4 overflow-y-auto">
               <ul className="space-y-2">
-                {menuItems.map((item) => {
+                {filteredMenuItems.map((item) => {
                   const Icon = item.icon
                   return (
                     <li key={item.id}>
@@ -132,7 +141,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-2">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon
               return (
                 <li key={item.id}>

@@ -5,8 +5,10 @@ import { Plus, Edit, Trash2, Mail, Phone, Shield, RefreshCw, KeyRound } from 'lu
 import userService from '../../Api-Services/userService';
 import roleService from '../../Api-Services/roleService';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../permissionContext/permissionContext.jsx';
 
 const AllUsers = () => {
+  const { canCreate, canUpdate, canDelete } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -235,13 +237,15 @@ const AllUsers = () => {
       accessor: 'id',
       render: (id, row) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleEditUser(row)}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit User"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
+          {canUpdate('users') && (
+            <button
+              onClick={() => handleEditUser(row)}
+              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit User"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => {
               setResetPasswordUser(row);
@@ -252,13 +256,15 @@ const AllUsers = () => {
           >
             <KeyRound className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => handleDeleteUser(row)}
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete User"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canDelete('users') && (
+            <button
+              onClick={() => handleDeleteUser(row)}
+              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete User"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -284,14 +290,16 @@ const AllUsers = () => {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleAddUser}
-            className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white"
-          >
-            <Plus className="w-4 h-4" />
-            Add User
-          </Button>
+          {canCreate('users') && (
+            <Button
+              variant="primary"
+              onClick={handleAddUser}
+              className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white"
+            >
+              <Plus className="w-4 h-4" />
+              Add User
+            </Button>
+          )}
         </div>
       </div>
 

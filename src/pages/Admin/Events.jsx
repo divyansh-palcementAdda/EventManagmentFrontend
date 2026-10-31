@@ -5,9 +5,11 @@ import AddAndEditEvents from '../../Components/Modals/addEvents/addAndEditEvents
 import eventsService from '../../Api-Services/eventsService';
 import { Plus, Edit, Trash2, Calendar, MapPin, Users, Eye, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../permissionContext/permissionContext.jsx';
 
 const Events = () => {
   const navigate = useNavigate();
+  const { canCreate, canUpdate, canDelete } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -257,20 +259,24 @@ const Events = () => {
           >
             <Eye className="w-4 h-4 text-green-600" />
           </button>
-          <button
-            onClick={() => handleEditEvent(row)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4 text-blue-600" />
-          </button>
-          <button
-            onClick={() => handleDeleteEvent(id)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
+          {canUpdate('events') && (
+            <button
+              onClick={() => handleEditEvent(row)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4 text-blue-600" />
+            </button>
+          )}
+          {canDelete('events') && (
+            <button
+              onClick={() => handleDeleteEvent(id)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -294,14 +300,16 @@ const Events = () => {
             className="max-w-md"
           />
         </div>
-        <Button
-          variant="primary"
-          onClick={handleAddEvent}
-          className="flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Add Event
-        </Button>
+        {canCreate('events') && (
+          <Button
+            variant="primary"
+            onClick={handleAddEvent}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            Add Event
+          </Button>
+        )}
       </div>
 
       {/* Table */}

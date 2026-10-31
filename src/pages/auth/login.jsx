@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, CalendarDays } from "lucide-react"
 import toast from "react-hot-toast"
 import RuLogo from "../../assets/logo.png"
 import authService from "../../Api-Services/authService.js"
+import roleService from "../../Api-Services/roleService.js"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -44,6 +45,20 @@ export default function Login() {
         sessionStorage.setItem("roles", JSON.stringify(response.data.roles))
       }
       sessionStorage.setItem("expiresIn", response.data.expiresIn)
+      
+      // Fetch permissions for the user's role
+      if (response.data.roleId) {
+        try {
+          const permResponse = await roleService.getPermissionsByRoleId(response.data.roleId)
+          const permissionData = permResponse?.data || permResponse || []
+          const permissionNames = permissionData.map(p => p.name || p)
+          sessionStorage.setItem('permissions', JSON.stringify(permissionNames))
+          sessionStorage.setItem('permissionTimestamp', Date.now().toString())
+        } catch (permError) {
+          console.error('Failed to fetch permissions:', permError)
+          // Continue with login even if permission fetch fails
+        }
+      }
       
       toast.success("Login successful!")
       navigate("/admin")

@@ -97,6 +97,17 @@ export const roleService = {
       throw error.response?.data || error.message;
     }
   },
+
+  // Get permissions for a specific role
+  getPermissionsByRoleId: async (id) => {
+    try {
+      const url = API_ROUTES.ROLES.PERMISSIONS.replace(':id', id);
+      const response = await axiosInstance.get(url);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 export default roleService;

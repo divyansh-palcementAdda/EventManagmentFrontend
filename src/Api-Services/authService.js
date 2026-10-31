@@ -41,6 +41,18 @@ export const authService = {
     }
   },
 
+  // Logout without redirect (for use with custom navigation)
+  logoutWithoutRedirect: async () => {
+    try {
+      const refreshToken = sessionStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await axiosInstance.post(API_ROUTES.AUTH.LOGOUT, { refreshToken }).catch(() => {});
+      }
+    } finally {
+      sessionStorage.clear();
+    }
+  },
+
   // Change password
   changePassword: async (passwordData) => {
     try {
