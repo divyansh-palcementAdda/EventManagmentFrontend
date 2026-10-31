@@ -12,6 +12,7 @@ const API_ROUTES = {
     LIST: '/events',
     CREATE: '/events',
     VIEW: '/events/:id',
+    UPDATE: '/events/:id',
     UPDATE_STATUS: '/events/:id/status',
     DELETE: '/events/:id',
     DAYS: '/events/:id/days',
