@@ -71,8 +71,8 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
         const res = await eventsService.searchEligibleGatekeepers(event.id, query, page, 8);
         const data = res.data;
         setEligibleList(data?.content || []);
-        setEligiblePage(data?.number || 0);
-        setEligibleTotalPages(data?.totalPages || 0);
+        setEligiblePage(data?.number ?? data?.page?.number ?? 0);
+        setEligibleTotalPages(data?.totalPages ?? data?.page?.totalPages ?? 0);
       } catch (err) {
         console.error('Failed to search eligible gatekeepers:', err);
         toast.error('Failed to search staff members');

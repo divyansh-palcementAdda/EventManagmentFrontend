@@ -5,6 +5,55 @@ const API_ROUTES = {
     LOGIN: '/auth/login',
     REFRESH_TOKEN: '/auth/refresh',
     ME: '/auth/me',
+    LOGOUT: '/auth/logout',
+    CHANGE_PASSWORD: '/auth/change-password',
+  },
+
+  // User Management Endpoints
+  USERS: {
+    LIST: '/users',
+    CREATE: '/users',
+    VIEW: '/users/:id',
+    UPDATE: '/users/:id',
+    UPDATE_STATUS: '/users/:id/status',
+    ROLES: '/users/:id/roles',
+    REMOVE_ROLE: '/users/:id/roles/:roleId',
+    PASSWORD: '/users/:id/password',
+    DELETE: '/users/:id',
+  },
+
+  // Role Management Endpoints
+  ROLES: {
+    LIST: '/roles',
+    ALL: '/roles/all',
+    CREATE: '/roles',
+    VIEW: '/roles/:id',
+    UPDATE: '/roles/:id',
+    DELETE: '/roles/:id',
+    PERMISSIONS: '/roles/:id/permissions',
+    REMOVE_PERMISSION: '/roles/:id/permissions/:permissionId',
+    USERS: '/roles/:id/users',
+  },
+
+  // Permission Management Endpoints
+  PERMISSIONS: {
+    LIST: '/permissions',
+    ALL: '/permissions/all',
+    RESOURCES: '/permissions/resources',
+    CREATE: '/permissions',
+    VIEW: '/permissions/:id',
+    UPDATE: '/permissions/:id',
+  },
+
+  // Attendee Management Endpoints
+  ATTENDEES: {
+    LIST: '/attendees',
+    CREATE: '/attendees',
+    VIEW: '/attendees/:id',
+    UPDATE: '/attendees/:id',
+    DELETE: '/attendees/:id',
+    STATS: '/attendees/stats',
+    EXPORT: '/attendees/export',
   },
 
   // Event Management Endpoints
