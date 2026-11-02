@@ -4,9 +4,8 @@ import { Searchbar, Table, Button, DeleteModal } from '../../../Components/reusa
 import AttendeeModal from '../../../Components/Modals/Attendees/AttendeeModal';
 import attendeesService from '../../../Api-Services/attendeesService';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
-import { usePermissions } from '../../../permissionContext/permissionContext.jsx';
 import { Plus, Edit, Trash2, Eye, Loader2, Ticket } from 'lucide-react';
+import { usePermissions } from '../../../permissionContext/permissionContext.jsx';
 
 const Attendees = () => {
   const navigate = useNavigate();
