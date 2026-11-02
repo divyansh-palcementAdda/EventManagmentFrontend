@@ -20,6 +20,8 @@ import {
   Loader2,
   Shield,
   QrCode,
+  GraduationCap,
+  Ticket,
 } from 'lucide-react';
 import { Button } from '../../../Components/reusable';
 
@@ -246,7 +248,7 @@ const AttendeeDetail = () => {
       </div>
 
       {/* Event Information Card */}
-      {attendee.event && (
+      {(attendee.event || attendee.eventName) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
             <MapPin className="w-4 h-4 text-purple-600" />
@@ -255,45 +257,91 @@ const AttendeeDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs text-gray-500">Event Name</label>
-              <p className="text-sm font-medium text-gray-900">{attendee.event.name || '-'}</p>
+              <p className="text-sm font-medium text-gray-900">{attendee.event?.name || attendee.eventName || '-'}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-gray-500">Event Code</label>
-              <p className="text-sm font-medium text-gray-900 font-mono">{attendee.event.eventCode || '-'}</p>
+              <p className="text-sm font-medium text-gray-900 font-mono">{attendee.event?.eventCode || attendee.eventCode || '-'}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-gray-500">Event Date</label>
               <p className="text-sm font-medium text-gray-900">
-                {attendee.event.startsAt ? new Date(attendee.event.startsAt).toLocaleDateString() : '-'}
+                {attendee.event?.startsAt ? new Date(attendee.event.startsAt).toLocaleDateString() : '-'}
               </p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-gray-500">Venue</label>
-              <p className="text-sm font-medium text-gray-900">{attendee.event.venue || '-'}</p>
+              <p className="text-sm font-medium text-gray-900">{attendee.event?.venue || '-'}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Linked Pass Card */}
-      {attendee.linkedPass && (
+      {(attendee.linkedPass || attendee.passNumber) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-            <QrCode className="w-4 h-4 text-purple-600" />
-            Linked Pass
+            <Ticket className="w-4 h-4 text-emerald-600" />
+            Linked Pass Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
+              <label className="text-xs text-gray-500">Pass Number</label>
+              <p className="text-sm font-bold text-emerald-700 font-mono">
+                {attendee.linkedPass?.passNumber || attendee.passNumber || '-'}
+              </p>
+            </div>
+            <div className="space-y-1">
               <label className="text-xs text-gray-500">Pass Sequence</label>
-              <p className="text-sm font-medium text-gray-900 font-mono">{attendee.linkedPass.sequenceNumber || '-'}</p>
+              <p className="text-sm font-medium text-gray-900 font-mono">
+                {attendee.linkedPass?.sequenceNumber ?? attendee.sequenceNumber ?? '-'}
+              </p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-gray-500">Pass Status</label>
-              <p className="text-sm font-medium text-gray-900">{attendee.linkedPass.status || '-'}</p>
+              <p className="text-sm font-medium text-gray-900">
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                  (attendee.linkedPass?.status || attendee.passStatus) === 'ACTIVATED'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {attendee.linkedPass?.status || attendee.passStatus || '-'}
+                </span>
+              </p>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500">Token</label>
-              <p className="text-sm font-medium text-gray-900 font-mono">{attendee.linkedPass.token || '-'}</p>
+              <label className="text-xs text-gray-500">Pass Category</label>
+              <p className="text-sm font-medium text-gray-900">
+                {attendee.linkedPass?.category || attendee.passCategory || attendee.category || 'GENERAL'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Academic Details Card if applicable */}
+      {(attendee.college || attendee.course || attendee.studentId) && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-purple-600" />
+            Academic Details
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">College / Institution</label>
+              <p className="text-sm font-medium text-gray-900">{attendee.college || '-'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">Course / Program</label>
+              <p className="text-sm font-medium text-gray-900">{attendee.course || '-'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">Year / Semester</label>
+              <p className="text-sm font-medium text-gray-900">{attendee.yearSemester || '-'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">Student ID / Roll No</label>
+              <p className="text-sm font-medium text-gray-900 font-mono">{attendee.studentId || '-'}</p>
             </div>
           </div>
         </div>

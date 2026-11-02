@@ -39,6 +39,7 @@ const ProtectedRoute = ({ children }) => {
 
 const AppRoutes = () => {
   return (
+<<<<<<< HEAD
     <PermissionProvider>
       <BrowserRouter>
         <Routes>
@@ -46,6 +47,16 @@ const AppRoutes = () => {
           <Route path="/activate/:token" element={<ActivatePass />} />
           <Route path="/activate" element={<ActivatePass />} />
           <Route path="/student-fill-form" element={<ActivatePass />} />
+=======
+    <BrowserRouter>
+      <Routes>
+        {/* Public Attendee Activation Endpoints */}
+        <Route path="/activate/:token" element={<ActivatePass />} />
+        <Route path="/activate" element={<ActivatePass />} />
+        <Route path="/pass/scan/:token" element={<ActivatePass />} />
+        <Route path="/pass/scan" element={<ActivatePass />} />
+        <Route path="/student-fill-form" element={<ActivatePass />} />
+>>>>>>> 07ea88c3a6201c6184c071b2d734db6a135bc34a
 
           {/* Authentication Endpoints */}
           <Route path="/login" element={<Login />} />

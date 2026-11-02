@@ -93,15 +93,7 @@ const API_ROUTES = {
   // Check-in Management Endpoints
   CHECKIN: {
     SCAN: '/checkin',
-  },
-
-  // Attendee Management Endpoints
-  ATTENDEES: {
-    LIST: '/attendees',
-    VIEW: '/attendees/:id',
-    CREATE: '/attendees',
-    UPDATE: '/attendees/:id',
-    DELETE: '/attendees/:id',
+    VERIFY: '/checkin/verify',
   },
 };
 

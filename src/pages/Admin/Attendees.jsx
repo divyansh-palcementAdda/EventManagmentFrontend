@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Searchbar, Table, Button, DeleteModal } from '../../Components/reusable';
 import AddAndEditAttendees from '../../Components/Modals/addAttendees/addAndEditAttendees';
-import { Plus, Edit, Trash2, Mail, Phone, Calendar, CheckCircle2, Ticket, Users, RefreshCw, Download, Building, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, Mail, Phone, Calendar, CheckCircle2, Ticket, Users, RefreshCw, Download, Building, Check, Eye, GraduationCap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import attendeeService from '../../Api-Services/attendeeService';
 import eventsService from '../../Api-Services/eventsService';
 import toast from 'react-hot-toast';
 
 const Attendees = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEventId, setSelectedEventId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -210,6 +212,12 @@ const Attendees = () => {
               {[row.designation, row.organization].filter(Boolean).join(' • ')}
             </div>
           )}
+          {(row.college || row.course) && (
+            <div className="text-[11px] text-purple-600 flex items-center gap-1 mt-0.5 font-medium">
+              <GraduationCap className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+              <span>{[row.course, row.college].filter(Boolean).join(' • ')}</span>
+            </div>
+          )}
         </div>
       ),
     },
@@ -226,17 +234,58 @@ const Attendees = () => {
       header: 'Pass Status',
       accessor: 'hasPass',
       render: (hasPass, row) => {
-        if (!hasPass) {
-          return <span className="text-xs text-gray-400">No Pass</span>;
+        const passAssigned = hasPass || Boolean(row?.passNumber) || Boolean(row?.passId) || Boolean(row?.linkedPass);
+        if (!passAssigned) {
+          return <span className="text-xs text-gray-400 font-medium">No Pass</span>;
         }
+
+        const passNum = row.passNumber || row.linkedPass?.passNumber;
+        const passStatus = (row.passStatus || row.linkedPass?.status || 'ACTIVATED').toUpperCase();
+        const category = row.passCategory || row.category || row.linkedPass?.category;
+
+        const getPassBadgeColor = (status) => {
+          switch (status) {
+            case 'ACTIVATED':
+              return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+            case 'REVOKED':
+              return 'bg-red-50 text-red-800 border-red-200';
+            case 'NOT_ACTIVATED':
+            case 'UNACTIVATED':
+              return 'bg-amber-50 text-amber-800 border-amber-200';
+            default:
+              return 'bg-blue-50 text-blue-800 border-blue-200';
+          }
+        };
+
+        const getStatusTagColor = (status) => {
+          switch (status) {
+            case 'ACTIVATED':
+              return 'bg-emerald-100 text-emerald-800';
+            case 'REVOKED':
+              return 'bg-red-100 text-red-800';
+            case 'NOT_ACTIVATED':
+            case 'UNACTIVATED':
+              return 'bg-amber-100 text-amber-800';
+            default:
+              return 'bg-gray-100 text-gray-700';
+          }
+        };
+
         return (
-          <div>
-            <div className="inline-flex items-center gap-1 font-mono text-xs font-bold text-green-800 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-              <Ticket className="w-3 h-3" />
-              {row.passNumber}
+          <div className="space-y-1">
+            <div className={`inline-flex items-center gap-1.5 font-mono text-xs font-bold px-2 py-0.5 rounded border ${getPassBadgeColor(passStatus)}`}>
+              <Ticket className="w-3.5 h-3.5 shrink-0" />
+              <span>{passNum || 'Assigned'}</span>
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">
-              Status: {row.passStatus || 'ACTIVE'}
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide ${getStatusTagColor(passStatus)}`}>
+                {passStatus}
+              </span>
+              {category && (
+                <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                  {category}
+                </span>
+              )}
             </div>
           </div>
         );
@@ -246,23 +295,25 @@ const Attendees = () => {
       header: 'Check-In',
       accessor: 'checkedIn',
       render: (checkedIn, row) => {
-        if (!checkedIn) {
+        const isCheckedIn = Boolean(checkedIn) || row?.checkInStatus === 'CHECKED_IN';
+        if (!isCheckedIn) {
           return (
-            <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
               <span className="w-2 h-2 rounded-full bg-gray-300"></span>
               Not Checked In
             </span>
           );
         }
+        const checkInTime = row.checkedInAt || row.lastCheckedInAt;
         return (
           <div>
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              <Check className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <Check className="w-3.5 h-3.5" />
               Checked In
             </span>
-            {row.checkedInAt && (
+            {checkInTime && (
               <div className="text-[10px] text-gray-400 mt-0.5">
-                {new Date(row.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             )}
           </div>
@@ -279,6 +330,13 @@ const Attendees = () => {
       accessor: 'id',
       render: (id, row) => (
         <div className="flex gap-1.5">
+          <button
+            onClick={() => navigate(`/admin/attendees/${id}`)}
+            className="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
           <button
             onClick={() => handleEditAttendee(row)}
             className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
@@ -341,26 +399,24 @@ const Attendees = () => {
       </div>
 
       {/* Stats Summary Cards */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Registered</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{stats.totalAttendees ?? 0}</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-xs font-medium text-green-600 uppercase tracking-wider">Confirmed</div>
-            <div className="text-2xl font-bold text-green-700 mt-1">{stats.confirmedAttendees ?? 0}</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-xs font-medium text-blue-600 uppercase tracking-wider">Passes Assigned</div>
-            <div className="text-2xl font-bold text-blue-700 mt-1">{stats.withPass ?? 0}</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-xs font-medium text-emerald-600 uppercase tracking-wider">Checked In</div>
-            <div className="text-2xl font-bold text-emerald-700 mt-1">{stats.checkedIn ?? 0}</div>
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Registered</div>
+          <div className="text-2xl font-bold text-gray-900 mt-1">{stats?.totalAttendees ?? totalElements ?? 0}</div>
         </div>
-      )}
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-xs font-medium text-green-600 uppercase tracking-wider">Confirmed</div>
+          <div className="text-2xl font-bold text-green-700 mt-1">{stats?.confirmedAttendees ?? attendees.filter(a => a.registrationStatus === 'CONFIRMED').length}</div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-xs font-medium text-blue-600 uppercase tracking-wider">Passes Assigned</div>
+          <div className="text-2xl font-bold text-blue-700 mt-1">{stats?.withPass ?? attendees.filter(a => a.passNumber || a.passId || a.hasPass).length}</div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-xs font-medium text-emerald-600 uppercase tracking-wider">Checked In</div>
+          <div className="text-2xl font-bold text-emerald-700 mt-1">{stats?.checkedIn ?? stats?.checkedInCount ?? attendees.filter(a => a.checkedIn).length}</div>
+        </div>
+      </div>
 
       {/* Filter and Search Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
