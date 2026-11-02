@@ -214,7 +214,11 @@ const Events = () => {
       header: 'Status',
       accessor: 'status',
       render: (status, row) => (
-        <StatusDropdown currentStatus={status} eventId={row.id} />
+        canUpdate('EVENT') ? (
+          <StatusDropdown currentStatus={status} eventId={row.id} />
+        ) : (
+          getStatusBadge(status)
+        )
       ),
     },
     {
