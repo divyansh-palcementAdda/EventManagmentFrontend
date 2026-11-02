@@ -104,19 +104,19 @@ const Dashboard = () => {
             Real-time overview of events, pass generation, activations, and gate check-in activity.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
           <button
             onClick={() => navigate('/admin/checkin')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition shadow-sm w-full sm:w-auto text-sm"
           >
-            <QrCode className="w-4 h-4" />
+            <QrCode className="w-3.5 h-3.5" />
             <span>Launch Scanner</span>
           </button>
           <button
             onClick={() => navigate('/admin/events')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition shadow-sm w-full sm:w-auto text-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Manage Events</span>
           </button>
         </div>

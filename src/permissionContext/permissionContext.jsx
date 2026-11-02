@@ -31,14 +31,16 @@ export const PermissionProvider = ({ children }) => {
 
     try {
       const response = await roleService.getPermissionsByRoleId(roleId);
-      const permissionData = response?.data || response || [];
+      // API returns { success: true, data: [...permissions] }
+      const permissionData = response?.data?.data || response?.data || [];
       
-      // Extract permission names from the response
-      const permissionNames = permissionData.map(p => p.name || p);
-      setPermissions(permissionNames);
+      console.log('Fetched permissions:', permissionData);
+      
+      // Store full permission objects with resource and action
+      setPermissions(permissionData);
       
       // Store in session storage for persistence
-      sessionStorage.setItem('permissions', JSON.stringify(permissionNames));
+      sessionStorage.setItem('permissions', JSON.stringify(permissionData));
       sessionStorage.setItem('permissionTimestamp', Date.now().toString());
       
       setInitialized(true);
@@ -57,21 +59,7 @@ export const PermissionProvider = ({ children }) => {
       if (isAuthenticated()) {
         const roleId = getCurrentRoleId();
         if (roleId) {
-          // Try to restore from session storage first
-          const storedPermissions = sessionStorage.getItem('permissions');
-          const storedTimestamp = sessionStorage.getItem('permissionTimestamp');
-          
-          if (storedPermissions && storedTimestamp) {
-            // Check if stored permissions are recent (less than 1 hour old)
-            const age = Date.now() - parseInt(storedTimestamp);
-            if (age < 3600000) {
-              setPermissions(JSON.parse(storedPermissions));
-              setInitialized(true);
-              return;
-            }
-          }
-          
-          // Fetch fresh permissions
+          // Always fetch fresh permissions on every reload
           await fetchPermissions(roleId);
         } else {
           setInitialized(true);
@@ -102,29 +90,37 @@ export const PermissionProvider = ({ children }) => {
   };
 
   // Permission checking functions
-  const hasPermission = (permissionName) => {
-    if (!permissionName) return false;
-    return permissions.includes(permissionName);
+  const hasPermission = (resource, action) => {
+    if (!resource || !action) return false;
+    const resourceUpper = resource.toUpperCase();
+    const actionUpper = action.toUpperCase();
+    const result = permissions.some(
+      p => p.resource?.toUpperCase() === resourceUpper && p.action?.toUpperCase() === actionUpper
+    );
+    console.log(`hasPermission(${resource}, ${action}):`, result);
+    return result;
   };
 
   const canRead = (resource) => {
-    return hasPermission(`read:${resource}`) || hasPermission(`${resource}:read`);
+    const result = hasPermission(resource, 'VIEW');
+    console.log(`canRead(${resource}):`, result);
+    return result;
   };
 
   const canCreate = (resource) => {
-    return hasPermission(`create:${resource}`) || hasPermission(`${resource}:create`);
+    return hasPermission(resource, 'CREATE');
   };
 
   const canUpdate = (resource) => {
-    return hasPermission(`update:${resource}`) || hasPermission(`${resource}:update`) || hasPermission(`edit:${resource}`) || hasPermission(`${resource}:edit`);
+    return hasPermission(resource, 'UPDATE');
   };
 
   const canDelete = (resource) => {
-    return hasPermission(`delete:${resource}`) || hasPermission(`${resource}:delete`);
+    return hasPermission(resource, 'DELETE');
   };
 
   const canExport = (resource) => {
-    return hasPermission(`export:${resource}`) || hasPermission(`${resource}:export`);
+    return hasPermission(resource, 'EXPORT');
   };
 
   const value = {

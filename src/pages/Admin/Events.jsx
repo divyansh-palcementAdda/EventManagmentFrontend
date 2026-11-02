@@ -259,7 +259,7 @@ const Events = () => {
           >
             <Eye className="w-4 h-4 text-green-600" />
           </button>
-          {canUpdate('events') && (
+          {canUpdate('EVENT') && (
             <button
               onClick={() => handleEditEvent(row)}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
@@ -268,7 +268,7 @@ const Events = () => {
               <Edit className="w-4 h-4 text-blue-600" />
             </button>
           )}
-          {canDelete('events') && (
+          {canDelete('EVENT') && (
             <button
               onClick={() => handleDeleteEvent(id)}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
@@ -300,7 +300,7 @@ const Events = () => {
             className="max-w-md"
           />
         </div>
-        {canCreate('events') && (
+        {canCreate('EVENT') && (
           <Button
             variant="primary"
             onClick={handleAddEvent}

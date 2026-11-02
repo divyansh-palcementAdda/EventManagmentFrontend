@@ -5,9 +5,11 @@ import AttendeeModal from '../../../Components/Modals/Attendees/AttendeeModal';
 import attendeesService from '../../../Api-Services/attendeesService';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
+import { usePermissions } from '../../../permissionContext/permissionContext.jsx';
 
 const Attendees = () => {
   const navigate = useNavigate();
+  const { canCreate, canUpdate, canDelete, canExport } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -158,20 +160,24 @@ const Attendees = () => {
           >
             <Eye className="w-4 h-4 text-blue-600" />
           </button>
-          <button
-            onClick={() => handleEditAttendee(row)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4 text-green-600" />
-          </button>
-          <button
-            onClick={() => handleDeleteAttendee(row)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
+          {canUpdate('ATTENDEE') && (
+            <button
+              onClick={() => handleEditAttendee(row)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4 text-green-600" />
+            </button>
+          )}
+          {canDelete('ATTENDEE') && (
+            <button
+              onClick={() => handleDeleteAttendee(row)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -195,14 +201,16 @@ const Attendees = () => {
             className="max-w-md"
           />
         </div>
-        <Button
-          variant="primary"
-          onClick={handleAddAttendee}
-          className="flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Add Attendee
-        </Button>
+        {canCreate('ATTENDEE') && (
+          <Button
+            variant="primary"
+            onClick={handleAddAttendee}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            Add Attendee
+          </Button>
+        )}
       </div>
 
       {/* Table */}

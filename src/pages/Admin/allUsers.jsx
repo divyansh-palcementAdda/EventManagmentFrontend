@@ -237,7 +237,7 @@ const AllUsers = () => {
       accessor: 'id',
       render: (id, row) => (
         <div className="flex items-center gap-2">
-          {canUpdate('users') && (
+          {canUpdate('USER') && (
             <button
               onClick={() => handleEditUser(row)}
               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -256,7 +256,7 @@ const AllUsers = () => {
           >
             <KeyRound className="w-4 h-4" />
           </button>
-          {canDelete('users') && (
+          {canDelete('USER') && (
             <button
               onClick={() => handleDeleteUser(row)}
               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -290,7 +290,7 @@ const AllUsers = () => {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          {canCreate('users') && (
+          {canCreate('USER') && (
             <Button
               variant="primary"
               onClick={handleAddUser}

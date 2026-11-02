@@ -15,8 +15,10 @@ import { usePermissions } from '../../permissionContext/permissionContext.jsx'
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { canRead, clearPermissions } = usePermissions()
+  const { canRead, clearPermissions, permissions } = usePermissions()
   const [activeItem, setActiveItem] = useState('dashboard')
+
+  console.log('Sidebar permissions:', permissions)
 
   useEffect(() => {
     const routeToItemMap = {
@@ -34,17 +36,19 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#6366f1', route: '/dashboard', permission: null },
-    { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events', permission: 'events' },
-    { id: 'checkin', label: 'Gate Scanner', icon: QrCode, color: '#ec4899', route: '/admin/checkin', permission: 'checkin' },
-    { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees', permission: 'attendees' },
-    { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users', permission: 'users' },
-    { id: 'roles', label: 'Roles & Permissions', icon: Shield, color: '#f59e0b', route: '/admin/roles', permission: 'roles' },
+    { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events', permission: 'EVENT' },
+    { id: 'checkin', label: 'Check-in', icon: QrCode, color: '#ec4899', route: '/admin/checkin', permission: 'CHECKIN' },
+    { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees', permission: 'ATTENDEE' },
+    { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users', permission: 'USER' },
+    { id: 'roles', label: 'Roles', icon: Shield, color: '#f59e0b', route: '/admin/roles', permission: 'ROLE' },
   ]
 
   // Filter menu items based on permissions
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.permission) return true
-    return canRead(item.permission)
+    const hasPermission = canRead(item.permission)
+    console.log(`Menu item "${item.label}" (permission: ${item.permission}):`, hasPermission)
+    return hasPermission
   })
 
   const handleItemClick = (item) => {

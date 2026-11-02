@@ -5,8 +5,10 @@ import { DeleteModal } from '../../Components/reusable';
 import roleService from '../../Api-Services/roleService';
 import permissionService from '../../Api-Services/permissionService';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../permissionContext/permissionContext.jsx';
 
 const RolesAndPermissions = () => {
+  const { canCreate, canUpdate, canDelete } = usePermissions();
   const [roles, setRoles] = useState([]);
   const [allPermissions, setAllPermissions] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
