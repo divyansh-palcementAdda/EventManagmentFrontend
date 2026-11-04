@@ -8,6 +8,8 @@ import Events from '../pages/Admin/Events';
 import EventDetail from '../pages/Admin/eventDetail';
 import AllUsers from '../pages/Admin/allUsers';
 import RolesAndPermissions from '../pages/Admin/rolesAndPermissions';
+import PassCategories from '../pages/Admin/PassCategories';
+import WalkInAdmission from '../pages/Admin/WalkInAdmission';
 import Login from '../pages/auth/login';
 import CheckinScan from '../Components/CheckinScan';
 import ActivatePass from '../pages/public/ActivatePass';
@@ -113,6 +115,27 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <MainLayout>
                 <RolesAndPermissions />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/categories"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <PassCategories />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/walkin"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <WalkInAdmission />
               </MainLayout>
             </ProtectedRoute>
           }

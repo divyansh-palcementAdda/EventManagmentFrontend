@@ -7,6 +7,8 @@ import {
   Shield,
   LogOut,
   QrCode,
+  Tags,
+  UserPlus,
   X
 } from 'lucide-react'
 import authService from '../../Api-Services/authService.js'
@@ -24,7 +26,9 @@ const Sidebar = ({ isOpen, onClose }) => {
       '/admin/events': 'events',
       '/admin/checkin': 'checkin',
       '/admin/users': 'users',
-      '/admin/roles': 'roles'
+      '/admin/roles': 'roles',
+      '/admin/categories': 'categories',
+      '/admin/walkin': 'walkin'
     }
     const currentRoute = location.pathname
     setActiveItem(routeToItemMap[currentRoute] || 'dashboard')
@@ -33,7 +37,9 @@ const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#6366f1', route: '/dashboard' },
     { id: 'events', label: 'Events', icon: Calendar, color: '#10b981', route: '/admin/events' },
+    { id: 'categories', label: 'Pass Categories', icon: Tags, color: '#8b5cf6', route: '/admin/categories' },
     { id: 'checkin', label: 'Gate Scanner', icon: QrCode, color: '#ec4899', route: '/admin/checkin' },
+    { id: 'walkin', label: 'Walk-In Admission', icon: UserPlus, color: '#f59e0b', route: '/admin/walkin' },
     { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees' },
     { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users' },
     { id: 'roles', label: 'Roles & Permissions', icon: Shield, color: '#f59e0b', route: '/admin/roles' },
