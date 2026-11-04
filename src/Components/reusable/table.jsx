@@ -1,7 +1,7 @@
 import React from 'react';
 import Pagination from './pagination';
 
-const Table = ({ columns, data, onRowClick, className = '', enablePagination = false, currentPage = 1, totalPages = 1, onPageChange, itemsPerPage = 5, useBackendPagination = false, totalElements = 0 }) => {
+const Table = ({ columns, data, onRowClick, className = '', enablePagination = false, currentPage = 1, totalPages = 1, onPageChange, itemsPerPage = 5, useBackendPagination = false, totalElements = 0, emptyMessage = 'No data found' }) => {
   const paginatedData = (enablePagination && !useBackendPagination)
     ? data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : data;
@@ -20,24 +20,32 @@ const Table = ({ columns, data, onRowClick, className = '', enablePagination = f
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 ${onRowClick ? 'cursor-pointer' : ''}`}
-                onClick={() => onRowClick && onRowClick(row)}
-              >
-                {columns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 text-gray-700">
-                    {column.render ? column.render(row[column.accessor], row, rowIndex) : row[column.accessor]}
-                  </td>
-                ))}
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-400 text-sm">
+                  {emptyMessage}
+                </td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  onClick={() => onRowClick && onRowClick(row)}
+                >
+                  {columns.map((column, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4 text-gray-700">
+                      {column.render ? column.render(row[column.accessor], row, rowIndex) : row[column.accessor]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {enablePagination && totalPages > 1 && (
+      {enablePagination && totalElements > 5 && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mt-4 p-4">
           <Pagination
             currentPage={currentPage}

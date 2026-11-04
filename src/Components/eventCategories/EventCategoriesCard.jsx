@@ -120,7 +120,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
   const handleToggleActive = async (cat) => {
     try {
       await categoryService.toggleEventCategoryActive(eventId, cat.id);
-      toast.success(`Category "${cat.passCategoryName}" status updated`);
+      toast.success(`Category "${cat.categoryName}" status updated`);
       fetchEventCategories();
     } catch (err) {
       console.error('Failed to toggle category active status:', err);
@@ -240,9 +240,9 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 <tr key={cat.id} className="hover:bg-gray-50/70 transition-colors">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">{cat.passCategoryName}</span>
+                      <span className="font-bold text-gray-900">{cat.categoryName}</span>
                       <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200">
-                        {cat.passCategoryCode}
+                        {cat.categoryCode}
                       </span>
                     </div>
                     {cat.passLimit && (
@@ -308,12 +308,12 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                     <button
                       onClick={() => handleToggleActive(cat)}
                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                        cat.active
+                        cat.enabled
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                           : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
                       }`}
                     >
-                      {cat.active ? (
+                      {cat.enabled ? (
                         <>
                           <CheckCircle className="w-3 h-3" /> Active
                         </>
@@ -478,7 +478,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="text-md font-bold text-gray-900">
-                Configure Policy — {editingCategory.passCategoryName}
+                Configure Policy — {editingCategory.categoryName}
               </h3>
               <button onClick={() => setEditModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X className="w-4 h-4" />
@@ -585,7 +585,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
             setSelectedForBuilder(null);
           }}
           eventCategoryId={selectedForBuilder.id}
-          categoryName={selectedForBuilder.passCategoryName}
+          categoryName={selectedForBuilder.categoryName}
           onPublished={() => {
             fetchEventCategories();
           }}

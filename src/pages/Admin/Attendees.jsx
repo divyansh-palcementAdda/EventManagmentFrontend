@@ -197,6 +197,15 @@ const Attendees = () => {
 
   const columns = [
     {
+      header: 'S.No',
+      accessor: 'id',
+      render: (_, __, rowIndex) => (
+        <span className="text-sm font-medium text-gray-500">
+          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+        </span>
+      ),
+    },
+    {
       header: 'Attendee',
       accessor: 'fullName',
       render: (name, row) => (
@@ -483,8 +492,11 @@ const Attendees = () => {
           <Table
             columns={columns}
             data={attendees}
+            enablePagination={true}
+            useBackendPagination={true}
             currentPage={currentPage}
             totalPages={totalPages}
+            totalElements={totalElements}
             onPageChange={setCurrentPage}
             emptyMessage="No attendees found matching current criteria"
           />

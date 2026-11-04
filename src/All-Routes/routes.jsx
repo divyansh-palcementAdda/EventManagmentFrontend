@@ -135,6 +135,26 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/categories"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <PassCategories />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/walkin"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <WalkInAdmission />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Gatekeeper Checkin Scanner Routes */}
           <Route

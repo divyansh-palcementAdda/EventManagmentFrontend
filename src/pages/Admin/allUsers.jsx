@@ -186,6 +186,15 @@ const AllUsers = () => {
 
   const columns = [
     {
+      header: 'S.No',
+      accessor: 'id',
+      render: (_, __, rowIndex) => (
+        <span className="text-sm font-medium text-gray-500">
+          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+        </span>
+      ),
+    },
+    {
       header: 'Full Name',
       accessor: 'fullName',
       render: (val, row) => (
@@ -351,8 +360,11 @@ const AllUsers = () => {
           <Table
             columns={columns}
             data={users}
+            enablePagination={true}
+            useBackendPagination={true}
             currentPage={currentPage}
             totalPages={totalPages}
+            totalElements={totalElements}
             onPageChange={setCurrentPage}
             emptyMessage="No system users found matching current criteria"
           />
