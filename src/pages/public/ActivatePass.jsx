@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Ticket,
@@ -14,17 +14,14 @@ import {
   Phone,
   Building,
   Briefcase,
-  ArrowRight,
-  ShieldCheck,
-  Clock,
-  RefreshCw,
   Search,
   GraduationCap,
   BookOpen,
   School,
   Hash,
   CheckCircle2,
-  ExternalLink,
+  Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import passService from '../../Api-Services/passService';
 
@@ -34,11 +31,11 @@ import passService from '../../Api-Services/passService';
  * - LOADING: Validating token against the backend
  * - READY_FOR_ACTIVATION: Valid, unactivated pass ready for attendee details entry
  * - SUBMITTING: Activation transaction in progress
- * - ACTIVATION_SUCCESS: Pass confirmed and linked to attendee
+ * - ACTIVATION_SUCCESS: Pass confirmed and linked
  * - ALREADY_ACTIVATED: Pass is already activated (terminal view)
  * - REVOKED: Pass is revoked (terminal view)
  * - INVALID_PASS: Pass token invalid or not found
- * - ERROR: Server or network error during validation
+ * - ERROR: Server or validation error
  */
 const PAGE_STATES = {
   INITIAL: 'INITIAL',
@@ -119,8 +116,15 @@ const ActivatePass = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [activationResult, setActivationResult] = useState(null);
+  const [isAutoActivated, setIsAutoActivated] = useState(false);
 
-  // Form State: preserves all entered values across errors
+  // Guard to ensure auto-activation is only invoked once per scan
+  const autoActivatedRef = useRef(false);
+
+  // Dynamic answers dictionary
+  const [dynamicAnswers, setDynamicAnswers] = useState({});
+
+  // Standard Form State: preserves all entered values across errors
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -156,6 +160,7 @@ const ActivatePass = () => {
     setSubmitError(null);
     setFormErrors({});
     setPassData(null);
+    setIsAutoActivated(false);
 
     try {
       const response = await passService.validatePass(cleanToken);
@@ -178,6 +183,37 @@ const ActivatePass = () => {
         setPageState(PAGE_STATES.REVOKED);
         setErrorMessage(data.message || 'This pass has been revoked by event administration.');
         return;
+      }
+
+      // Check walk-in policy
+      if (data.activationMode === 'NO_QR_WALK_IN') {
+        setPageState(PAGE_STATES.ERROR);
+        setErrorMessage('This pass category is designated for on-site staff walk-in admission only.');
+        return;
+      }
+
+      // Check scan auto-activate + no identity policy
+      if (data.activationMode === 'SCAN_AUTO_ACTIVATE' && data.identityPolicy === 'NO_IDENTITY') {
+        if (!autoActivatedRef.current) {
+          autoActivatedRef.current = true;
+          setPageState(PAGE_STATES.SUBMITTING);
+          try {
+            const autoRes = await passService.autoActivatePass({
+              rawToken: cleanToken,
+              eventId: data.eventId,
+            });
+            setActivationResult(autoRes.data || autoRes);
+            setIsAutoActivated(true);
+            setPageState(PAGE_STATES.ACTIVATION_SUCCESS);
+            toast.success('Pass auto-activated successfully!');
+            return;
+          } catch (autoErr) {
+            console.error('Auto-activation error:', autoErr);
+            setPageState(PAGE_STATES.ERROR);
+            setErrorMessage(autoErr.message || 'Auto-activation failed');
+            return;
+          }
+        }
       }
 
       // Check eligibility (handling both eligibleForActivation and isEligibleForActivation)
@@ -227,7 +263,11 @@ const ActivatePass = () => {
     }
   };
 
-  const isStudent = passData?.category === 'STUDENT';
+  const isStudent =
+    passData?.category === 'STUDENT' || passData?.categoryCode === 'STUDENT';
+  const hasCustomSchema = Boolean(
+    passData?.formSchema?.fields && passData.formSchema.fields.length > 0
+  );
 
   const validateForm = () => {
     const errors = {};
@@ -245,7 +285,16 @@ const ActivatePass = () => {
       errors.mobileNumber = 'Please enter a valid mobile number (7 to 15 digits)';
     }
 
-    if (isStudent) {
+    if (hasCustomSchema) {
+      passData.formSchema.fields.forEach((field) => {
+        if (field.required && field.visible !== false) {
+          const val = dynamicAnswers[field.fieldKey];
+          if (val === undefined || val === null || val === '') {
+            errors[field.fieldKey] = `${field.label} is required`;
+          }
+        }
+      });
+    } else if (isStudent) {
       if (!formData.college.trim()) {
         errors.college = 'College or institution name is required';
       }
@@ -281,6 +330,7 @@ const ActivatePass = () => {
         attendeeFullName: formData.fullName.trim(),
         attendeeEmail: formData.email.trim().toLowerCase(),
         attendeeMobileNumber: formData.mobileNumber.trim(),
+        answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : null,
         // Category specific fields
         attendeeCollege: isStudent ? formData.college.trim() : null,
         attendeeCourse: isStudent ? formData.course.trim() : null,
@@ -311,7 +361,6 @@ const ActivatePass = () => {
       setSubmitError(errorMsg);
       toast.error(errorMsg);
 
-      // If backend validation provides field errors
       if (err.errors && typeof err.errors === 'object') {
         setFormErrors(err.errors);
       }
@@ -343,17 +392,25 @@ const ActivatePass = () => {
           }`}
         >
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-            {isStudent ? (
+            {isAutoActivated ? (
+              <Sparkles className="w-8 h-8 text-white" />
+            ) : isStudent ? (
               <GraduationCap className="w-8 h-8 text-white" />
             ) : (
               <Ticket className="w-8 h-8 text-white" />
             )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isStudent ? 'Student Pass Registration' : 'Event Pass Activation'}
+            {isAutoActivated
+              ? 'Pass Validated'
+              : isStudent
+              ? 'Student Pass Registration'
+              : `${passData?.categoryName || 'Event'} Pass Activation`}
           </h1>
           <p className="text-purple-100/90 text-xs sm:text-sm mt-1 max-w-md mx-auto">
-            {isStudent
+            {isAutoActivated
+              ? 'Your event pass is active and ready for gate admission.'
+              : isStudent
               ? 'Complete your verified student registration to link your badge for official campus/event admission.'
               : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
           </p>
@@ -409,21 +466,27 @@ const ActivatePass = () => {
                 <CheckCircle className="w-10 h-10" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Pass Activated!</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isAutoActivated ? 'Pass Validated & Ready!' : 'Pass Activated!'}
+                </h2>
                 <p className="text-xs text-emerald-700 mt-1">Admission Registration Confirmed</p>
               </div>
 
-              <p className="text-xs text-gray-600 max-w-sm mx-auto">
-                This pass has been registered to{' '}
-                <strong className="text-gray-900">{formData.fullName}</strong>.
-                A confirmation has been queued for <strong>{formData.email}</strong>.
-              </p>
+              {isAutoActivated ? (
+                <p className="text-xs text-emerald-800 font-medium max-w-sm mx-auto">
+                  This pass has been auto-activated for admission without personal registration. Present your badge at the gate.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-600 max-w-sm mx-auto">
+                  This pass has been registered to <strong className="text-gray-900">{formData.fullName}</strong>. A confirmation has been recorded.
+                </p>
+              )}
 
               <div className="bg-white rounded-xl p-4 shadow-xs border border-emerald-100 text-left text-xs space-y-2 max-w-sm mx-auto">
                 <div className="flex justify-between items-center border-b pb-1.5">
                   <span className="text-gray-500">Pass Number:</span>
                   <span className="font-mono font-bold text-purple-700 text-sm">
-                    {passData?.passNumber}
+                    {passData?.passNumber || activationResult?.passNumber}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b pb-1.5">
@@ -435,7 +498,7 @@ const ActivatePass = () => {
                         : 'bg-purple-50 text-purple-700 border border-purple-200'
                     }`}
                   >
-                    {passData?.category || 'STUDENT'}
+                    {passData?.categoryCode || passData?.category || 'PASS'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b pb-1.5">
@@ -454,12 +517,6 @@ const ActivatePass = () => {
                     <span className="text-gray-800 font-medium">{formData.college}</span>
                   </div>
                 )}
-                {isStudent && formData.course && (
-                  <div className="flex justify-between items-center border-b pb-1.5">
-                    <span className="text-gray-500">Course:</span>
-                    <span className="text-gray-800 font-medium">{formData.course}</span>
-                  </div>
-                )}
                 {passData?.validDays && passData.validDays.length > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Valid Days:</span>
@@ -471,7 +528,7 @@ const ActivatePass = () => {
               </div>
 
               <p className="text-[11px] text-gray-500 pt-2">
-                Present this pass badge or your confirmation email to the gatekeeper on event day for check-in.
+                Present this pass badge to the gatekeeper on event day for admission scan.
               </p>
 
               <button
@@ -480,6 +537,7 @@ const ActivatePass = () => {
                   setPageState(PAGE_STATES.INITIAL);
                   setPassData(null);
                   setInputToken('');
+                  autoActivatedRef.current = false;
                   navigate('/activate');
                 }}
                 className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 text-xs font-semibold rounded-lg transition"
@@ -498,7 +556,7 @@ const ActivatePass = () => {
               <div>
                 <h3 className="text-lg font-bold text-blue-950">Pass Already Claimed</h3>
                 <p className="text-xs text-blue-700 mt-1">
-                  {errorMessage || 'This badge has already been activated and linked to an attendee.'}
+                  {errorMessage || 'This badge has already been activated.'}
                 </p>
               </div>
 
@@ -644,7 +702,7 @@ const ActivatePass = () => {
                             : 'bg-purple-100 text-purple-800 border-purple-300'
                         }`}
                       >
-                        {passData.category || 'STUDENT'} CATEGORY
+                        {passData.categoryName || passData.categoryCode || passData.category || 'GENERAL'} CATEGORY
                       </span>
                     </div>
                     <span className="font-mono text-xs font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">
@@ -699,7 +757,7 @@ const ActivatePass = () => {
                   </div>
                 )}
 
-                {/* 3. Category-Specific Registration Form */}
+                {/* 3. Category Registration Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Full Name */}
                   <div>
@@ -786,10 +844,156 @@ const ActivatePass = () => {
                     </div>
                   </div>
 
-                  {/* Category-Specific Fields */}
-                  {isStudent ? (
+                  {/* Custom Dynamic Form Fields (if published schema exists) */}
+                  {hasCustomSchema ? (
+                    <div className="space-y-4 pt-2 border-t border-gray-100">
+                      <div className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Additional Information
+                      </div>
+                      {passData.formSchema.fields
+                        .filter((f) => f.visible !== false)
+                        .map((field) => (
+                          <div key={field.fieldKey} className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 block">
+                              {field.label} {field.required && <span className="text-rose-500">*</span>}
+                            </label>
+
+                            {['TEXT', 'EMAIL', 'PHONE', 'NUMBER'].includes(field.fieldType) ? (
+                              <input
+                                type={
+                                  field.fieldType === 'NUMBER'
+                                    ? 'number'
+                                    : field.fieldType === 'EMAIL'
+                                    ? 'email'
+                                    : 'text'
+                                }
+                                placeholder={field.placeholder || ''}
+                                value={dynamicAnswers[field.fieldKey] || ''}
+                                onChange={(e) => {
+                                  setDynamicAnswers({
+                                    ...dynamicAnswers,
+                                    [field.fieldKey]: e.target.value,
+                                  });
+                                  if (formErrors[field.fieldKey]) {
+                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                  }
+                                }}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+                                  formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-purple-500'
+                                }`}
+                              />
+                            ) : field.fieldType === 'TEXTAREA' ? (
+                              <textarea
+                                rows="3"
+                                placeholder={field.placeholder || ''}
+                                value={dynamicAnswers[field.fieldKey] || ''}
+                                onChange={(e) => {
+                                  setDynamicAnswers({
+                                    ...dynamicAnswers,
+                                    [field.fieldKey]: e.target.value,
+                                  });
+                                  if (formErrors[field.fieldKey]) {
+                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                  }
+                                }}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+                                  formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-purple-500'
+                                }`}
+                              />
+                            ) : field.fieldType === 'SELECT' ? (
+                              <select
+                                value={dynamicAnswers[field.fieldKey] || ''}
+                                onChange={(e) => {
+                                  setDynamicAnswers({
+                                    ...dynamicAnswers,
+                                    [field.fieldKey]: e.target.value,
+                                  });
+                                  if (formErrors[field.fieldKey]) {
+                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                  }
+                                }}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+                                  formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-purple-500'
+                                }`}
+                              >
+                                <option value="">{field.placeholder || '-- Select an option --'}</option>
+                                {field.options?.map((opt, oIdx) => (
+                                  <option key={oIdx} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : field.fieldType === 'RADIO' ? (
+                              <div className="space-y-1.5 pt-1">
+                                {field.options?.map((opt, oIdx) => (
+                                  <label
+                                    key={oIdx}
+                                    className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={field.fieldKey}
+                                      value={opt}
+                                      checked={dynamicAnswers[field.fieldKey] === opt}
+                                      onChange={(e) => {
+                                        setDynamicAnswers({
+                                          ...dynamicAnswers,
+                                          [field.fieldKey]: e.target.value,
+                                        });
+                                        if (formErrors[field.fieldKey]) {
+                                          setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                        }
+                                      }}
+                                      className="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span>{opt}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            ) : field.fieldType === 'CHECKBOX' ? (
+                              <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer pt-1">
+                                <input
+                                  type="checkbox"
+                                  checked={!!dynamicAnswers[field.fieldKey]}
+                                  onChange={(e) => {
+                                    setDynamicAnswers({
+                                      ...dynamicAnswers,
+                                      [field.fieldKey]: e.target.checked,
+                                    });
+                                    if (formErrors[field.fieldKey]) {
+                                      setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                    }
+                                  }}
+                                  className="rounded text-purple-600 focus:ring-purple-500"
+                                />
+                                <span>{field.placeholder || field.label}</span>
+                              </label>
+                            ) : null}
+
+                            {field.helpText && (
+                              <p className="text-[11px] text-gray-400">{field.helpText}</p>
+                            )}
+
+                            {formErrors[field.fieldKey] && (
+                              <span className="text-[11px] text-rose-500 mt-1 block">
+                                {formErrors[field.fieldKey]}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  ) : isStudent ? (
                     <>
-                      {/* Student: College & Course */}
+                      {/* Default Student: College & Course */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-semibold text-gray-700 block mb-1">
@@ -884,7 +1088,7 @@ const ActivatePass = () => {
                     </>
                   ) : (
                     <>
-                      {/* OTHER Category: Organization & Designation */}
+                      {/* Default OTHER Category: Organization & Designation */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-semibold text-gray-700 block mb-1">

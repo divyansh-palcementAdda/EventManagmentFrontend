@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import eventsService from '../../Api-Services/eventsService';
 import passService from '../../Api-Services/passService';
+import categoryService from '../../Api-Services/categoryService';
+import EventCategoriesCard from '../../Components/eventCategories/EventCategoriesCard';
 import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownloadPassesModal';
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
@@ -84,6 +86,7 @@ const EventDetail = () => {
   const [selectedGenDayIds, setSelectedGenDayIds] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [newlyGeneratedPasses, setNewlyGeneratedPasses] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
 
   // Modals State
   const [isBulkDownloadOpen, setIsBulkDownloadOpen] = useState(false);
@@ -115,6 +118,7 @@ const EventDetail = () => {
     fetchEventDays();
     fetchPassStats();
     fetchGatekeepers();
+    fetchConfiguredCategories();
   }, [eventId]);
 
   // Fetch Passes whenever filters, pagination, or sorting change
@@ -166,6 +170,22 @@ const EventDetail = () => {
       console.error('Error fetching pass stats:', error);
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const fetchConfiguredCategories = async () => {
+    try {
+      const res = await categoryService.getEventCategories(eventId, true);
+      const cats = res.data || [];
+      setAvailableCategories(cats);
+      if (cats.length > 0) {
+        const firstCreatable = cats.find((c) => c.activationMode !== 'NO_QR_WALK_IN');
+        if (firstCreatable) {
+          setGenCategory(firstCreatable.passCategoryCode);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load categories for pass generation:', err);
     }
   };
 
@@ -222,6 +242,7 @@ const EventDetail = () => {
         fetchPasses(),
         fetchPassStats(),
         fetchGatekeepers(),
+        fetchConfiguredCategories(),
       ]);
       toast.success('Event data refreshed!');
     } catch (err) {
@@ -241,6 +262,11 @@ const EventDetail = () => {
 
   const handleGeneratePasses = async (e) => {
     e.preventDefault();
+    const catConfig = availableCategories.find((c) => c.passCategoryCode === genCategory);
+    if (catConfig?.activationMode === 'NO_QR_WALK_IN') {
+      toast.error('Walk-in categories do not use pre-generated QR passes. Use Staff Walk-In Admission.');
+      return;
+    }
     if (batchSize < 1 || batchSize > 500) {
       toast.error('Batch size must be between 1 and 500');
       return;
@@ -581,6 +607,9 @@ const EventDetail = () => {
         </div>
       </div>
 
+      {/* Dynamic Pass Categories & Policies Card */}
+      <EventCategoriesCard eventId={eventId} eventCode={event?.eventCode} />
+
       {/* Enhanced Passes for This Event Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Section Header & Live Metric Chips */}
@@ -800,8 +829,16 @@ const EventDetail = () => {
                     className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-purple-500 focus:outline-none"
                   >
                     <option value="ALL">All Categories</option>
-                    <option value="STUDENT">STUDENT</option>
-                    <option value="OTHER">OTHER</option>
+                    {availableCategories.length > 0 ? (
+                      availableCategories.map((c) => (
+                        <option key={c.id} value={c.passCategoryCode}>
+                          {c.passCategoryName} ({c.passCategoryCode})
+                        </option>
+                      ))
+                    ) : (
+                      <option value="STUDENT">STUDENT</option>
+                    )}
+                    {availableCategories.length === 0 && <option value="OTHER">OTHER</option>}
                   </select>
                 </div>
 
@@ -997,11 +1034,10 @@ const EventDetail = () => {
                       </td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            p.category === 'STUDENT'
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                               : 'bg-purple-50 text-purple-700 border-purple-200'
-                          }`}
+                            }`}
                         >
                           {p.category || 'STUDENT'}
                         </span>
@@ -1183,7 +1219,7 @@ const EventDetail = () => {
                   <p className="text-xs text-green-700 mt-1">
                     Raw QR tokens have been generated. Below is the batch preview.
                   </p>
-  
+
                 </div>
 
                 <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
@@ -1229,13 +1265,36 @@ const EventDetail = () => {
                     onChange={(e) => setGenCategory(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   >
-                    <option value="STUDENT">STUDENT (Student Registration)</option>
-                    <option value="OTHER">OTHER (General Attendee Registration)</option>
+                    {availableCategories.length > 0 ? (
+                      availableCategories.map((c) => (
+                        <option
+                          key={c.id}
+                          value={c.passCategoryCode}
+                          disabled={c.activationMode === 'NO_QR_WALK_IN'}
+                        >
+                          {c.passCategoryName} ({c.passCategoryCode})
+                          {c.activationMode === 'NO_QR_WALK_IN' ? ' — [Walk-In Only, Pre-generation not permitted]' : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="STUDENT">STUDENT (Student Registration)</option>
+                    )}
+                    {availableCategories.length === 0 && (
+                      <option value="OTHER">OTHER (General Attendee Registration)</option>
+                    )}
                   </select>
                   <p className="text-[11px] text-gray-400 mt-1">
                     Determines the registration fields presented to attendees upon scanning.
                   </p>
-  
+                  {availableCategories.find((c) => c.passCategoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
+                    <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Walk-in categories do not use pre-generated QR passes; attendees are admitted on-site via Staff Walk-In.</span>
+                    </div>
+                  )}
+                  <p className="hidden">
+                  </p>
+
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -1253,7 +1312,7 @@ const EventDetail = () => {
                   <p className="text-[11px] text-gray-400 mt-1">
                     Format: {event.eventCode}-{event.passSeriesCode}-000001
                   </p>
-  
+
                 </div>
 
                 {/* Day Selection Checkboxes */}
@@ -1295,7 +1354,7 @@ const EventDetail = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={generating}
+                    disabled={generating || availableCategories.find((c) => c.passCategoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
                     className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     {generating ? (
@@ -1355,11 +1414,10 @@ const EventDetail = () => {
 
                 <div className="mt-1">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
-                      activePrintPass.category === 'STUDENT'
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${activePrintPass.category === 'STUDENT'
                         ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-purple-50 text-purple-700 border-purple-200'
-                    }`}
+                      }`}
                   >
                     {activePrintPass.category || 'STUDENT'} PASS
                   </span>

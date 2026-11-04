@@ -71,6 +71,19 @@ export const passService = {
     }
   },
 
+  // Public scan auto-activation (for SCAN_AUTO_ACTIVATE + NO_IDENTITY)
+  autoActivatePass: async (data) => {
+    try {
+      const response = await axiosInstance.post(
+        API_ROUTES.PASSES.AUTO_ACTIVATE,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // Revoke pass (admin only)
   revokePass: async (passId, reason = '') => {
     try {

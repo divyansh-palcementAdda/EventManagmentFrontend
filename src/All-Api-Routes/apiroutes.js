@@ -79,6 +79,7 @@ const API_ROUTES = {
     GENERATE: '/passes/generate',
     VALIDATE: '/passes/validate',
     ACTIVATE: '/passes/activate',
+    AUTO_ACTIVATE: '/passes/auto-activate',
     VIEW: '/passes/:id',
     REVOKE: '/passes/:id/revoke',
     STATS: '/passes/event/:eventId/stats',
@@ -94,6 +95,40 @@ const API_ROUTES = {
   CHECKIN: {
     SCAN: '/checkin',
     VERIFY: '/checkin/verify',
+  },
+
+  // Pass Categories
+  PASS_CATEGORIES: {
+    LIST: '/pass-categories',
+    CREATE: '/pass-categories',
+    VIEW: '/pass-categories/:id',
+    UPDATE: '/pass-categories/:id',
+    TOGGLE_ACTIVE: '/pass-categories/:id/toggle-active',
+    AVAILABLE_FOR_EVENT: '/pass-categories/available-for-event/:eventId',
+  },
+
+  // Event Categories & Policies
+  EVENT_CATEGORIES: {
+    LIST: '/events/:eventId/categories',
+    CONFIGURE: '/events/:eventId/categories',
+    VIEW: '/events/:eventId/categories/:eventCategoryId',
+    UPDATE_POLICY: '/events/:eventId/categories/:eventCategoryId',
+    TOGGLE_ACTIVE: '/events/:eventId/categories/:eventCategoryId/toggle-active',
+  },
+
+  // Dynamic Form Builder
+  FORM_BUILDER: {
+    DRAFT: '/event-categories/:eventCategoryId/form/draft',
+    DELETE_FIELD: '/event-categories/:eventCategoryId/form/fields/:fieldConfigId',
+    PUBLISH: '/event-categories/:eventCategoryId/form/publish',
+    PUBLISHED: '/event-categories/:eventCategoryId/form/published',
+    HISTORY: '/event-categories/:eventCategoryId/form/history',
+  },
+
+  // Walk-in Admission
+  WALKIN: {
+    CATEGORIES: '/walkin/categories',
+    ADMIT: '/walkin/admit',
   },
 };
 

@@ -8,6 +8,8 @@ import Events from '../pages/Admin/Events';
 import EventDetail from '../pages/Admin/eventDetail';
 import AllUsers from '../pages/Admin/allUsers';
 import RolesAndPermissions from '../pages/Admin/rolesAndPermissions';
+import PassCategories from '../pages/Admin/PassCategories';
+import WalkInAdmission from '../pages/Admin/WalkInAdmission';
 import Login from '../pages/auth/login';
 import CheckinScan from '../Components/CheckinScan';
 import ActivatePass from '../pages/public/ActivatePass';
@@ -40,14 +42,14 @@ const ProtectedRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <PermissionProvider>
-       <BrowserRouter>
-      <Routes>
-        {/* Public Attendee Activation Endpoints */}
-        <Route path="/activate/:token" element={<ActivatePass />} />
-        <Route path="/activate" element={<ActivatePass />} />
-        <Route path="/pass/scan/:token" element={<ActivatePass />} />
-        <Route path="/pass/scan" element={<ActivatePass />} />
-        <Route path="/student-fill-form" element={<ActivatePass />} />
+      <BrowserRouter>
+        <Routes>
+          {/* Public Attendee Activation Endpoints */}
+          <Route path="/activate/:token" element={<ActivatePass />} />
+          <Route path="/activate" element={<ActivatePass />} />
+          <Route path="/pass/scan/:token" element={<ActivatePass />} />
+          <Route path="/pass/scan" element={<ActivatePass />} />
+          <Route path="/student-fill-form" element={<ActivatePass />} />
           {/* Authentication Endpoints */}
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Login />} />
