@@ -191,6 +191,102 @@ const PassEmailTemplate = ({
             )}
           </div>
 
+          {/* Pass details — same row as QR, to its right */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '11%',
+              left: '50%',
+              width: '30%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: '0.4vw',
+            }}
+          >
+            {/* Attendee Name */}
+            {attendeeName && (
+              <p
+                style={{
+                  margin: '0',
+                  color: '#1a1a1a',
+                  fontSize: 'clamp(5px, 1.8vw, 11px)',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.2px',
+                  lineHeight: 1.3,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {attendeeName}
+              </p>
+            )}
+
+            {/* Pass Identifier */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1vw' }}>
+              <p
+                style={{
+                  margin: '0',
+                  color: '#6b7280',
+                  fontSize: 'clamp(4px, 1.3vw, 9px)',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3px',
+                  lineHeight: 1.2,
+                }}
+              >
+                Pass Identifier
+              </p>
+              <p
+                style={{
+                  margin: '0',
+                  color: '#1a1a1a',
+                  fontSize: 'clamp(5px, 1.6vw, 10px)',
+                  fontWeight: '700',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.3px',
+                  lineHeight: 1.3,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {passCode}
+              </p>
+            </div>
+
+            {/* Valid for */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1vw' }}>
+              <p
+                style={{
+                  margin: '0',
+                  color: '#6b7280',
+                  fontSize: 'clamp(4px, 1.3vw, 9px)',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3px',
+                  lineHeight: 1.2,
+                }}
+              >
+                Valid for
+              </p>
+              <p
+                style={{
+                  margin: '0',
+                  color: '#1a1a1a',
+                  fontSize: 'clamp(5px, 1.6vw, 10px)',
+                  fontWeight: '700',
+                  letterSpacing: '0.2px',
+                  lineHeight: 1.3,
+                }}
+              >
+                {validDays}
+              </p>
+            </div>
+          </div>
+
           {/* T&C — absolutely positioned over the bottom half of the second image */}
           <div
             style={{
