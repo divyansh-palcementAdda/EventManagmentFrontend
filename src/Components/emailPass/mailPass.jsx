@@ -151,29 +151,44 @@ const PassEmailTemplate = ({
             }}
           />
 
-          {/* QR placeholder — divider ke right side, top area */}
+          {/* QR Code Image — divider ke right side, top area */}
           <div
             style={{
               position: 'absolute',
-              top: '30%',
-              left: '38%',
+              top: '5%',
+              left: '34%',
+              width: '22%',
+              aspectRatio: '1 / 1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <p
-              style={{
-                margin: '0',
-                fontSize: 'clamp(5px, 1.8vw, 11px)',
-                fontWeight: '700',
-                color: '#1a1a1a',
-                fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
-                letterSpacing: '0.3px',
-              }}
-            >
-              QR Code
-            </p>
+            {qrImageUrl ? (
+              <img
+                src={qrImageUrl}
+                alt="QR Code"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <p
+                style={{
+                  margin: '0',
+                  fontSize: 'clamp(5px, 1.8vw, 11px)',
+                  fontWeight: '700',
+                  color: '#1a1a1a',
+                  fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
+                  letterSpacing: '0.3px',
+                }}
+              >
+                QR Code
+              </p>
+            )}
           </div>
 
           {/* T&C — absolutely positioned over the bottom half of the second image */}
