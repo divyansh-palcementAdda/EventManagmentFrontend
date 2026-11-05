@@ -46,7 +46,6 @@ const PassEmailTemplate = ({
     'Each pass is valid for one person only and is non-transferable.',
     'Please carry a valid government-issued photo ID for verification.',
     'Re-entry is subject to event management approval.',
-    'The organisers reserve the right to deny entry or make changes to the event schedule without prior notice.',
   ];
   const terms = termsAndConditions || defaultTerms;
   return (
@@ -90,11 +89,11 @@ const PassEmailTemplate = ({
             style={{
               position: 'absolute',
               top: '55%',
-              left: '52%',
+              left: '53%',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-start',
-              gap: '10px',
+              gap: '1vw',
             }}
           >
             {/* Date */}
@@ -102,7 +101,7 @@ const PassEmailTemplate = ({
               style={{
                 margin: '0',
                 color: '#1a1a1a',
-                fontSize: '13px',
+                fontSize: 'clamp(6px, 2.2vw, 13px)',
                 fontWeight: '800',
                 textTransform: 'uppercase',
                 letterSpacing: '0.3px',
@@ -117,7 +116,7 @@ const PassEmailTemplate = ({
               style={{
                 margin: '0',
                 color: '#1a1a1a',
-                fontSize: '13px',
+                fontSize: 'clamp(6px, 2.2vw, 13px)',
                 fontWeight: '800',
                 textTransform: 'uppercase',
                 letterSpacing: '0.3px',
@@ -152,11 +151,36 @@ const PassEmailTemplate = ({
             }}
           />
 
+          {/* QR placeholder — divider ke right side, top area */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '30%',
+              left: '38%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <p
+              style={{
+                margin: '0',
+                fontSize: 'clamp(5px, 1.8vw, 11px)',
+                fontWeight: '700',
+                color: '#1a1a1a',
+                fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
+                letterSpacing: '0.3px',
+              }}
+            >
+              QR Code
+            </p>
+          </div>
+
           {/* T&C — absolutely positioned over the bottom half of the second image */}
           <div
             style={{
               position: 'absolute',
-              bottom: '6%',
+              bottom: '8%',
               left: '14%',
               right: '18%',
             }}
@@ -164,13 +188,14 @@ const PassEmailTemplate = ({
             {/* Heading */}
             <p
               style={{
-                margin: '0 0 4px 0',
-                fontSize: '10px',
+                margin: '0 0 0.3vw 0',
+                fontSize: 'clamp(5px, 2vw, 13px)',
                 fontWeight: '700',
                 color: '#1a1a1a',
                 textDecoration: 'underline',
                 fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
                 lineHeight: 1.3,
+                whiteSpace: 'nowrap',
               }}
             >
               Terms &amp; Conditions – {eventName}
@@ -184,15 +209,15 @@ const PassEmailTemplate = ({
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '5px',
-                    marginBottom: '2px',
-                    fontSize: '8.5px',
+                    gap: '0.4vw',
+                    marginBottom: '0.25vw',
+                    fontSize: 'clamp(4px, 1.6vw, 11px)',
                     color: '#1a1a1a',
-                    lineHeight: '1.4',
+                    lineHeight: '1.35',
                     fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
                   }}
                 >
-                  <span style={{ fontSize: '10px', lineHeight: '1.2', flexShrink: 0 }}>•</span>
+                  <span style={{ fontSize: 'clamp(5px, 1.8vw, 12px)', lineHeight: '1.2', flexShrink: 0 }}>•</span>
                   <span>{term}</span>
                 </li>
               ))}
