@@ -23,6 +23,7 @@ import forDiv2Img from '../../assets/for div2.png';
  *  - organizerEmail : string
  *  - qrImageUrl     : string  (data-URL or hosted URL for the QR code image)
  *  - logoUrl        : string  (optional organiser logo URL)
+ *  - termsAndConditions : string[]  (optional custom T&C list; falls back to defaults)
  */
 const PassEmailTemplate = ({
   attendeeName = 'John Doe',
@@ -38,7 +39,16 @@ const PassEmailTemplate = ({
   organizerEmail = 'events@example.com',
   qrImageUrl = null,
   logoUrl = null,
+  termsAndConditions = null,
 }) => {
+  const defaultTerms = [
+    'Entry is permitted only with a valid event pass.',
+    'Each pass is valid for one person only and is non-transferable.',
+    'Please carry a valid government-issued photo ID for verification.',
+    'Re-entry is subject to event management approval.',
+    'The organisers reserve the right to deny entry or make changes to the event schedule without prior notice.',
+  ];
+  const terms = termsAndConditions || defaultTerms;
   return (
     /* ── Outer page wrapper ─────────────────────────────────────── */
     <div
@@ -129,8 +139,8 @@ const PassEmailTemplate = ({
           </div>
         </div>
 
-        {/* ── Second banner image ───────────────────────────────── */}
-        <div style={{ width: '100%', lineHeight: 0, marginTop: '8px' }}>
+        {/* ── Second banner image + T&C overlay ────────────────── */}
+        <div style={{ position: 'relative', width: '100%', lineHeight: 0, marginTop: '8px' }}>
           <img
             src={forDiv2Img}
             alt="Event pass banner 2"
@@ -141,8 +151,54 @@ const PassEmailTemplate = ({
               objectFit: 'cover',
             }}
           />
-        </div>
 
+          {/* T&C — absolutely positioned over the bottom half of the second image */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '6%',
+              left: '14%',
+              right: '18%',
+            }}
+          >
+            {/* Heading */}
+            <p
+              style={{
+                margin: '0 0 4px 0',
+                fontSize: '10px',
+                fontWeight: '700',
+                color: '#1a1a1a',
+                textDecoration: 'underline',
+                fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
+                lineHeight: 1.3,
+              }}
+            >
+              Terms &amp; Conditions – {eventName}
+            </p>
+
+            {/* Bullet list */}
+            <ul style={{ margin: '0', padding: '0', listStyle: 'none' }}>
+              {terms.map((term, idx) => (
+                <li
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '5px',
+                    marginBottom: '2px',
+                    fontSize: '8.5px',
+                    color: '#1a1a1a',
+                    lineHeight: '1.4',
+                    fontFamily: "'Telegraf', 'Segoe UI', Arial, sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: '10px', lineHeight: '1.2', flexShrink: 0 }}>•</span>
+                  <span>{term}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
       </div>
     </div>
