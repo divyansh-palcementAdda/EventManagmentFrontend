@@ -13,6 +13,7 @@ import WalkInAdmission from '../pages/Admin/WalkInAdmission';
 import Login from '../pages/auth/login';
 import CheckinScan from '../Components/CheckinScan';
 import ActivatePass from '../pages/public/ActivatePass';
+import PassPreview from '../pages/public/PassPreview';
 import { PermissionProvider, usePermissions } from '../permissionContext/permissionContext.jsx';
 
 // Route guard to protect admin routes
@@ -50,6 +51,9 @@ const AppRoutes = () => {
           <Route path="/pass/scan/:token" element={<ActivatePass />} />
           <Route path="/pass/scan" element={<ActivatePass />} />
           <Route path="/student-fill-form" element={<ActivatePass />} />
+          {/* Pass email preview / test page */}
+          <Route path="/pass-preview" element={<PassPreview />} />
+
           {/* Authentication Endpoints */}
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Login />} />
