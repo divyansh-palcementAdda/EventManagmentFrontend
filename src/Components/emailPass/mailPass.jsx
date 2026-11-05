@@ -151,13 +151,13 @@ const PassEmailTemplate = ({
             }}
           />
 
-          {/* QR Code Image — divider ke right side, top area */}
+          {/* QR Code Image — inspector verified: top:11%, left:34%, width:14%, aspect-ratio:1/1 */}
           <div
             style={{
               position: 'absolute',
-              top: '5%',
+              top: '11%',
               left: '34%',
-              width: '22%',
+              width: '14%',
               aspectRatio: '1 / 1',
               display: 'flex',
               alignItems: 'center',
