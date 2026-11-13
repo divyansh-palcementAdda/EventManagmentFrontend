@@ -38,7 +38,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
   // Configure New Category Modal
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addForm, setAddForm] = useState({
-    passCategoryId: '',
+    categoryId: '',
     activationMode: 'SELF_SERVICE',
     identityPolicy: 'COLLECT_IDENTITY',
     qrRequired: true,
@@ -92,7 +92,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
   const handleOpenAdd = () => {
     fetchAvailableCategories();
     setAddForm({
-      passCategoryId: '',
+      categoryId: '',
       activationMode: 'SELF_SERVICE',
       identityPolicy: 'COLLECT_IDENTITY',
       qrRequired: true,
@@ -130,14 +130,14 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!addForm.passCategoryId) {
+    if (!addForm.categoryId) {
       toast.error('Please select a category');
       return;
     }
 
     try {
       await categoryService.configureEventCategory(eventId, {
-        passCategoryId: addForm.passCategoryId,
+        categoryId: addForm.categoryId,
         activationMode: addForm.activationMode,
         identityPolicy: addForm.identityPolicy,
         qrRequired: addForm.activationMode === 'NO_QR_WALK_IN' ? false : addForm.qrRequired,
@@ -369,8 +369,8 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 </label>
                 <select
                   required
-                  value={addForm.passCategoryId}
-                  onChange={(e) => setAddForm({ ...addForm, passCategoryId: e.target.value })}
+                  value={addForm.categoryId}
+                  onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">-- Choose Category --</option>
