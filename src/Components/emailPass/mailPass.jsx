@@ -1,6 +1,5 @@
 import React from 'react';
-// import forDivImg from '../../assets/for div.png';
-// import forDiv2Img from '../../assets/for div2.png';
+import forDivImg from '../../assets/for div.png';         
 import RCFPassBack from '../../assets/RCF Pass back.png'
 
 /**
@@ -37,7 +36,6 @@ const PassEmailTemplate = ({
           maxWidth: '600px',
           minWidth: '280px',
           backgroundColor: '#ffffff',
-          // borderRadius: 'clamp(8px, 2vw, 16px)',
           overflow: 'hidden',
           boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
           boxSizing: 'border-box',
