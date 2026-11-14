@@ -106,13 +106,16 @@ const EventDetail = () => {
     if (!activePrintPass) return false;
     if (activePrintPass.qrRequired === false) return true;
     if (activePrintPass.activationMode === 'NO_QR_WALK_IN') return true;
+    const passCat = (
+      typeof activePrintPass.category === 'string'
+        ? activePrintPass.category
+        : activePrintPass.category?.name || activePrintPass.categoryCode || ''
+    ).toUpperCase();
+    if (passCat === 'VIP') return true;
     const cat = availableCategories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activePrintPass.category
+      (c) => (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase() === passCat
     );
     if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
-      return true;
-    }
-    if (!activePrintPass.rawToken && activePrintPass.category === 'VIP') {
       return true;
     }
     return false;
@@ -122,13 +125,16 @@ const EventDetail = () => {
     if (!activeFullPass) return false;
     if (activeFullPass.qrRequired === false) return true;
     if (activeFullPass.activationMode === 'NO_QR_WALK_IN') return true;
+    const passCat = (
+      typeof activeFullPass.category === 'string'
+        ? activeFullPass.category
+        : activeFullPass.category?.name || activeFullPass.categoryCode || ''
+    ).toUpperCase();
+    if (passCat === 'VIP') return true;
     const cat = availableCategories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activeFullPass.category
+      (c) => (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase() === passCat
     );
     if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
-      return true;
-    }
-    if (!activeFullPass.rawToken && activeFullPass.category === 'VIP') {
       return true;
     }
     return false;

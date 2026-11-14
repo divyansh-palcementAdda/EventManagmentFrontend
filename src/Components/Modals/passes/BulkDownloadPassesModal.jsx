@@ -53,10 +53,16 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
   const isNoQrPass = (p) => {
     if (p.qrRequired === false) return true;
     if (p.activationMode === 'NO_QR_WALK_IN') return true;
-    if (p.category === 'VIP' && !p.rawToken) return true;
-    const matchCat = categories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === p.category
-    );
+    const passCat = (
+      typeof p.category === 'string'
+        ? p.category
+        : p.category?.name || p.categoryCode || ''
+    ).toUpperCase();
+    if (passCat === 'VIP') return true;
+    const matchCat = categories.find((c) => {
+      const cCode = (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase();
+      return cCode === passCat;
+    });
     if (matchCat && (matchCat.qrRequired === false || matchCat.activationMode === 'NO_QR_WALK_IN')) {
       return true;
     }
