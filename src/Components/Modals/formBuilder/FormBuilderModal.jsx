@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import categoryService from '../../../Api-Services/categoryService';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const FIELD_TYPES = [
   { value: 'TEXT', label: 'Single-line Text' },
@@ -249,6 +250,8 @@ const FormBuilderModal = ({ isOpen, onClose, eventCategoryId, categoryName, onPu
       setPublishing(false);
     }
   };
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

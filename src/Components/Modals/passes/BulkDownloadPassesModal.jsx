@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import toast from 'react-hot-toast';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => {
   const [statusFilter, setStatusFilter] = useState('');
@@ -40,6 +41,8 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
       setIsPrintViewOpen(false);
     }
   }, [isOpen]);
+
+  useScrollLock(isOpen && !!event);
 
   if (!isOpen || !event) return null;
 

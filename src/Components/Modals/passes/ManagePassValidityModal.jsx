@@ -12,6 +12,7 @@ import {
   ListFilter,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const ManagePassValidityModal = ({
   isOpen,
@@ -57,6 +58,8 @@ const ManagePassValidityModal = ({
       }
     }
   }, [isOpen, singlePass, selectedPasses]);
+
+  useScrollLock(isOpen && !!event);
 
   if (!isOpen || !event) return null;
 

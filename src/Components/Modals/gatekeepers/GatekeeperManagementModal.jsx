@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChanged }) => {
   const [activeTab, setActiveTab] = useState('assigned'); // 'assigned', 'search_assign', 'create'
@@ -97,6 +98,8 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
       return () => clearTimeout(timer);
     }
   }, [searchQuery, activeTab, isOpen, event?.id, fetchEligible]);
+
+  useScrollLock(isOpen && !!event);
 
   if (!isOpen || !event) return null;
 
