@@ -102,6 +102,38 @@ const EventDetail = () => {
   // Full Pass (Email Template) Modal
   const [activeFullPass, setActiveFullPass] = useState(null);
 
+  const isNoQrActivePrintPass = useMemo(() => {
+    if (!activePrintPass) return false;
+    if (activePrintPass.qrRequired === false) return true;
+    if (activePrintPass.activationMode === 'NO_QR_WALK_IN') return true;
+    const cat = availableCategories.find(
+      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activePrintPass.category
+    );
+    if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
+      return true;
+    }
+    if (!activePrintPass.rawToken && activePrintPass.category === 'VIP') {
+      return true;
+    }
+    return false;
+  }, [activePrintPass, availableCategories]);
+
+  const isNoQrActiveFullPass = useMemo(() => {
+    if (!activeFullPass) return false;
+    if (activeFullPass.qrRequired === false) return true;
+    if (activeFullPass.activationMode === 'NO_QR_WALK_IN') return true;
+    const cat = availableCategories.find(
+      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activeFullPass.category
+    );
+    if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
+      return true;
+    }
+    if (!activeFullPass.rawToken && activeFullPass.category === 'VIP') {
+      return true;
+    }
+    return false;
+  }, [activeFullPass, availableCategories]);
+
   // Pass action dropdown (per-row)
   const [passDropdownId, setPassDropdownId] = useState(null);
   const passDropdownRef = useRef(null);
@@ -198,10 +230,7 @@ const EventDetail = () => {
       const cats = Array.isArray(res.data) ? res.data : (res.data?.content || []);
       setAvailableCategories(cats);
       if (cats.length > 0) {
-        const firstCreatable = cats.find((c) => c.activationMode !== 'NO_QR_WALK_IN');
-        if (firstCreatable) {
-          setGenCategory(firstCreatable.categoryCode);
-        }
+        setGenCategory(cats[0].categoryCode || cats[0].passCategoryCode || cats[0].code || 'STUDENT');
       } else {
         setGenCategory('STUDENT');
       }
@@ -285,11 +314,9 @@ const EventDetail = () => {
 
   const handleGeneratePasses = async (e) => {
     e.preventDefault();
-    const catConfig = availableCategories.find((c) => c.categoryCode === genCategory);
-    if (catConfig?.activationMode === 'NO_QR_WALK_IN') {
-      toast.error('Walk-in categories do not use pre-generated QR passes. Use Staff Walk-In Admission.');
-      return;
-    }
+    const catConfig = availableCategories.find(
+      (c) => (c.categoryCode || c.passCategoryCode || c.code) === genCategory
+    );
     if (batchSize < 1 || batchSize > 500) {
       toast.error('Batch size must be between 1 and 500');
       return;
@@ -1067,14 +1094,21 @@ const EventDetail = () => {
                           )}
                         </td>
                         <td className="px-3 sm:px-4 py-2 sm:py-3">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
-                              }`}
-                          >
-                            {p.category || 'STUDENT'}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                                }`}
+                            >
+                              {p.category || 'STUDENT'}
+                            </span>
+                            {(p.qrRequired === false || p.activationMode === 'NO_QR_WALK_IN' || (!p.rawToken && p.category === 'VIP')) && (
+                              <span className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-semibold" title="Walk-In / Badge Only (No QR)">
+                                No QR
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 sm:px-4 py-2 sm:py-3">{getPassStatusBadge(p.status)}</td>
                         <td className="px-3 sm:px-4 py-2 sm:py-3">
@@ -1152,26 +1186,34 @@ const EventDetail = () => {
                             </button>
                             {passDropdownId === p.id && (
                               <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActivePrintPass(p);
-                                    setPassDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                                >
-                                  <QrCode className="w-3.5 h-3.5" /> QR Only
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveFullPass(p);
-                                    setPassDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                                >
-                                  <Printer className="w-3.5 h-3.5" /> View Full Pass
-                                </button>
+                                {(() => {
+                                  const isNoQr = p.qrRequired === false || p.activationMode === 'NO_QR_WALK_IN' || (!p.rawToken && p.category === 'VIP');
+                                  return (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActivePrintPass(p);
+                                          setPassDropdownId(null);
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
+                                      >
+                                        {isNoQr ? <ShieldCheck className="w-3.5 h-3.5 text-amber-600" /> : <QrCode className="w-3.5 h-3.5" />}
+                                        {isNoQr ? 'View Badge' : 'QR Card'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveFullPass(p);
+                                          setPassDropdownId(null);
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
+                                      >
+                                        <Printer className="w-3.5 h-3.5" /> View Full Pass
+                                      </button>
+                                    </>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
@@ -1288,27 +1330,37 @@ const EventDetail = () => {
                   </div>
 
                   <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
-                    {newlyGeneratedPasses.map((p) => (
-                      <div key={p.id} className="p-2.5 flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <span className="font-mono font-bold text-purple-700">{p.passNumber}</span>
-                          {p.rawToken && (
-                            <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">
-                              Token: {p.rawToken}
+                    {newlyGeneratedPasses.map((p) => {
+                      const isNoQr = p.qrRequired === false || p.activationMode === 'NO_QR_WALK_IN' || (!p.rawToken && p.category === 'VIP');
+                      return (
+                        <div key={p.id} className="p-2.5 flex items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-purple-700">{p.passNumber}</span>
+                              {isNoQr && (
+                                <span className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
+                                  No QR / Badge
+                                </span>
+                              )}
                             </div>
-                          )}
+                            {p.rawToken && (
+                              <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">
+                                Token: {p.rawToken}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setActivePrintPass(p);
+                              setIsGenModalOpen(false);
+                            }}
+                            className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1 shrink-0 ml-2"
+                          >
+                            <Printer className="w-3.5 h-3.5" /> View Pass
+                          </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            setActivePrintPass(p);
-                            setIsGenModalOpen(false);
-                          }}
-                          className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1 shrink-0 ml-2"
-                        >
-                          <Printer className="w-3.5 h-3.5" /> View Pass
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <button
@@ -1332,16 +1384,19 @@ const EventDetail = () => {
                     >
                       {
                         availableCategories.length > 0 ? (
-                          availableCategories.map((c) => (
-                            <option
-                              key={c.id}
-                              value={c.categoryCode}
-                              disabled={c.activationMode === 'NO_QR_WALK_IN'}
-                            >
-                              {c.categoryName} ({c.categoryCode})
-                              {c.activationMode === 'NO_QR_WALK_IN' ? ' — [Walk-In Only, Pre-generation not permitted]' : ''}
-                            </option>
-                          ))
+                          availableCategories.map((c) => {
+                            const code = c.categoryCode || c.passCategoryCode || c.code;
+                            const name = c.categoryName || c.passCategoryName || c.name || code;
+                            const isNoQr = c.activationMode === 'NO_QR_WALK_IN' || c.qrRequired === false;
+                            return (
+                              <option
+                                key={c.id || code}
+                                value={code}
+                              >
+                                {name} ({code}){isNoQr ? ' — [Badge / No QR]' : ''}
+                              </option>
+                            );
+                          })
                         ) : (
                           <>
                             <option value="STUDENT">Student (STUDENT)</option>
@@ -1353,14 +1408,6 @@ const EventDetail = () => {
                     <p className="text-[11px] text-gray-400 mt-1">
                       Determines the registration fields presented to attendees upon scanning.
                     </p>
-                    {
-                      availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
-                        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>Walk-in categories do not use pre-generated QR passes; attendees are admitted on-site via Staff Walk-In.</span>
-                        </div>
-                      )
-                    }
 
                   </div >
                   <div>
@@ -1423,7 +1470,7 @@ const EventDetail = () => {
                     </button>
                     <button
                       type="submit"
-                      disabled={generating || availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
+                      disabled={generating}
                       className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
                       {generating ? (
@@ -1435,7 +1482,7 @@ const EventDetail = () => {
                       )}
                     </button>
                   </div>
-                </form >
+                </form>
               )
               }
             </div >
@@ -1468,14 +1515,31 @@ const EventDetail = () => {
                   <p className="text-xs text-gray-500 truncate">{event.venue || 'Event Venue'}</p>
                 </div>
 
-                {/* QR Code Container */}
-                <div className="bg-gray-50 p-3 rounded-xl border inline-block mx-auto shadow-inner">
-                  <img
-                    src={getQrImageUrl(activePrintPass.passNumber || activePrintPass.rawToken, event?.id || eventId)}
-                    alt="QR Pass"
-                    className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
-                  />
-                </div>
+                {/* QR Code Container or No-QR Walk-In Badge */}
+                {isNoQrActivePrintPass ? (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-dashed border-amber-300 p-5 rounded-2xl mx-auto max-w-xs shadow-xs text-center space-y-2">
+                    <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shadow-xs">
+                      <ShieldCheck className="w-8 h-8" />
+                    </div>
+                    <div className="text-sm font-black text-amber-900 uppercase tracking-wide">
+                      Walk-In Badge Pass
+                    </div>
+                    <span className="inline-block text-[11px] font-bold text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full border border-amber-300">
+                      No QR Code Required
+                    </span>
+                    <p className="text-[11px] text-amber-700 pt-1 leading-relaxed">
+                      Official on-site badge admission. Verified at entry using Pass Identifier.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-3 rounded-xl border inline-block mx-auto shadow-inner">
+                    <img
+                      src={getQrImageUrl(activePrintPass.rawToken || activePrintPass.passNumber, event?.id || eventId)}
+                      alt="QR Pass"
+                      className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <p className="text-xs text-gray-400 font-medium">Pass Identifier</p>
@@ -1501,6 +1565,10 @@ const EventDetail = () => {
                   <div className="bg-purple-50/70 p-2.5 rounded-lg text-xs">
                     <span className="text-gray-500">Attendee: </span>
                     <strong className="text-gray-900">{activePrintPass.attendeeName}</strong>
+                  </div>
+                ) : isNoQrActivePrintPass ? (
+                  <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded border border-amber-200 font-medium">
+                    Staff On-Site Admission Only • No attendee QR registration required
                   </div>
                 ) : (
                   <div className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
@@ -1622,7 +1690,7 @@ const EventDetail = () => {
                     ? activeFullPass.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')
                     : 'All Days'
                 }
-                qrImageUrl={getQrImageUrl(activeFullPass.passNumber || activeFullPass.rawToken)}
+                qrImageUrl={isNoQrActiveFullPass ? null : getQrImageUrl(activeFullPass.rawToken || activeFullPass.passNumber)}
               />
             </div>
           </div>

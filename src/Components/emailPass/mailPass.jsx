@@ -84,14 +84,22 @@ const PassEmailTemplate = ({
                   width: '100%',
                   height: '100%',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 'clamp(5px, 1.8vw, 11px)',
-                  fontWeight: '700',
-                  color: '#1a1a1a',
+                  fontSize: 'clamp(5px, 1.4vw, 10px)',
+                  fontWeight: '800',
+                  color: '#92400e',
+                  backgroundColor: '#fef3c7',
+                  border: '1.5px dashed #f59e0b',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  padding: '2px',
+                  lineHeight: '1.2',
                 }}
               >
-                QR
+                <span>BADGE</span>
+                <span style={{ fontSize: 'clamp(4px, 1vw, 8px)', fontWeight: '600', color: '#b45309' }}>NO QR</span>
               </div>
             )}
           </div>
