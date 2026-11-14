@@ -1736,6 +1736,7 @@ const EventDetail = () => {
         onClose={() => setIsBulkDownloadOpen(false)}
         event={event}
         eventDays={eventDays}
+        categories={availableCategories}
       />
 
       {/* BULK ACTIVATION FROM EXCEL MODAL */}
@@ -1743,6 +1744,7 @@ const EventDetail = () => {
         isOpen={isBulkActivateOpen}
         onClose={() => setIsBulkActivateOpen(false)}
         event={event}
+        categories={availableCategories}
         onActivationComplete={handleRefreshAll}
       />
     </div >
