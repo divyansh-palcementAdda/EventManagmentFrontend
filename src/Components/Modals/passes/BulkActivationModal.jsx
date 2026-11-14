@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Upload,
@@ -17,13 +17,17 @@ import {
   Users,
   Check,
   RefreshCw,
+  Layers,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import toast from 'react-hot-toast';
 
-const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) => {
+const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActivationComplete }) => {
   // Step tracker: 1 = Pass Selection, 2 = Upload Excel, 3 = Assignment Preview, 4 = Results
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Category Selection
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Stats
   const [passStats, setPassStats] = useState(null);
@@ -47,9 +51,34 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
   const [submitting, setSubmitting] = useState(false);
   const [batchResult, setBatchResult] = useState(null);
 
+  const categoryOptions = useMemo(() => {
+    const list = [{ value: 'ALL', label: 'All Categories' }];
+    if (categories && categories.length > 0) {
+      categories.forEach((cat) => {
+        const code = cat.categoryCode || cat.passCategoryCode || cat.code;
+        const name = cat.categoryName || cat.passCategoryName || cat.name || code;
+        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
+        list.push({
+          value: code,
+          label: name,
+          isNoQr,
+        });
+      });
+    } else {
+      list.push({ value: 'STUDENT', label: 'Student' });
+      list.push({ value: 'OTHER', label: 'Other' });
+    }
+    return list;
+  }, [categories]);
+
   useEffect(() => {
     if (isOpen && event) {
       setCurrentStep(1);
+      setSelectedCategory(
+        categories && categories.length > 0
+          ? categories[0].categoryCode || categories[0].passCategoryCode || categories[0].code
+          : 'ALL'
+      );
       setSelectionMode('AUTO');
       setFromSequence('');
       setToSequence('');
@@ -59,7 +88,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
       setActiveTab('ALL');
       fetchLiveStats();
     }
-  }, [isOpen, event]);
+  }, [isOpen, event, categories]);
 
   const fetchLiveStats = async () => {
     if (!event?.id) return;
@@ -78,6 +107,10 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
 
   // Step 1 Navigation
   const handleProceedToUpload = () => {
+    if (!selectedCategory) {
+      toast.error('Please select a pass category.');
+      return;
+    }
     if (selectionMode === 'RANGE') {
       if (!fromSequence || !toSequence) {
         toast.error('Please enter both From and To sequence numbers.');
@@ -157,6 +190,9 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
       const formData = new FormData();
       formData.append('file', file);
       formData.append('selectionMode', selectionMode);
+      if (selectedCategory && selectedCategory !== 'ALL') {
+        formData.append('category', selectedCategory);
+      }
       if (selectionMode === 'RANGE') {
         formData.append('fromSequence', fromSequence);
         formData.append('toSequence', toSequence);
@@ -371,10 +407,54 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
                 </div>
               </div>
 
-              {/* Selection Method */}
+              {/* Step 1A: Select Pass Category */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-gray-900">
+                    Step 1: Select Pass Category to Activate *
+                  </label>
+                  <span className="text-xs text-purple-700 font-medium">
+                    Only passes in the chosen category will be assigned
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {categoryOptions.map((cat) => {
+                    const isSelected = selectedCategory === cat.value;
+                    return (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.value)}
+                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'border-purple-600 bg-purple-50 text-purple-900 ring-2 ring-purple-500/20 shadow-sm'
+                            : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-xs truncate">{cat.label}</div>
+                          <div className="text-[10px] text-gray-400 font-mono truncate">
+                            {cat.value === 'ALL' ? 'All categories' : `Code: ${cat.value}`}
+                          </div>
+                        </div>
+                        {cat.isNoQr && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200 shrink-0">
+                            No QR
+                          </span>
+                        )}
+                        {isSelected && (
+                          <Check className="w-4 h-4 text-purple-600 shrink-0 ml-1" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Step 1B: Selection Method */}
               <div>
                 <label className="block text-sm font-bold text-gray-900 mb-2">
-                  Select Pass Assignment Method
+                  Step 2: Select Pass Assignment Method
                 </label>
                 <div className="space-y-3">
                   {/* Option A: Auto Available */}
@@ -482,6 +562,24 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
           {/* STEP 2: UPLOAD EXCEL */}
           {currentStep === 2 && (
             <div className="space-y-6">
+              {/* Selected Configuration Summary */}
+              <div className="bg-purple-50/70 border border-purple-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 font-medium">Target Category:</span>
+                  <span className="font-bold text-purple-900 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-200">
+                    {categoryOptions.find((c) => c.value === selectedCategory)?.label || selectedCategory}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 font-medium">Assignment Method:</span>
+                  <span className="font-semibold text-gray-800">
+                    {selectionMode === 'AUTO'
+                      ? 'Automatic Earliest Available'
+                      : `Range (#${fromSequence} to #${toSequence})`}
+                  </span>
+                </div>
+              </div>
+
               {/* Template Download Banner */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 gap-3">
                 <div>

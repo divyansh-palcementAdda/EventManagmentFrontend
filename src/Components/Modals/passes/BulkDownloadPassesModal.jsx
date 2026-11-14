@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Download,
@@ -12,11 +12,13 @@ import {
   Layers,
   GraduationCap,
   Users,
+  ShieldCheck,
+  Shield,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import toast from 'react-hot-toast';
 
-const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => {
+const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categories = [] }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [useRange, setUseRange] = useState(false);
@@ -27,6 +29,39 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
   const [loading, setLoading] = useState(false);
   const [passesData, setPassesData] = useState([]);
   const [isPrintViewOpen, setIsPrintViewOpen] = useState(false);
+
+  const categoryOptions = useMemo(() => {
+    const list = [{ value: 'ALL', label: 'All Categories' }];
+    if (categories && categories.length > 0) {
+      categories.forEach((cat) => {
+        const code = cat.categoryCode || cat.passCategoryCode || cat.code;
+        const name = cat.categoryName || cat.passCategoryName || cat.name || code;
+        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
+        list.push({
+          value: code,
+          label: name,
+          isNoQr,
+        });
+      });
+    } else {
+      list.push({ value: 'STUDENT', label: 'Student' });
+      list.push({ value: 'OTHER', label: 'Other' });
+    }
+    return list;
+  }, [categories]);
+
+  const isNoQrPass = (p) => {
+    if (p.qrRequired === false) return true;
+    if (p.activationMode === 'NO_QR_WALK_IN') return true;
+    if (p.category === 'VIP' && !p.rawToken) return true;
+    const matchCat = categories.find(
+      (c) => (c.categoryCode || c.passCategoryCode || c.code) === p.category
+    );
+    if (matchCat && (matchCat.qrRequired === false || matchCat.activationMode === 'NO_QR_WALK_IN')) {
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -154,23 +189,24 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
             {/* Category Filter */}
             <div>
               <label className="block font-semibold text-gray-800 mb-1.5">Pass Category</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: 'ALL', label: 'All Categories' },
-                  { value: 'STUDENT', label: '🎓 Student' },
-                  { value: 'OTHER', label: '👥 Other' },
-                ].map((cat) => (
+              <div className="flex flex-wrap gap-2">
+                {categoryOptions.map((cat) => (
                   <button
                     key={cat.value}
                     type="button"
                     onClick={() => setCategoryFilter(cat.value)}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition ${
+                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
                       categoryFilter === cat.value
                         ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    {cat.label}
+                    <span>{cat.label}</span>
+                    {cat.isNoQr && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                        No QR
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -334,60 +370,81 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [] }) => 
 
           {/* Cards Grid */}
           <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 print:grid-cols-2 print:gap-4">
-            {passesData.map((p, idx) => (
-              <div
-                key={p.passId || idx}
-                className="border-2 border-gray-300 rounded-2xl p-5 bg-white shadow-sm flex flex-col items-center justify-between text-center relative print:shadow-none print:border-gray-800 print:break-inside-avoid print:page-break-after-avoid"
-                style={{ minHeight: '360px' }}
-              >
-                <div className="w-full border-b pb-2">
-                  <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold tracking-wider">
-                    <span className="text-purple-700 uppercase font-extrabold">{p.eventCode}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      p.category === 'OTHER'
-                        ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                        : 'bg-blue-100 text-blue-800 border border-blue-200'
-                    }`}>
-                      {p.category === 'OTHER' ? '👥 OTHER PASS' : '🎓 STUDENT PASS'}
-                    </span>
-                    <span>PASS #{p.sequenceNumber || idx + 1}</span>
-                  </div>
-                  <h4 className="font-extrabold text-sm text-gray-900 mt-1 truncate">{p.eventName}</h4>
-                  <p className="text-[11px] text-gray-500 truncate">{p.venue || 'Official Venue'}</p>
-                </div>
-
-                <div className="my-3 p-2 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
-                  <img
-                    src={getQrUrl(p)}
-                    alt={`QR for ${p.passNumber}`}
-                    className="w-36 h-36 object-contain mx-auto"
-                    loading="lazy"
-                  />
-                </div>
-
-                <div className="w-full">
-                  <div className="font-mono font-black text-sm tracking-wider text-purple-900 bg-purple-50 py-1 px-2 rounded border border-purple-200">
-                    {p.passNumber}
+            {passesData.map((p, idx) => {
+              const noQr = isNoQrPass(p);
+              return (
+                <div
+                  key={p.passId || idx}
+                  className="border-2 border-gray-300 rounded-2xl p-5 bg-white shadow-sm flex flex-col items-center justify-between text-center relative print:shadow-none print:border-gray-800 print:break-inside-avoid print:page-break-after-avoid"
+                  style={{ minHeight: '360px' }}
+                >
+                  <div className="w-full border-b pb-2">
+                    <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold tracking-wider">
+                      <span className="text-purple-700 uppercase font-extrabold">{p.eventCode}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                        noQr
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : p.category === 'STUDENT'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                          : 'bg-purple-100 text-purple-800 border border-purple-200'
+                      }`}>
+                        {p.category || 'PASS'} {noQr ? '• NO QR' : ''}
+                      </span>
+                      <span>PASS #{p.sequenceNumber || idx + 1}</span>
+                    </div>
+                    <h4 className="font-extrabold text-sm text-gray-900 mt-1 truncate">{p.eventName}</h4>
+                    <p className="text-[11px] text-gray-500 truncate">{p.venue || 'Official Venue'}</p>
                   </div>
 
-                  {p.attendeeName ? (
-                    <div className="mt-2 text-xs font-semibold text-gray-800">
-                      Attendee: <span className="text-purple-700">{p.attendeeName}</span>
+                  {noQr ? (
+                    <div className="my-3 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-dashed border-amber-300 flex flex-col items-center justify-center space-y-1 w-36 h-36 mx-auto">
+                      <ShieldCheck className="w-10 h-10 text-amber-600 mb-1" />
+                      <span className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide">
+                        Badge Pass
+                      </span>
+                      <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                        No QR Code
+                      </span>
                     </div>
                   ) : (
-                    <div className="mt-2 text-[10px] font-medium text-amber-700 bg-amber-50 rounded px-1.5 py-0.5">
-                      Unactivated · Scan QR to register attendee
+                    <div className="my-3 p-2 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
+                      <img
+                        src={getQrUrl(p)}
+                        alt={`QR for ${p.passNumber}`}
+                        className="w-36 h-36 object-contain mx-auto"
+                        loading="lazy"
+                      />
                     </div>
                   )}
 
-                  {p.validDays && p.validDays.length > 0 && (
-                    <div className="mt-1 text-[10px] text-gray-500">
-                      Valid: {p.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')}
+                  <div className="w-full">
+                    <div className="font-mono font-black text-sm tracking-wider text-purple-900 bg-purple-50 py-1 px-2 rounded border border-purple-200">
+                      {p.passNumber}
                     </div>
-                  )}
+
+                    {p.attendeeName ? (
+                      <div className="mt-2 text-xs font-semibold text-gray-800">
+                        Attendee: <span className="text-purple-700">{p.attendeeName}</span>
+                      </div>
+                    ) : noQr ? (
+                      <div className="mt-2 text-[10px] font-medium text-amber-800 bg-amber-50 rounded px-1.5 py-0.5 border border-amber-200">
+                        Staff On-Site Admission Only • No QR required
+                      </div>
+                    ) : (
+                      <div className="mt-2 text-[10px] font-medium text-amber-700 bg-amber-50 rounded px-1.5 py-0.5">
+                        Unactivated · Scan QR to register attendee
+                      </div>
+                    )}
+
+                    {p.validDays && p.validDays.length > 0 && (
+                      <div className="mt-1 text-[10px] text-gray-500">
+                        Valid: {p.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
