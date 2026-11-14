@@ -130,6 +130,18 @@ const API_ROUTES = {
     CATEGORIES: '/walkin/categories',
     ADMIT: '/walkin/admit',
   },
+
+  // WhatsApp Integration (Botsense)
+  WHATSAPP: {
+    SETTINGS: '/whatsapp/settings',
+    UPDATE_SETTINGS: '/whatsapp/settings',
+    TEST_CONNECTION: '/whatsapp/test-connection',
+    TEMPLATES: '/whatsapp/templates',
+    LOGS: '/whatsapp/logs',
+    OTP_STATUS: '/whatsapp/otp/status',
+    OTP_SEND: '/whatsapp/otp/send',
+    OTP_VERIFY: '/whatsapp/otp/verify',
+  },
 };
 
 export default API_ROUTES;

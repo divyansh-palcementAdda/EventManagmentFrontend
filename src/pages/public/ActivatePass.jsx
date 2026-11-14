@@ -22,8 +22,11 @@ import {
   CheckCircle2,
   Sparkles,
   ShieldCheck,
+  MessageSquare,
+  Send,
 } from 'lucide-react';
 import passService from '../../Api-Services/passService';
+import whatsappService from '../../Api-Services/whatsappService';
 
 /**
  * Public Pass Activation States:
@@ -141,6 +144,24 @@ const ActivatePass = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  // WhatsApp OTP Verification States
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [verificationToken, setVerificationToken] = useState(null);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  useEffect(() => {
+    let interval = null;
+    if (otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer]);
+
   useEffect(() => {
     if (initialToken) {
       setInputToken(initialToken);
@@ -226,6 +247,14 @@ const ActivatePass = () => {
       if (isEligible) {
         setPageState(PAGE_STATES.READY_FOR_ACTIVATION);
         setStatusNotice(data.message || 'Pass is valid and ready for activation.');
+        if (data.eventId) {
+          whatsappService.getOtpStatus(data.eventId)
+            .then((res) => {
+              const resData = res.data || res;
+              setOtpRequired(Boolean(resData?.otpRequired));
+            })
+            .catch(() => setOtpRequired(false));
+        }
       } else {
         setPageState(PAGE_STATES.ERROR);
         setErrorMessage(data.message || 'Pass is not eligible for activation.');
@@ -268,6 +297,54 @@ const ActivatePass = () => {
   const hasCustomSchema = Boolean(
     passData?.formSchema?.fields && passData.formSchema.fields.length > 0
   );
+
+  const handleSendOtp = async () => {
+    const mobile = formData.mobileNumber.trim();
+    if (!mobile || !/^\+?[0-9]{7,15}$/.test(mobile)) {
+      toast.error('Please enter a valid mobile number first.');
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const res = await whatsappService.sendOtp({
+        mobileNumber: mobile,
+        eventId: passData?.eventId,
+        passNumber: passData?.passNumber || inputToken.trim(),
+      });
+      setOtpSent(true);
+      setOtpTimer(60);
+      toast.success('WhatsApp OTP code sent! Please check your WhatsApp.');
+    } catch (err) {
+      console.error('Failed to send WhatsApp OTP:', err);
+      toast.error(err.message || 'Failed to dispatch WhatsApp OTP.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.trim().length !== 6) {
+      toast.error('Please enter the 6-digit verification code.');
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      const res = await whatsappService.verifyOtp({
+        mobileNumber: formData.mobileNumber.trim(),
+        eventId: passData?.eventId,
+        otp: otpCode.trim(),
+      });
+      const data = res.data || res;
+      setVerificationToken(data.verificationToken);
+      setOtpVerified(true);
+      toast.success('WhatsApp phone number verified successfully!');
+    } catch (err) {
+      console.error('Failed to verify OTP:', err);
+      toast.error(err.message || 'Invalid or expired WhatsApp OTP code.');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   const validateForm = () => {
     const errors = {};
@@ -315,6 +392,11 @@ const ActivatePass = () => {
       return;
     }
 
+    if (otpRequired && !otpVerified) {
+      toast.error('Please verify your mobile number via WhatsApp OTP before activating your pass.');
+      return;
+    }
+
     if (!passData?.eventId) {
       toast.error('Event details missing. Please refresh and try again.');
       return;
@@ -330,6 +412,7 @@ const ActivatePass = () => {
         attendeeFullName: formData.fullName.trim(),
         attendeeEmail: formData.email.trim().toLowerCase(),
         attendeeMobileNumber: formData.mobileNumber.trim(),
+        verificationToken: verificationToken || null,
         answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : null,
         // Category specific fields
         attendeeCollege: isStudent ? formData.college.trim() : null,
@@ -840,6 +923,78 @@ const ActivatePass = () => {
                         <span className="text-[11px] text-rose-500 mt-1 block">
                           {formErrors.mobileNumber}
                         </span>
+                      )}
+
+                      {/* WhatsApp OTP Verification Widget */}
+                      {otpRequired && (
+                        <div className="mt-2.5">
+                          {!otpSent && !otpVerified && (
+                            <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                              <div className="flex items-center gap-2 text-emerald-900 font-medium">
+                                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>WhatsApp phone verification required</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleSendOtp}
+                                disabled={sendingOtp || !formData.mobileNumber.trim()}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                              >
+                                {sendingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                                <span>Send OTP</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {otpSent && !otpVerified && (
+                            <div className="p-3.5 bg-emerald-50/90 border border-emerald-300 rounded-xl space-y-2.5 text-xs">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                                  <MessageSquare className="w-4 h-4 text-emerald-600" />
+                                  <span>Enter WhatsApp Verification Code</span>
+                                </div>
+                                <span className="text-[10px] text-emerald-700 font-mono">10 min expiry</span>
+                              </div>
+                              <p className="text-[11px] text-emerald-700">
+                                6-digit verification code sent to <strong className="font-mono">{formData.mobileNumber}</strong>.
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <input
+                                  type="text"
+                                  maxLength={6}
+                                  placeholder="000000"
+                                  value={otpCode}
+                                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                                  className="w-32 px-3 py-1.5 text-center font-mono font-bold tracking-widest text-base border border-emerald-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleVerifyOtp}
+                                  disabled={verifyingOtp || otpCode.length !== 6}
+                                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                                >
+                                  {verifyingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                  <span>Verify</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleSendOtp}
+                                  disabled={sendingOtp || otpTimer > 0}
+                                  className="px-2.5 py-1.5 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition disabled:opacity-50 ml-auto"
+                                >
+                                  {otpTimer > 0 ? `Resend (${otpTimer}s)` : 'Resend OTP'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {otpVerified && (
+                            <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2 text-xs text-emerald-800 font-bold">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                              <span>WhatsApp Verified ({formData.mobileNumber})</span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

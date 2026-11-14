@@ -16,10 +16,12 @@ import {
   Shield,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
+import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 import useScrollLock from '../../../hooks/useScrollLock';
 
 const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categories = [] }) => {
+  const [localCategories, setLocalCategories] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [useRange, setUseRange] = useState(false);
@@ -31,10 +33,14 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
   const [passesData, setPassesData] = useState([]);
   const [isPrintViewOpen, setIsPrintViewOpen] = useState(false);
 
+  const effectiveCategories = useMemo(() => {
+    return (categories && categories.length > 0) ? categories : localCategories;
+  }, [categories, localCategories]);
+
   const categoryOptions = useMemo(() => {
     const list = [{ value: 'ALL', label: 'All Categories' }];
-    if (categories && categories.length > 0) {
-      categories.forEach((cat) => {
+    if (effectiveCategories && effectiveCategories.length > 0) {
+      effectiveCategories.forEach((cat) => {
         const code = cat.categoryCode || cat.passCategoryCode || cat.code;
         const name = cat.categoryName || cat.passCategoryName || cat.name || code;
         const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
@@ -46,23 +52,48 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
       });
     } else {
       list.push({ value: 'STUDENT', label: 'Student' });
+      list.push({ value: 'VIP', label: 'VIP', isNoQr: true });
       list.push({ value: 'OTHER', label: 'Other' });
     }
     return list;
-  }, [categories]);
+  }, [effectiveCategories]);
 
   const isNoQrPass = (p) => {
+    if (!p) return false;
     if (p.qrRequired === false) return true;
     if (p.activationMode === 'NO_QR_WALK_IN') return true;
-    if (p.category === 'VIP' && !p.rawToken) return true;
-    const matchCat = categories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === p.category
-    );
+    if (p.qrData === null || p.qrData === '') return true;
+    const passCat = (
+      typeof p.category === 'string'
+        ? p.category
+        : p.category?.name || p.categoryCode || p.categoryName || ''
+    ).toUpperCase();
+    if (passCat === 'VIP' || passCat.includes('VIP')) return true;
+    const matchCat = effectiveCategories.find((c) => {
+      const cCode = (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase();
+      return cCode === passCat;
+    });
     if (matchCat && (matchCat.qrRequired === false || matchCat.activationMode === 'NO_QR_WALK_IN')) {
       return true;
     }
     return false;
   };
+
+  useEffect(() => {
+    if (isOpen && event?.id) {
+      if (!categories || categories.length === 0) {
+        categoryService.getEventCategories(event.id, false)
+          .then((res) => {
+            let list = [];
+            if (Array.isArray(res)) list = res;
+            else if (Array.isArray(res?.data)) list = res.data;
+            else if (Array.isArray(res?.data?.content)) list = res.data.content;
+            setLocalCategories(list);
+          })
+          .catch((err) => console.error('Failed to load categories in bulk download:', err));
+      }
+    }
+  }, [isOpen, event, categories]);
 
   useEffect(() => {
     if (isOpen) {
@@ -293,10 +324,10 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
             <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-900 text-[11px] space-y-1">
               <div className="font-bold flex items-center gap-1.5">
                 <QrCode className="w-4 h-4 text-purple-700" />
-                Print-Ready QR Passes
+                Print-Ready Event Passes & Badges
               </div>
               <p className="text-purple-700">
-                Generates high-resolution QR badges formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.
+                Generates print-ready QR badges or walk-in passes formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.
               </p>
             </div>
           </div>

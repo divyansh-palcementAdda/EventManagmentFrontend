@@ -103,36 +103,32 @@ const EventDetail = () => {
   // Full Pass (Email Template) Modal
   const [activeFullPass, setActiveFullPass] = useState(null);
 
-  const isNoQrActivePrintPass = useMemo(() => {
-    if (!activePrintPass) return false;
-    if (activePrintPass.qrRequired === false) return true;
-    if (activePrintPass.activationMode === 'NO_QR_WALK_IN') return true;
+  const checkIsNoQr = (p) => {
+    if (!p) return false;
+    if (p.qrRequired === false) return true;
+    if (p.activationMode === 'NO_QR_WALK_IN') return true;
+    if (p.qrData === null || p.qrData === '') return true;
+    const passCat = (
+      typeof p.category === 'string'
+        ? p.category
+        : p.category?.name || p.categoryCode || p.categoryName || ''
+    ).toUpperCase();
+    if (passCat === 'VIP' || passCat.includes('VIP')) return true;
     const cat = availableCategories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activePrintPass.category
+      (c) => (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase() === passCat
     );
     if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
       return true;
     }
-    if (!activePrintPass.rawToken && activePrintPass.category === 'VIP') {
-      return true;
-    }
     return false;
+  };
+
+  const isNoQrActivePrintPass = useMemo(() => {
+    return checkIsNoQr(activePrintPass);
   }, [activePrintPass, availableCategories]);
 
   const isNoQrActiveFullPass = useMemo(() => {
-    if (!activeFullPass) return false;
-    if (activeFullPass.qrRequired === false) return true;
-    if (activeFullPass.activationMode === 'NO_QR_WALK_IN') return true;
-    const cat = availableCategories.find(
-      (c) => (c.categoryCode || c.passCategoryCode || c.code) === activeFullPass.category
-    );
-    if (cat && (cat.qrRequired === false || cat.activationMode === 'NO_QR_WALK_IN')) {
-      return true;
-    }
-    if (!activeFullPass.rawToken && activeFullPass.category === 'VIP') {
-      return true;
-    }
-    return false;
+    return checkIsNoQr(activeFullPass);
   }, [activeFullPass, availableCategories]);
 
   // Pass action dropdown (per-row)
@@ -227,18 +223,42 @@ const EventDetail = () => {
 
   const fetchConfiguredCategories = async () => {
     try {
-      const res = await categoryService.getEventCategories(eventId, true);
-      const cats = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      const res = await categoryService.getEventCategories(eventId, false);
+      let cats = [];
+      if (Array.isArray(res)) {
+        cats = res;
+      } else if (Array.isArray(res?.data)) {
+        cats = res.data;
+      } else if (Array.isArray(res?.data?.content)) {
+        cats = res.data.content;
+      } else if (Array.isArray(res?.content)) {
+        cats = res.content;
+      }
       setAvailableCategories(cats);
       if (cats.length > 0) {
-        setGenCategory(cats[0].categoryCode || cats[0].passCategoryCode || cats[0].code || 'STUDENT');
+        setGenCategory((prev) => {
+          const exists = cats.some((c) => (c.categoryCode || c.passCategoryCode || c.code) === prev);
+          return exists ? prev : (cats[0].categoryCode || cats[0].passCategoryCode || cats[0].code || 'STUDENT');
+        });
       } else {
         setGenCategory('STUDENT');
       }
     } catch (err) {
       console.error('Failed to load categories for pass generation:', err);
-      setAvailableCategories([]);
-      setGenCategory('STUDENT');
+      try {
+        const fallbackRes = await categoryService.getCategories();
+        let list = [];
+        if (Array.isArray(fallbackRes)) list = fallbackRes;
+        else if (Array.isArray(fallbackRes?.data)) list = fallbackRes.data;
+        else if (Array.isArray(fallbackRes?.data?.content)) list = fallbackRes.data.content;
+        setAvailableCategories(list);
+        if (list.length > 0) {
+          setGenCategory(list[0].categoryCode || list[0].code || 'STUDENT');
+        }
+      } catch (e) {
+        setAvailableCategories([]);
+        setGenCategory('STUDENT');
+      }
     }
   };
 
@@ -692,6 +712,17 @@ const EventDetail = () => {
                 type="button"
                 onClick={() => {
                   setNewlyGeneratedPasses([]);
+                  if (availableCategories.length > 0) {
+                    const exists = availableCategories.some(
+                      (c) => (c.categoryCode || c.passCategoryCode || c.code) === genCategory
+                    );
+                    if (!exists) {
+                      const first = availableCategories[0];
+                      setGenCategory(first.categoryCode || first.passCategoryCode || first.code || 'STUDENT');
+                    }
+                  } else {
+                    setGenCategory('STUDENT');
+                  }
                   setIsGenModalOpen(true);
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
@@ -1110,7 +1141,7 @@ const EventDetail = () => {
                             >
                               {p.category || 'STUDENT'}
                             </span>
-                            {(p.qrRequired === false || p.activationMode === 'NO_QR_WALK_IN' || (!p.rawToken && p.category === 'VIP')) && (
+                            {checkIsNoQr(p) && (
                               <span className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-semibold" title="Walk-In / Badge Only (No QR)">
                                 No QR
                               </span>
@@ -1194,7 +1225,7 @@ const EventDetail = () => {
                             {passDropdownId === p.id && (
                               <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
                                 {(() => {
-                                  const isNoQr = p.qrRequired === false || p.activationMode === 'NO_QR_WALK_IN' || (!p.rawToken && p.category === 'VIP');
+                                  const isNoQr = checkIsNoQr(p);
                                   return (
                                     <>
                                       <button
@@ -1385,33 +1416,32 @@ const EventDetail = () => {
                       Pass Category
                     </label>
                     <select
-                      value={genCategory}
+                      value={genCategory || 'STUDENT'}
                       onChange={(e) => setGenCategory(e.target.value)}
                       className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     >
-                      {
-                        availableCategories.length > 0 ? (
-                          availableCategories.map((c) => {
-                            const code = c.categoryCode || c.passCategoryCode || c.code;
-                            const name = c.categoryName || c.passCategoryName || c.name || code;
-                            const isNoQr = c.activationMode === 'NO_QR_WALK_IN' || c.qrRequired === false;
-                            return (
-                              <option
-                                key={c.id || code}
-                                value={code}
-                              >
-                                {name} ({code}){isNoQr ? ' — [Badge / No QR]' : ''}
-                              </option>
-                            );
-                          })
-                        ) : (
-                          <>
-                            <option value="STUDENT">Student (STUDENT)</option>
-                            <option value="OTHER">Other / General (OTHER)</option>
-                          </>
-                        )
-                      }
-                    </select >
+                      {availableCategories.length > 0 ? (
+                        availableCategories.map((c) => {
+                          const code = c.categoryCode || c.passCategoryCode || c.code || 'STUDENT';
+                          const name = c.categoryName || c.passCategoryName || c.name || code;
+                          const isNoQr = c.activationMode === 'NO_QR_WALK_IN' || c.qrRequired === false;
+                          return (
+                            <option
+                              key={c.id || code}
+                              value={code}
+                            >
+                              {name} ({code}){isNoQr ? ' — [Staff Walk-In / No QR Badge]' : ''}
+                            </option>
+                          );
+                        })
+                      ) : (
+                        <>
+                          <option value="STUDENT">Student (STUDENT)</option>
+                          <option value="VIP">VIP (VIP) — [Staff Walk-In / No QR Badge]</option>
+                          <option value="OTHER">Other / General (OTHER)</option>
+                        </>
+                      )}
+                    </select>
                     <p className="text-[11px] text-gray-400 mt-1">
                       Determines the registration fields presented to attendees upon scanning.
                     </p>

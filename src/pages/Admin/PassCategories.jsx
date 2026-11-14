@@ -51,11 +51,21 @@ const PassCategories = () => {
       if (scopeFilter) params.scope = scopeFilter;
       if (activeFilter !== '') params.active = activeFilter === 'true';
       const res = await categoryService.getCategories(params);
-      const list = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      let list = [];
+      if (Array.isArray(res)) {
+        list = res;
+      } else if (Array.isArray(res?.data)) {
+        list = res.data;
+      } else if (Array.isArray(res?.data?.content)) {
+        list = res.data.content;
+      } else if (Array.isArray(res?.content)) {
+        list = res.content;
+      }
       setCategories(list);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
       toast.error(err.message || 'Failed to fetch categories');
+      setCategories([]);
     } finally {
       setLoading(false);
     }
