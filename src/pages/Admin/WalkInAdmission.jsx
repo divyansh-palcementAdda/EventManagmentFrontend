@@ -106,7 +106,7 @@ const WalkInAdmission = () => {
       const cats = Array.isArray(catRes.data) ? catRes.data : (catRes.data?.content || []);
       setWalkInCategories(cats);
       if (cats.length > 0) {
-        setSelectedCategoryId(cats[0].passCategoryId);
+        setSelectedCategoryId(cats[0].id || cats[0].passCategoryId);
       } else {
         setSelectedCategoryId('');
       }
@@ -120,7 +120,7 @@ const WalkInAdmission = () => {
 
   useEffect(() => {
     if (selectedCategoryId && walkInCategories.length > 0) {
-      const cat = walkInCategories.find((c) => c.passCategoryId === selectedCategoryId);
+      const cat = walkInCategories.find((c) => (c.id || c.passCategoryId) === selectedCategoryId);
       if (cat && cat.id) {
         loadPublishedSchema(cat.id);
       } else {
@@ -149,19 +149,32 @@ const WalkInAdmission = () => {
     }
   };
 
+  const getSelectedCategory = () => {
+    return walkInCategories.find((c) => (c.id || c.passCategoryId) === selectedCategoryId);
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!selectedEventId) errors.event = 'Please select an event';
     if (!selectedDayId && eventDays.length > 0) errors.day = 'Please select an active check-in day';
     if (!selectedCategoryId) errors.category = 'Please select a walk-in pass category';
 
-    if (!formData.attendeeFullName.trim()) {
-      errors.attendeeFullName = 'Attendee full name is required';
-    }
-    if (!formData.attendeeEmail.trim()) {
-      errors.attendeeEmail = 'Attendee email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.attendeeEmail.trim())) {
-      errors.attendeeEmail = 'Please enter a valid email address';
+    const selectedCategory = getSelectedCategory();
+    const isNoIdentity = selectedCategory?.identityPolicy === 'NO_IDENTITY';
+
+    if (!isNoIdentity) {
+      if (!formData.attendeeFullName.trim()) {
+        errors.attendeeFullName = 'Attendee full name is required';
+      }
+      if (!formData.attendeeEmail.trim()) {
+        errors.attendeeEmail = 'Attendee email address is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.attendeeEmail.trim())) {
+        errors.attendeeEmail = 'Please enter a valid email address';
+      }
+    } else {
+      if (formData.attendeeEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.attendeeEmail.trim())) {
+        errors.attendeeEmail = 'Please enter a valid email address';
+      }
     }
 
     if (currentSchema?.fields) {
@@ -191,12 +204,12 @@ const WalkInAdmission = () => {
       const payload = {
         eventId: selectedEventId,
         eventDayId: selectedDayId || null,
-        passCategoryId: selectedCategoryId,
-        attendeeFullName: formData.attendeeFullName.trim(),
-        attendeeEmail: formData.attendeeEmail.trim().toLowerCase(),
-        attendeeMobileNumber: formData.attendeeMobileNumber.trim() || null,
-        attendeeOrganization: formData.attendeeOrganization.trim() || null,
-        attendeeDesignation: formData.attendeeDesignation.trim() || null,
+        eventCategoryId: selectedCategoryId,
+        fullName: formData.attendeeFullName.trim() || null,
+        email: formData.attendeeEmail.trim().toLowerCase() || null,
+        mobileNumber: formData.attendeeMobileNumber.trim() || null,
+        organization: formData.attendeeOrganization.trim() || null,
+        designation: formData.attendeeDesignation.trim() || null,
         answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : null
       };
 
@@ -380,8 +393,8 @@ const WalkInAdmission = () => {
                     <option value="">No Walk-In Categories Configured</option>
                   ) : (
                     walkInCategories.map((c) => (
-                      <option key={c.passCategoryId} value={c.passCategoryId}>
-                        {c.passCategoryName} ({c.passCategoryCode})
+                      <option key={c.id || c.passCategoryId} value={c.id || c.passCategoryId}>
+                        {c.categoryName || c.passCategoryName} ({c.categoryCode || c.passCategoryCode}) — {c.identityPolicy === 'NO_IDENTITY' ? 'Badge Only' : 'Collects Identity'}
                       </option>
                     ))
                   )}
@@ -400,15 +413,22 @@ const WalkInAdmission = () => {
 
           {/* Step 2: Attendee Details */}
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-              <User className="w-4 h-4 text-indigo-600" />
-              2. Attendee Registration Information
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <User className="w-4 h-4 text-indigo-600" />
+                2. Attendee Registration Information
+              </h3>
+              {getSelectedCategory()?.identityPolicy === 'NO_IDENTITY' && (
+                <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  No Identity Policy — Details Optional
+                </span>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Full Name *
+                  Full Name {getSelectedCategory()?.identityPolicy === 'NO_IDENTITY' ? '(Optional)' : '*'}
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
@@ -417,7 +437,7 @@ const WalkInAdmission = () => {
                     name="attendeeFullName"
                     value={formData.attendeeFullName}
                     onChange={handleChange}
-                    placeholder="e.g. John Doe"
+                    placeholder={getSelectedCategory()?.identityPolicy === 'NO_IDENTITY' ? 'Anonymous / Walk-in' : 'e.g. John Doe'}
                     className={`w-full pl-9 pr-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
                       formErrors.attendeeFullName
                         ? 'border-rose-400 focus:ring-rose-500'
@@ -434,7 +454,7 @@ const WalkInAdmission = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Email Address *
+                  Email Address {getSelectedCategory()?.identityPolicy === 'NO_IDENTITY' ? '(Optional)' : '*'}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />

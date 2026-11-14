@@ -393,8 +393,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                     setAddForm({
                       ...addForm,
                       activationMode: mode,
-                      qrRequired: mode === 'NO_QR_WALK_IN' ? false : addForm.qrRequired,
-                      identityPolicy: mode === 'NO_QR_WALK_IN' ? 'COLLECT_IDENTITY' : addForm.identityPolicy
+                      qrRequired: mode === 'NO_QR_WALK_IN' ? false : addForm.qrRequired
                     });
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -412,10 +411,9 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   Identity Policy *
                 </label>
                 <select
-                  disabled={addForm.activationMode === 'NO_QR_WALK_IN'}
                   value={addForm.identityPolicy}
                   onChange={(e) => setAddForm({ ...addForm, identityPolicy: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {IDENTITY_POLICIES.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -497,8 +495,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                     setPolicyForm({
                       ...policyForm,
                       activationMode: mode,
-                      qrRequired: mode === 'NO_QR_WALK_IN' ? false : policyForm.qrRequired,
-                      identityPolicy: mode === 'NO_QR_WALK_IN' ? 'COLLECT_IDENTITY' : policyForm.identityPolicy
+                      qrRequired: mode === 'NO_QR_WALK_IN' ? false : policyForm.qrRequired
                     });
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -516,10 +513,9 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   Identity Policy *
                 </label>
                 <select
-                  disabled={policyForm.activationMode === 'NO_QR_WALK_IN'}
                   value={policyForm.identityPolicy}
                   onChange={(e) => setPolicyForm({ ...policyForm, identityPolicy: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {IDENTITY_POLICIES.map((p) => (
                     <option key={p.value} value={p.value}>

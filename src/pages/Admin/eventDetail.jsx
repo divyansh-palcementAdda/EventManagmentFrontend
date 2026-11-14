@@ -202,9 +202,13 @@ const EventDetail = () => {
         if (firstCreatable) {
           setGenCategory(firstCreatable.categoryCode);
         }
+      } else {
+        setGenCategory('STUDENT');
       }
     } catch (err) {
       console.error('Failed to load categories for pass generation:', err);
+      setAvailableCategories([]);
+      setGenCategory('STUDENT');
     }
   };
 
@@ -296,7 +300,9 @@ const EventDetail = () => {
       const payload = {
         eventId,
         batchSize: parseInt(batchSize),
-        category: genCategory,
+        categoryCode: genCategory,
+        eventCategoryId: catConfig?.id || null,
+        category: (genCategory === 'STUDENT' || genCategory === 'OTHER') ? genCategory : 'OTHER',
         validDayIds: selectedGenDayIds.length > 0 ? selectedGenDayIds : null,
       };
 
@@ -848,21 +854,25 @@ const EventDetail = () => {
                     className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-purple-500 focus:outline-none"
                   >
                     <option value="ALL">All Categories</option>
-                    {availableCategories.length > 0 ? (
-                      availableCategories.map((c) => (
-                        <option key={c.id} value={c.categoryCode}>
-                          {c.categoryName} ({c.categoryCode})
-                        </option>
-                      ))
-                    ) : (
-                      <option value="STUDENT">STUDENT</option>
-                    )}
-                    {availableCategories.length === 0 && <option value="OTHER">OTHER</option>}
-                  </select>
-                </div>
+                    {
+                      availableCategories.length > 0 ? (
+                        availableCategories.map((c) => (
+                          <option key={c.id} value={c.categoryCode}>
+                            {c.categoryName} ({c.categoryCode})
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="STUDENT">STUDENT</option>
+                          <option value="OTHER">OTHER</option>
+                        </>
+                      )
+                    }
+                  </select >
+                </div >
 
                 {/* Check-In Filter */}
-                <div>
+                < div >
                   <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                     Check-in Status
                   </label>
@@ -878,10 +888,10 @@ const EventDetail = () => {
                     <option value="CHECKED_IN">Checked In</option>
                     <option value="NOT_CHECKED_IN">Not Checked In</option>
                   </select>
-                </div>
+                </div >
 
                 {/* Event Day Filter */}
-                <div>
+                < div >
                   <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                     Permitted Day
                   </label>
@@ -900,10 +910,10 @@ const EventDetail = () => {
                       </option>
                     ))}
                   </select>
-                </div>
+                </div >
 
                 {/* Sequence Range Filters */}
-                <div className="sm:col-span-2 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                < div className="sm:col-span-2 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-2" >
                   <div className="flex-1 w-full">
                     <label className="text-[11px] font-semibold text-gray-600 block mb-1">
                       From Sequence #
@@ -934,670 +944,690 @@ const EventDetail = () => {
                       className="w-full p-1.5 bg-white border border-gray-300 rounded-lg text-xs"
                     />
                   </div>
-                  {(checkInFilter !== 'ALL' || categoryFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter || toSeqFilter) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCheckInFilter('ALL');
-                        setCategoryFilter('ALL');
-                        setDayFilter('ALL');
-                        setFromSeqFilter('');
-                        setToSeqFilter('');
-                        setPage(0);
-                      }}
-                      className="mt-4 sm:mt-5 px-2 py-1.5 text-xs text-red-600 hover:underline whitespace-nowrap"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
+                  {
+                    (checkInFilter !== 'ALL' || categoryFilter !== 'ALL' || dayFilter !== 'ALL' || fromSeqFilter || toSeqFilter) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCheckInFilter('ALL');
+                          setCategoryFilter('ALL');
+                          setDayFilter('ALL');
+                          setFromSeqFilter('');
+                          setToSeqFilter('');
+                          setPage(0);
+                        }}
+                        className="mt-4 sm:mt-5 px-2 py-1.5 text-xs text-red-600 hover:underline whitespace-nowrap"
+                      >
+                        Clear
+                      </button>
+                    )
+                  }
+                </div >
+              </div >
             )}
 
             {/* Bulk Selection Notification Bar */}
-            {selectedPassesList.length > 0 && (
-              <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 text-xs text-purple-900">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full text-[11px]">
-                    {selectedPassesList.length}
-                  </span>
-                  <span>pass(es) selected on this page / view</span>
+            {
+              selectedPassesList.length > 0 && (
+                <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 text-xs text-purple-900">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full text-[11px]">
+                      {selectedPassesList.length}
+                    </span>
+                    <span>pass(es) selected on this page / view</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenValidityBulk}
+                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs flex items-center gap-1 shadow-xs"
+                    >
+                      <Layers className="w-3.5 h-3.5" /> Set Validity
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearSelection}
+                      className="px-2 py-1 text-gray-500 hover:text-gray-700 font-semibold"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleOpenValidityBulk}
-                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs flex items-center gap-1 shadow-xs"
-                  >
-                    <Layers className="w-3.5 h-3.5" /> Set Validity
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearSelection}
-                    className="px-2 py-1 text-gray-500 hover:text-gray-700 font-semibold"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+              )
+            }
+          </div >
+        </div >
 
         {/* Passes Table Body */}
-        {passesLoading ? (
-          <div className="p-8 sm:p-12 text-center text-gray-400">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
-            <p className="text-sm mt-2">Loading passes from server...</p>
-          </div>
-        ) : passes.length === 0 ? (
-          <div className="p-8 sm:p-12 text-center text-gray-500 space-y-2">
-            <Ticket className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-300" />
-            <p className="font-bold text-gray-700 text-sm sm:text-base">
-              {totalElements === 0 ? 'No passes generated yet.' : 'No passes match your filter criteria.'}
-            </p>
-            <p className="text-xs text-gray-400 max-w-sm mx-auto">
-              {totalElements === 0
-                ? 'Click "Generate Passes" or "Bulk Activate from Excel" to issue credentials for attendees.'
-                : 'Try clearing your search query or adjusting filter values.'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-[10px] sm:text-xs uppercase tracking-wider border-b border-gray-200">
-                <tr>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 w-8">
-                    <input
-                      type="checkbox"
-                      checked={passes.length > 0 && passes.every((p) => !!selectedPassMap[p.id])}
-                      onChange={toggleSelectAllOnPage}
-                      className="rounded text-purple-600 focus:ring-purple-500"
-                    />
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Pass ID</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Category</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Status</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Check-in</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Attendee</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3">Days</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {passes.map((p) => {
-                  const isSelected = !!selectedPassMap[p.id];
-                  return (
-                    <tr
-                      key={p.id}
-                      className={`hover:bg-gray-50/80 transition ${isSelected ? 'bg-purple-50/40' : ''
-                        }`}
-                    >
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelectPass(p)}
-                          className="rounded text-purple-600 focus:ring-purple-500"
-                        />
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        <div className="font-mono font-bold text-purple-700 text-xs sm:text-sm">
-                          {p.passNumber}
-                        </div>
-                        {p.sequenceNumber && (
-                          <div className="text-[9px] sm:text-[10px] text-gray-400 font-mono">
-                            Seq #{String(p.sequenceNumber).padStart(4, '0')}
+        {
+          passesLoading ? (
+            <div className="p-8 sm:p-12 text-center text-gray-400">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
+              <p className="text-sm mt-2">Loading passes from server...</p>
+            </div>
+          ) : passes.length === 0 ? (
+            <div className="p-8 sm:p-12 text-center text-gray-500 space-y-2">
+              <Ticket className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-300" />
+              <p className="font-bold text-gray-700 text-sm sm:text-base">
+                {totalElements === 0 ? 'No passes generated yet.' : 'No passes match your filter criteria.'}
+              </p>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                {totalElements === 0
+                  ? 'Click "Generate Passes" or "Bulk Activate from Excel" to issue credentials for attendees.'
+                  : 'Try clearing your search query or adjusting filter values.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-[10px] sm:text-xs uppercase tracking-wider border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 w-8">
+                      <input
+                        type="checkbox"
+                        checked={passes.length > 0 && passes.every((p) => !!selectedPassMap[p.id])}
+                        onChange={toggleSelectAllOnPage}
+                        className="rounded text-purple-600 focus:ring-purple-500"
+                      />
+                    </th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Pass ID</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Category</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Status</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Check-in</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Attendee</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3">Days</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {passes.map((p) => {
+                    const isSelected = !!selectedPassMap[p.id];
+                    return (
+                      <tr
+                        key={p.id}
+                        className={`hover:bg-gray-50/80 transition ${isSelected ? 'bg-purple-50/40' : ''
+                          }`}
+                      >
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectPass(p)}
+                            className="rounded text-purple-600 focus:ring-purple-500"
+                          />
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          <div className="font-mono font-bold text-purple-700 text-xs sm:text-sm">
+                            {p.passNumber}
                           </div>
-                        )}
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
+                          {p.sequenceNumber && (
+                            <div className="text-[9px] sm:text-[10px] text-gray-400 font-mono">
+                              Seq #{String(p.sequenceNumber).padStart(4, '0')}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                               : 'bg-purple-50 text-purple-700 border-purple-200'
-                            }`}
-                        >
-                          {p.category || 'STUDENT'}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">{getPassStatusBadge(p.status)}</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        {p.checkedIn ? (
-                          <div>
-                            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600" />
-                              <span className="hidden sm:inline">Checked In</span>
-                              <span className="sm:hidden">In</span>
-                              {p.checkInCount > 1 ? `(${p.checkInCount}x)` : ''}
+                              }`}
+                          >
+                            {p.category || 'STUDENT'}
+                          </span>
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">{getPassStatusBadge(p.status)}</td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          {p.checkedIn ? (
+                            <div>
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600" />
+                                <span className="hidden sm:inline">Checked In</span>
+                                <span className="sm:hidden">In</span>
+                                {p.checkInCount > 1 ? `(${p.checkInCount}x)` : ''}
+                              </span>
+                              {p.lastCheckedInAt && (
+                                <div className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 hidden sm:flex">
+                                  <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                                  {formatDateTime(p.lastCheckedInAt)}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" /> <span className="hidden sm:inline">Not Checked In</span><span className="sm:hidden">No</span>
                             </span>
-                            {p.lastCheckedInAt && (
-                              <div className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 hidden sm:flex">
-                                <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                                {formatDateTime(p.lastCheckedInAt)}
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          {p.attendeeName ? (
+                            <div>
+                              <div className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{p.attendeeName}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">{p.attendeeEmail}</div>
+                              {p.attendeeMobileNumber && (
+                                <div className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">{p.attendeeMobileNumber}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] sm:text-xs text-gray-400 italic">Unclaimed</span>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
+                          {p.validDays && p.validDays.length > 0 ? (
+                            <div className="flex flex-wrap gap-0.5 sm:gap-1 max-w-[100px] sm:max-w-xs">
+                              {p.validDays.map((d) => (
+                                <span
+                                  key={d.id}
+                                  className="bg-purple-50 text-purple-700 border border-purple-200 px-1 sm:px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold"
+                                  title={d.eventDate}
+                                >
+                                  D{d.dayNumber}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] sm:text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
+                              All
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-right space-x-0.5 sm:space-x-1.5 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenValidityForSingle(p)}
+                            className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded text-[10px] sm:text-xs font-semibold transition"
+                            title="Manage Event-Day Validity"
+                          >
+                            <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Validity</span>
+                          </button>
+
+                          {/* Pass dropdown: QR Only / View Full Pass */}
+                          <div className="relative inline-block" ref={passDropdownId === p.id ? passDropdownRef : null}>
+                            <button
+                              type="button"
+                              onClick={() => setPassDropdownId(passDropdownId === p.id ? null : p.id)}
+                              className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-white border border-gray-300 rounded text-[10px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
+                            >
+                              <Printer className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Pass</span>
+                            </button>
+                            {passDropdownId === p.id && (
+                              <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActivePrintPass(p);
+                                    setPassDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
+                                >
+                                  <QrCode className="w-3.5 h-3.5" /> QR Only
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveFullPass(p);
+                                    setPassDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
+                                >
+                                  <Printer className="w-3.5 h-3.5" /> View Full Pass
+                                </button>
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
-                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" /> <span className="hidden sm:inline">Not Checked In</span><span className="sm:hidden">No</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        {p.attendeeName ? (
-                          <div>
-                            <div className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{p.attendeeName}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">{p.attendeeEmail}</div>
-                            {p.attendeeMobileNumber && (
-                              <div className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">{p.attendeeMobileNumber}</div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] sm:text-xs text-gray-400 italic">Unclaimed</span>
-                        )}
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">
-                        {p.validDays && p.validDays.length > 0 ? (
-                          <div className="flex flex-wrap gap-0.5 sm:gap-1 max-w-[100px] sm:max-w-xs">
-                            {p.validDays.map((d) => (
-                              <span
-                                key={d.id}
-                                className="bg-purple-50 text-purple-700 border border-purple-200 px-1 sm:px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold"
-                                title={d.eventDate}
-                              >
-                                D{d.dayNumber}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] sm:text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
-                            All
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 text-right space-x-0.5 sm:space-x-1.5 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenValidityForSingle(p)}
-                          className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded text-[10px] sm:text-xs font-semibold transition"
-                          title="Manage Event-Day Validity"
-                        >
-                          <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Validity</span>
-                        </button>
 
-                        {/* Pass dropdown: QR Only / View Full Pass */}
-                        <div className="relative inline-block" ref={passDropdownId === p.id ? passDropdownRef : null}>
-                          <button
-                            type="button"
-                            onClick={() => setPassDropdownId(passDropdownId === p.id ? null : p.id)}
-                            className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-white border border-gray-300 rounded text-[10px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
-                          >
-                            <Printer className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Pass</span>
-                          </button>
-                          {passDropdownId === p.id && (
-                            <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActivePrintPass(p);
-                                  setPassDropdownId(null);
-                                }}
-                                className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                              >
-                                <QrCode className="w-3.5 h-3.5" /> QR Only
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveFullPass(p);
-                                  setPassDropdownId(null);
-                                }}
-                                className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                              >
-                                <Printer className="w-3.5 h-3.5" /> View Full Pass
-                              </button>
+                          {p.status !== 'REVOKED' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPassToRevoke(p);
+                                setRevokeModalOpen(true);
+                              }}
+                              className="px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs text-red-600 hover:bg-red-50 rounded transition font-medium"
+                            >
+                              <span className="hidden sm:inline">Revoke</span>
+                              <span className="sm:hidden">×</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+
+        {/* Server-Side Pagination Footer */}
+        {
+          totalElements > 0 && (
+            <div className="px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <span className="text-[10px] sm:text-xs">
+                  Showing <strong className="text-gray-900">{page * pageSize + 1}</strong> to{' '}
+                  <strong className="text-gray-900">
+                    {Math.min((page + 1) * pageSize, totalElements)}
+                  </strong>{' '}
+                  of <strong className="text-gray-900">{totalElements}</strong> passes
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] sm:text-xs">Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(parseInt(e.target.value));
+                      setPage(0);
+                    }}
+                    className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-[10px] sm:text-xs font-medium focus:outline-none"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center gap-1 self-center sm:self-auto">
+                <button
+                  type="button"
+                  disabled={page === 0 || passesLoading}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-2 sm:px-3 py-1 font-semibold text-gray-900 text-[10px] sm:text-xs">
+                  {page + 1} / {Math.max(1, totalPages)}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages - 1 || passesLoading}
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )
+        }
+      </div >
+
+      {/* GENERATE PASSES MODAL */}
+      {
+        isGenModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b pb-3">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">Generate Unique Passes</h2>
+                  <p className="text-xs text-gray-500 truncate">Event: {event.name}</p>
+                </div>
+                <button
+                  onClick={() => setIsGenModalOpen(false)}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 shrink-0 ml-2"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {newlyGeneratedPasses.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 text-center">
+                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                    <h3 className="font-bold text-green-900 text-sm sm:text-base">
+                      {newlyGeneratedPasses.length} Passes Generated!
+                    </h3>
+                    <p className="text-xs text-green-700 mt-1">
+                      Raw QR tokens have been generated. Below is the batch preview.
+                    </p>
+
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
+                    {newlyGeneratedPasses.map((p) => (
+                      <div key={p.id} className="p-2.5 flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-mono font-bold text-purple-700">{p.passNumber}</span>
+                          {p.rawToken && (
+                            <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">
+                              Token: {p.rawToken}
                             </div>
                           )}
                         </div>
-
-                        {p.status !== 'REVOKED' && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPassToRevoke(p);
-                              setRevokeModalOpen(true);
-                            }}
-                            className="px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs text-red-600 hover:bg-red-50 rounded transition font-medium"
-                          >
-                            <span className="hidden sm:inline">Revoke</span>
-                            <span className="sm:hidden">×</span>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Server-Side Pagination Footer */}
-        {totalElements > 0 && (
-          <div className="px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <span className="text-[10px] sm:text-xs">
-                Showing <strong className="text-gray-900">{page * pageSize + 1}</strong> to{' '}
-                <strong className="text-gray-900">
-                  {Math.min((page + 1) * pageSize, totalElements)}
-                </strong>{' '}
-                of <strong className="text-gray-900">{totalElements}</strong> passes
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-xs">Per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(parseInt(e.target.value));
-                    setPage(0);
-                  }}
-                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-[10px] sm:text-xs font-medium focus:outline-none"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center gap-1 self-center sm:self-auto">
-              <button
-                type="button"
-                disabled={page === 0 || passesLoading}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="px-2 sm:px-3 py-1 font-semibold text-gray-900 text-[10px] sm:text-xs">
-                {page + 1} / {Math.max(1, totalPages)}
-              </span>
-              <button
-                type="button"
-                disabled={page >= totalPages - 1 || passesLoading}
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* GENERATE PASSES MODAL */}
-      {isGenModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">Generate Unique Passes</h2>
-                <p className="text-xs text-gray-500 truncate">Event: {event.name}</p>
-              </div>
-              <button
-                onClick={() => setIsGenModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 shrink-0 ml-2"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {newlyGeneratedPasses.length > 0 ? (
-              <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 text-center">
-                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
-                  <h3 className="font-bold text-green-900 text-sm sm:text-base">
-                    {newlyGeneratedPasses.length} Passes Generated!
-                  </h3>
-                  <p className="text-xs text-green-700 mt-1">
-                    Raw QR tokens have been generated. Below is the batch preview.
-                  </p>
-
-                </div>
-
-                <div className="max-h-60 overflow-y-auto divide-y border rounded-lg text-xs">
-                  {newlyGeneratedPasses.map((p) => (
-                    <div key={p.id} className="p-2.5 flex items-center justify-between">
-                      <div className="min-w-0 flex-1">
-                        <span className="font-mono font-bold text-purple-700">{p.passNumber}</span>
-                        {p.rawToken && (
-                          <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">
-                            Token: {p.rawToken}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => {
-                          setActivePrintPass(p);
-                          setIsGenModalOpen(false);
-                        }}
-                        className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1 shrink-0 ml-2"
-                      >
-                        <Printer className="w-3.5 h-3.5" /> View Pass
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsGenModalOpen(false)}
-                  className="w-full py-2.5 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition text-sm"
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleGeneratePasses} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Pass Category
-                  </label>
-                  <select
-                    value={genCategory}
-                    onChange={(e) => setGenCategory(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  >
-                    {availableCategories.length > 0 ? (
-                      availableCategories.map((c) => (
-                        <option
-                          key={c.id}
-                          value={c.categoryCode}
-                          disabled={c.activationMode === 'NO_QR_WALK_IN'}
+                        <button
+                          onClick={() => {
+                            setActivePrintPass(p);
+                            setIsGenModalOpen(false);
+                          }}
+                          className="px-2.5 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold rounded text-xs flex items-center gap-1 shrink-0 ml-2"
                         >
-                          {c.categoryName} ({c.categoryCode})
-                          {c.activationMode === 'NO_QR_WALK_IN' ? ' — [Walk-In Only, Pre-generation not permitted]' : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="STUDENT">STUDENT (Student Registration)</option>
-                    )}
-                    {availableCategories.length === 0 && (
-                      <option value="OTHER">OTHER (General Attendee Registration)</option>
-                    )}
-                  </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Determines the registration fields presented to attendees upon scanning.
-                  </p>
-                  {availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
-                    <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>Walk-in categories do not use pre-generated QR passes; attendees are admitted on-site via Staff Walk-In.</span>
-                    </div>
-                  )}
-                  <p className="hidden">
-                  </p>
-
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Batch Size (Number of passes to generate)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="500"
-                    value={batchSize}
-                    onChange={(e) => setBatchSize(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  />
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Format: {event.eventCode}-{event.passSeriesCode}-000001
-                  </p>
-
-                </div>
-
-                {/* Day Selection Checkboxes */}
-                {eventDays.length > 0 && (
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Permitted Event Days (Leave blank to permit ALL days)
-                    </label>
-                    <div className="space-y-2 border rounded-lg p-3 max-h-40 overflow-y-auto">
-                      {eventDays.map((day) => {
-                        const checked = selectedGenDayIds.includes(day.id);
-                        return (
-                          <label
-                            key={day.id}
-                            className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleGenDaySelection(day.id)}
-                              className="rounded text-purple-600 focus:ring-purple-500"
-                            />
-                            <span className="font-semibold">Day {day.dayNumber}:</span>
-                            <span className="truncate">{day.eventDate || day.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
+                          <Printer className="w-3.5 h-3.5" /> View Pass
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                )}
 
-                <div className="pt-2 flex flex-col sm:flex-row justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setIsGenModalOpen(false)}
-                    className="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                    className="w-full py-2.5 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition text-sm"
                   >
-                    Cancel
+                    Done
                   </button>
-                  <button
-                    type="submit"
-                    disabled={generating || availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  >
-                    {generating ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating...
-                      </>
-                    ) : (
-                      'Generate Passes'
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* PRINTABLE PASS MODAL */}
-      {activePrintPass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Header / Close */}
-            <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-xs font-semibold text-gray-700">
-              <span>Printable Event Pass Card</span>
-              <button
-                onClick={() => setActivePrintPass(null)}
-                className="p-1 rounded hover:bg-gray-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* The Pass Card (Printable Area) */}
-            <div id="printable-card" className="p-4 sm:p-6 text-center space-y-4 bg-white">
-              <div className="border-b pb-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-                  OFFICIAL EVENT PASS
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-gray-900 mt-2 truncate">{event.name}</h3>
-                <p className="text-xs text-gray-500 truncate">{event.venue || 'Event Venue'}</p>
-              </div>
-
-              {/* QR Code Container */}
-              <div className="bg-gray-50 p-3 rounded-xl border inline-block mx-auto shadow-inner">
-                <img
-                  src={getQrImageUrl(activePrintPass.passNumber || activePrintPass.rawToken, event?.id || eventId)}
-                  alt="QR Pass"
-                  className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Pass Identifier</p>
-                <p className="font-mono font-black text-lg sm:text-xl text-purple-800 tracking-wider break-all">
-                  {activePrintPass.passNumber}
-                </p>
-
-                <div className="mt-1">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${activePrintPass.category === 'STUDENT'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'bg-purple-50 text-purple-700 border-purple-200'
-                      }`}
-                  >
-                    {activePrintPass.category || 'STUDENT'} PASS
-                  </span>
-                </div>
-
-
-              </div>
-
-              {activePrintPass.attendeeName ? (
-                <div className="bg-purple-50/70 p-2.5 rounded-lg text-xs">
-                  <span className="text-gray-500">Attendee: </span>
-                  <strong className="text-gray-900">{activePrintPass.attendeeName}</strong>
                 </div>
               ) : (
-                <div className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-                  Scan QR with your smartphone to activate attendee registration
-                </div>
-              )}
-
-              {activePrintPass.validDays && activePrintPass.validDays.length > 0 && (
-                <div className="text-[11px] text-gray-600 flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="font-medium">Valid for:</span>
-                  {activePrintPass.validDays.map((d) => (
-                    <span
-                      key={d.id}
-                      className="bg-gray-100 font-semibold px-2 py-0.5 rounded text-[10px]"
+                <form onSubmit={handleGeneratePasses} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Pass Category
+                    </label>
+                    <select
+                      value={genCategory}
+                      onChange={(e) => setGenCategory(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     >
-                      Day {d.dayNumber}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+                      {
+                        availableCategories.length > 0 ? (
+                          availableCategories.map((c) => (
+                            <option
+                              key={c.id}
+                              value={c.categoryCode}
+                              disabled={c.activationMode === 'NO_QR_WALK_IN'}
+                            >
+                              {c.categoryName} ({c.categoryCode})
+                              {c.activationMode === 'NO_QR_WALK_IN' ? ' — [Walk-In Only, Pre-generation not permitted]' : ''}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="STUDENT">Student (STUDENT)</option>
+                            <option value="OTHER">Other / General (OTHER)</option>
+                          </>
+                        )
+                      }
+                    </select >
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Determines the registration fields presented to attendees upon scanning.
+                    </p>
+                    {
+                      availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
+                        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>Walk-in categories do not use pre-generated QR passes; attendees are admitted on-site via Staff Walk-In.</span>
+                        </div>
+                      )
+                    }
 
-            {/* Print actions footer */}
-            <div className="p-4 bg-gray-50 border-t flex gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition"
-              >
-                <Printer className="w-3.5 h-3.5" /> Print Pass
-              </button>
-              <button
-                type="button"
-                onClick={() => setActivePrintPass(null)}
-                className="px-4 py-2 border bg-white rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100"
-              >
-                Close
-              </button>
+                  </div >
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Batch Size (Number of passes to generate)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="500"
+                      value={batchSize}
+                      onChange={(e) => setBatchSize(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Format: {event.eventCode}-{event.passSeriesCode}-000001
+                    </p>
+
+                  </div>
+
+                  {/* Day Selection Checkboxes */}
+                  {
+                    eventDays.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                          Permitted Event Days (Leave blank to permit ALL days)
+                        </label>
+                        <div className="space-y-2 border rounded-lg p-3 max-h-40 overflow-y-auto">
+                          {eventDays.map((day) => {
+                            const checked = selectedGenDayIds.includes(day.id);
+                            return (
+                              <label
+                                key={day.id}
+                                className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleGenDaySelection(day.id)}
+                                  className="rounded text-purple-600 focus:ring-purple-500"
+                                />
+                                <span className="font-semibold">Day {day.dayNumber}:</span>
+                                <span className="truncate">{day.eventDate || day.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  <div className="pt-2 flex flex-col sm:flex-row justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsGenModalOpen(false)}
+                      className="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={generating || availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating...
+                        </>
+                      ) : (
+                        'Generate Passes'
+                      )}
+                    </button>
+                  </div>
+                </form >
+              )
+              }
+            </div >
+          </div >
+        )}
+
+      {/* PRINTABLE PASS MODAL */}
+      {
+        activePrintPass && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+              {/* Header / Close */}
+              <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-xs font-semibold text-gray-700">
+                <span>Printable Event Pass Card</span>
+                <button
+                  onClick={() => setActivePrintPass(null)}
+                  className="p-1 rounded hover:bg-gray-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* The Pass Card (Printable Area) */}
+              <div id="printable-card" className="p-4 sm:p-6 text-center space-y-4 bg-white">
+                <div className="border-b pb-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                    OFFICIAL EVENT PASS
+                  </span>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 mt-2 truncate">{event.name}</h3>
+                  <p className="text-xs text-gray-500 truncate">{event.venue || 'Event Venue'}</p>
+                </div>
+
+                {/* QR Code Container */}
+                <div className="bg-gray-50 p-3 rounded-xl border inline-block mx-auto shadow-inner">
+                  <img
+                    src={getQrImageUrl(activePrintPass.passNumber || activePrintPass.rawToken, event?.id || eventId)}
+                    alt="QR Pass"
+                    className="w-36 h-36 sm:w-44 sm:h-44 object-contain mx-auto"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-400 font-medium">Pass Identifier</p>
+                  <p className="font-mono font-black text-lg sm:text-xl text-purple-800 tracking-wider break-all">
+                    {activePrintPass.passNumber}
+                  </p>
+
+                  <div className="mt-1">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${activePrintPass.category === 'STUDENT'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200'
+                        }`}
+                    >
+                      {activePrintPass.category || 'STUDENT'} PASS
+                    </span>
+                  </div>
+
+
+                </div>
+
+                {activePrintPass.attendeeName ? (
+                  <div className="bg-purple-50/70 p-2.5 rounded-lg text-xs">
+                    <span className="text-gray-500">Attendee: </span>
+                    <strong className="text-gray-900">{activePrintPass.attendeeName}</strong>
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                    Scan QR with your smartphone to activate attendee registration
+                  </div>
+                )}
+
+                {activePrintPass.validDays && activePrintPass.validDays.length > 0 && (
+                  <div className="text-[11px] text-gray-600 flex items-center justify-center gap-1.5 flex-wrap">
+                    <span className="font-medium">Valid for:</span>
+                    {activePrintPass.validDays.map((d) => (
+                      <span
+                        key={d.id}
+                        className="bg-gray-100 font-semibold px-2 py-0.5 rounded text-[10px]"
+                      >
+                        Day {d.dayNumber}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Print actions footer */}
+              <div className="p-4 bg-gray-50 border-t flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print Pass
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActivePrintPass(null)}
+                  className="px-4 py-2 border bg-white rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* REVOKE PASS MODAL */}
-      {revokeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 text-red-600">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-              <h3 className="font-bold text-base sm:text-lg text-gray-900">Revoke Pass</h3>
-            </div>
-            <p className="text-xs text-gray-600">
-              Are you sure you want to revoke pass{' '}
-              <strong className="font-mono text-gray-900 break-all">{passToRevoke?.passNumber}</strong>? Once
-              revoked, it cannot be used for gate check-in or reactivation.
-            </p>
-            <div>
-              <label className="text-xs font-semibold text-gray-700 block mb-1">
-                Revocation Reason
-              </label>
-              <textarea
-                value={revokeReason}
-                onChange={(e) => setRevokeReason(e.target.value)}
-                placeholder="e.g. Lost badge, cancelled registration, duplicate issuance"
-                rows={3}
-                className="w-full p-2.5 border rounded-lg text-xs focus:ring-2 focus:ring-red-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setRevokeModalOpen(false)}
-                className="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleRevokePass}
-                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow transition"
-              >
-                Confirm Revocation
-              </button>
+      {
+        revokeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center gap-3 text-red-600">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                <h3 className="font-bold text-base sm:text-lg text-gray-900">Revoke Pass</h3>
+              </div>
+              <p className="text-xs text-gray-600">
+                Are you sure you want to revoke pass{' '}
+                <strong className="font-mono text-gray-900 break-all">{passToRevoke?.passNumber}</strong>? Once
+                revoked, it cannot be used for gate check-in or reactivation.
+              </p>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 block mb-1">
+                  Revocation Reason
+                </label>
+                <textarea
+                  value={revokeReason}
+                  onChange={(e) => setRevokeReason(e.target.value)}
+                  placeholder="e.g. Lost badge, cancelled registration, duplicate issuance"
+                  rows={3}
+                  className="w-full p-2.5 border rounded-lg text-xs focus:ring-2 focus:ring-red-500 focus:outline-none"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRevokeModalOpen(false)}
+                  className="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRevokePass}
+                  className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow transition"
+                >
+                  Confirm Revocation
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* VIEW FULL PASS MODAL */}
-      {activeFullPass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-xs font-semibold text-gray-700">
-              <span>Full Event Pass</span>
-              <button
-                onClick={() => setActiveFullPass(null)}
-                className="p-1 rounded hover:bg-gray-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {
+        activeFullPass && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-xs font-semibold text-gray-700">
+                <span>Full Event Pass</span>
+                <button
+                  onClick={() => setActiveFullPass(null)}
+                  className="p-1 rounded hover:bg-gray-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Pass Template */}
+              <PassEmailTemplate
+                attendeeName={activeFullPass.attendeeName || ''}
+                attendeeEmail={activeFullPass.attendeeEmail || ''}
+                passCode={activeFullPass.passNumber}
+                passCategory={activeFullPass.category || 'General'}
+                eventName={event?.name || ''}
+                eventDate={`${formatDate(event?.startsAt)} – ${formatDate(event?.endsAt)}`}
+                eventVenue={event?.venue || ''}
+                seatOrSeq={activeFullPass.sequenceNumber ? String(activeFullPass.sequenceNumber).padStart(4, '0') : ''}
+                validDays={
+                  activeFullPass.validDays && activeFullPass.validDays.length > 0
+                    ? activeFullPass.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')
+                    : 'All Days'
+                }
+                qrImageUrl={getQrImageUrl(activeFullPass.passNumber || activeFullPass.rawToken)}
+              />
             </div>
-            {/* Pass Template */}
-            <PassEmailTemplate
-              attendeeName={activeFullPass.attendeeName || ''}
-              attendeeEmail={activeFullPass.attendeeEmail || ''}
-              passCode={activeFullPass.passNumber}
-              passCategory={activeFullPass.category || 'General'}
-              eventName={event?.name || ''}
-              eventDate={`${formatDate(event?.startsAt)} – ${formatDate(event?.endsAt)}`}
-              eventVenue={event?.venue || ''}
-              seatOrSeq={activeFullPass.sequenceNumber ? String(activeFullPass.sequenceNumber).padStart(4, '0') : ''}
-              validDays={
-                activeFullPass.validDays && activeFullPass.validDays.length > 0
-                  ? activeFullPass.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')
-                  : 'All Days'
-              }
-              qrImageUrl={getQrImageUrl(activeFullPass.passNumber || activeFullPass.rawToken)}
-            />
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* MANAGE PASS VALIDITY MODAL */}
       <ManagePassValidityModal
@@ -1640,7 +1670,7 @@ const EventDetail = () => {
         event={event}
         onActivationComplete={handleRefreshAll}
       />
-    </div>
+    </div >
   );
 };
 
