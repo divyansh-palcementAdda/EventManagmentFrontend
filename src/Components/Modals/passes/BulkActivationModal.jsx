@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import toast from 'react-hot-toast';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) => {
   // Step tracker: 1 = Pass Selection, 2 = Upload Excel, 3 = Assignment Preview, 4 = Results
@@ -73,6 +74,8 @@ const BulkActivationModal = ({ isOpen, onClose, event, onActivationComplete }) =
       setStatsLoading(false);
     }
   };
+
+  useScrollLock(isOpen && !!event);
 
   if (!isOpen || !event) return null;
 

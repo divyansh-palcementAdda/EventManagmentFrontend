@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Button } from '../../reusable';
 import { X, User, Mail, Phone, Building, Briefcase, CheckCircle, Save, XCircle } from 'lucide-react';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const AttendeeModal = ({ isOpen, onClose, attendee, onSave, loading }) => {
   const [formData, setFormData] = useState({
@@ -69,6 +70,8 @@ const AttendeeModal = ({ isOpen, onClose, attendee, onSave, loading }) => {
     }
     onSave(formData);
   };
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

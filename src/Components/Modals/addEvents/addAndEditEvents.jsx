@@ -18,6 +18,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import Input from '../../../Components/reusable/input';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const COMMON_TIMEZONES = [
   { value: 'UTC', label: 'UTC — Coordinated Universal Time' },
@@ -94,11 +95,13 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
   const [isDirty, setIsDirty] = useState(false);
   const [showScheduledDates, setShowScheduledDates] = useState(false);
 
+  // Lock body scroll while modal is open (via shared hook)
+  useScrollLock(isOpen);
+
   // Initialize or populate form on modal open
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement;
-      document.body.style.overflow = 'hidden';
 
       if (event) {
         setFormData({
@@ -139,15 +142,10 @@ const AddAndEditEvents = ({ isOpen, onClose, event, onSave }) => {
         }
       }, 50);
     } else {
-      document.body.style.overflow = '';
       if (previousActiveElement.current) {
         previousActiveElement.current.focus();
       }
     }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen, event]);
 
   // Handle Escape key to close modal safely

@@ -9,6 +9,7 @@ import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownload
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
 import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/GatekeeperManagementModal';
+import useScrollLock from '../../hooks/useScrollLock';
 import {
   ArrowLeft,
   Calendar,
@@ -488,6 +489,12 @@ const EventDetail = () => {
       activationUrl
     )}`;
   };
+
+  // Lock body scroll whenever any inline modal is open
+  useScrollLock(isGenModalOpen);
+  useScrollLock(!!activePrintPass);
+  useScrollLock(revokeModalOpen);
+  useScrollLock(!!activeFullPass);
 
   if (loading) {
     return (

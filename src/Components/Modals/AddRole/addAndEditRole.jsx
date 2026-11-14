@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Shield, FileText, CheckSquare, XCircle, AlertCircle } from 'lucide-react';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], loading }) => {
   const [name, setName] = useState('');
@@ -62,6 +63,8 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
       permissionIds: selectedPermissionIds,
     });
   };
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

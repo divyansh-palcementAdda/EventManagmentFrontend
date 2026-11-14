@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Input, Button } from '../../../Components/reusable';
 import { X, User, Mail, Phone, Shield, CheckCircle, Save, XCircle, Lock } from 'lucide-react';
 import roleService from '../../../Api-Services/roleService';
+import useScrollLock from '../../../hooks/useScrollLock';
 
 const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
   const [formData, setFormData] = useState({
@@ -107,6 +108,8 @@ const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
 
     onSave(payload);
   };
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

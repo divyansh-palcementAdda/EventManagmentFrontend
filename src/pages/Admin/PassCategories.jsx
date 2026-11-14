@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import categoryService from '../../Api-Services/categoryService';
 import eventsService from '../../Api-Services/eventsService';
 import Pagination from '../../Components/reusable/pagination';
+import useScrollLock from '../../hooks/useScrollLock';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -40,6 +41,8 @@ const PassCategories = () => {
     displayOrder: 0,
     active: true
   });
+
+  useScrollLock(isModalOpen);
 
   const fetchCategories = async () => {
     setLoading(true);

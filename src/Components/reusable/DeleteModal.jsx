@@ -1,7 +1,10 @@
 import React from 'react';
 import { Button } from './index';
+import useScrollLock from '../../hooks/useScrollLock';
 
 const DeleteModal = ({ isOpen, onClose, onConfirm, title = 'Delete Item', message = 'Are you sure you want to delete this item?' }) => {
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (

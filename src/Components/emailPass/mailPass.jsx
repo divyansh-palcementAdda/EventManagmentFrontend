@@ -1,6 +1,7 @@
 import React from 'react';
-import forDivImg from '../../assets/for div.png';         
-import RCFPassBack from '../../assets/RCF Pass back.png'
+// import forDivImg from '../../assets/for div.png';         
+// import RCFPassBack from '../../assets/RCF Pass back.png'
+import RCFPassBack from '../../assets/rcf-back.png'
 
 /**
  * PassEmailTemplate
@@ -13,6 +14,7 @@ import RCFPassBack from '../../assets/RCF Pass back.png'
  */
 const PassEmailTemplate = ({
   qrImageUrl = null,
+  seatOrSeq = '',
 }) => {
   return (
     /* ── Outer page wrapper ─────────────────────────────────────── */
@@ -59,7 +61,7 @@ const PassEmailTemplate = ({
             style={{
               position: 'absolute',
               top: '22%',
-              right: '10%',
+              left: '11.5%',
               width: '17%',
               aspectRatio: '1 / 1',
               display: 'flex',
@@ -103,6 +105,39 @@ const PassEmailTemplate = ({
               </div>
             )}
           </div>
+
+          {/* Sequence Number — in the left brown strip, below STANDARD, rotated like STANDARD text */}
+          {seatOrSeq && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '12%',
+                left: '0%',
+                width: '5.5%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: 'rotate(-90deg)',
+                transformOrigin: 'center center',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(4px, 1.1vw, 12px)',
+                  fontWeight: '900',
+                  color: '#121212',
+                  fontFamily: 'monospace',
+                  letterSpacing: '3.5px',
+                  lineHeight: 2,
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  marginTop: "9px",
+                }}
+              >
+                {seatOrSeq}
+              </span>
+            </div>
+          )}
         </div>
 
       </div>
