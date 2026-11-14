@@ -13,6 +13,7 @@ import AllUsers from '../pages/Admin/allUsers';
 import RolesAndPermissions from '../pages/Admin/rolesAndPermissions';
 import PassCategories from '../pages/Admin/PassCategories';
 import WalkInAdmission from '../pages/Admin/WalkInAdmission';
+import WhatsAppSettings from '../pages/Admin/WhatsAppSettings';
 import Login from '../pages/auth/login';
 import CheckinScan from '../Components/CheckinScan';
 import ActivatePass from '../pages/public/ActivatePass';
@@ -165,6 +166,16 @@ const AppRoutes = () => {
               <ProtectedRoute>
                 <MainLayout>
                   <WalkInAdmission />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/whatsapp"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <WhatsAppSettings />
                 </MainLayout>
               </ProtectedRoute>
             }

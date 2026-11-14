@@ -20,9 +20,11 @@ import {
   Layers,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
+import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 
 const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActivationComplete }) => {
+  const [localCategories, setLocalCategories] = useState([]);
   // Step tracker: 1 = Pass Selection, 2 = Upload Excel, 3 = Assignment Preview, 4 = Results
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -51,10 +53,14 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
   const [submitting, setSubmitting] = useState(false);
   const [batchResult, setBatchResult] = useState(null);
 
+  const effectiveCategories = useMemo(() => {
+    return (categories && categories.length > 0) ? categories : localCategories;
+  }, [categories, localCategories]);
+
   const categoryOptions = useMemo(() => {
     const list = [{ value: 'ALL', label: 'All Categories' }];
-    if (categories && categories.length > 0) {
-      categories.forEach((cat) => {
+    if (effectiveCategories && effectiveCategories.length > 0) {
+      effectiveCategories.forEach((cat) => {
         const code = cat.categoryCode || cat.passCategoryCode || cat.code;
         const name = cat.categoryName || cat.passCategoryName || cat.name || code;
         const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
@@ -66,17 +72,34 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
       });
     } else {
       list.push({ value: 'STUDENT', label: 'Student' });
+      list.push({ value: 'VIP', label: 'VIP', isNoQr: true });
       list.push({ value: 'OTHER', label: 'Other' });
     }
     return list;
-  }, [categories]);
+  }, [effectiveCategories]);
+
+  useEffect(() => {
+    if (isOpen && event?.id) {
+      if (!categories || categories.length === 0) {
+        categoryService.getEventCategories(event.id, false)
+          .then((res) => {
+            let list = [];
+            if (Array.isArray(res)) list = res;
+            else if (Array.isArray(res?.data)) list = res.data;
+            else if (Array.isArray(res?.data?.content)) list = res.data.content;
+            setLocalCategories(list);
+          })
+          .catch((err) => console.error('Failed to load categories in bulk activation:', err));
+      }
+    }
+  }, [isOpen, event, categories]);
 
   useEffect(() => {
     if (isOpen && event) {
       setCurrentStep(1);
       setSelectedCategory(
-        categories && categories.length > 0
-          ? categories[0].categoryCode || categories[0].passCategoryCode || categories[0].code
+        effectiveCategories && effectiveCategories.length > 0
+          ? effectiveCategories[0].categoryCode || effectiveCategories[0].passCategoryCode || effectiveCategories[0].code
           : 'ALL'
       );
       setSelectionMode('AUTO');
@@ -88,7 +111,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
       setActiveTab('ALL');
       fetchLiveStats();
     }
-  }, [isOpen, event, categories]);
+  }, [isOpen, event, effectiveCategories]);
 
   const fetchLiveStats = async () => {
     if (!event?.id) return;

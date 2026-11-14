@@ -9,6 +9,7 @@ import {
   QrCode,
   Tags,
   UserPlus,
+  MessageSquare,
   X
 } from 'lucide-react'
 import authService from '../../Api-Services/authService.js'
@@ -32,7 +33,8 @@ const Sidebar = ({ isOpen, onClose }) => {
       '/admin/users': 'users',
       '/admin/roles': 'roles',
       '/admin/categories': 'categories',
-      '/admin/walkin': 'walkin'
+      '/admin/walkin': 'walkin',
+      '/admin/whatsapp': 'whatsapp'
     }
     const currentRoute = location.pathname
     setActiveItem(routeToItemMap[currentRoute] || 'dashboard')
@@ -47,6 +49,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { id: 'attendees', label: 'Attendees', icon: Users, color: '#3b82f6', route: '/admin/attendees' },
     { id: 'users', label: 'Users', icon: Users, color: '#7c3aed', route: '/admin/users' },
     { id: 'roles', label: 'Roles & Permissions', icon: Shield, color: '#f59e0b', route: '/admin/roles' },
+    { id: 'whatsapp', label: 'WhatsApp Settings', icon: MessageSquare, color: '#10b981', route: '/admin/whatsapp' },
   ]
 
   // Filter menu items based on permissions
