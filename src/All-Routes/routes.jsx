@@ -1,5 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import StudentFillForm from "../pages/students/studentFillForm.jsx"
+
 import MainLayout from '../Layouts/mainLayout';
 import Dashboard from '../pages/Admin/dashboard';
 import Attendees from '../pages/Admin/Attendees';
@@ -15,6 +18,9 @@ import CheckinScan from '../Components/CheckinScan';
 import ActivatePass from '../pages/public/ActivatePass';
 import PassPreview from '../pages/public/PassPreview';
 import { PermissionProvider, usePermissions } from '../permissionContext/permissionContext.jsx';
+// this componnet for Email 
+import PassActivationEmail from "../Components/reusable/passActivationEmail.jsx"
+import EventReminderEmail from "../Components/reusable/emailRemainder.jsx"
 
 // Route guard to protect admin routes
 const ProtectedRoute = ({ children }) => {
@@ -53,6 +59,10 @@ const AppRoutes = () => {
           <Route path="/student-fill-form" element={<ActivatePass />} />
           {/* Pass email preview / test page */}
           <Route path="/pass-preview" element={<PassPreview />} />
+
+           {/* This for Email body for backend test only frontend not use in frontend  */}
+          <Route path='/email' element={<PassActivationEmail/>} />
+          <Route path='/remainder' element={<EventReminderEmail/>} />
 
           {/* Authentication Endpoints */}
           <Route path="/login" element={<Login />} />

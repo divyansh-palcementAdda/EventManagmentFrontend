@@ -195,12 +195,12 @@ const EventDetail = () => {
   const fetchConfiguredCategories = async () => {
     try {
       const res = await categoryService.getEventCategories(eventId, true);
-      const cats = res.data || [];
+      const cats = Array.isArray(res.data) ? res.data : (res.data?.content || []);
       setAvailableCategories(cats);
       if (cats.length > 0) {
         const firstCreatable = cats.find((c) => c.activationMode !== 'NO_QR_WALK_IN');
         if (firstCreatable) {
-          setGenCategory(firstCreatable.passCategoryCode);
+          setGenCategory(firstCreatable.categoryCode);
         }
       }
     } catch (err) {
@@ -281,7 +281,7 @@ const EventDetail = () => {
 
   const handleGeneratePasses = async (e) => {
     e.preventDefault();
-    const catConfig = availableCategories.find((c) => c.passCategoryCode === genCategory);
+    const catConfig = availableCategories.find((c) => c.categoryCode === genCategory);
     if (catConfig?.activationMode === 'NO_QR_WALK_IN') {
       toast.error('Walk-in categories do not use pre-generated QR passes. Use Staff Walk-In Admission.');
       return;
@@ -850,8 +850,8 @@ const EventDetail = () => {
                     <option value="ALL">All Categories</option>
                     {availableCategories.length > 0 ? (
                       availableCategories.map((c) => (
-                        <option key={c.id} value={c.passCategoryCode}>
-                          {c.passCategoryName} ({c.passCategoryCode})
+                        <option key={c.id} value={c.categoryCode}>
+                          {c.categoryName} ({c.categoryCode})
                         </option>
                       ))
                     ) : (
@@ -1315,10 +1315,10 @@ const EventDetail = () => {
                       availableCategories.map((c) => (
                         <option
                           key={c.id}
-                          value={c.passCategoryCode}
+                          value={c.categoryCode}
                           disabled={c.activationMode === 'NO_QR_WALK_IN'}
                         >
-                          {c.passCategoryName} ({c.passCategoryCode})
+                          {c.categoryName} ({c.categoryCode})
                           {c.activationMode === 'NO_QR_WALK_IN' ? ' — [Walk-In Only, Pre-generation not permitted]' : ''}
                         </option>
                       ))
@@ -1332,7 +1332,7 @@ const EventDetail = () => {
                   <p className="text-[11px] text-gray-400 mt-1">
                     Determines the registration fields presented to attendees upon scanning.
                   </p>
-                  {availableCategories.find((c) => c.passCategoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
+                  {availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN' && (
                     <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                       <span>Walk-in categories do not use pre-generated QR passes; attendees are admitted on-site via Staff Walk-In.</span>
@@ -1400,7 +1400,7 @@ const EventDetail = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={generating || availableCategories.find((c) => c.passCategoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
+                    disabled={generating || availableCategories.find((c) => c.categoryCode === genCategory)?.activationMode === 'NO_QR_WALK_IN'}
                     className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     {generating ? (
