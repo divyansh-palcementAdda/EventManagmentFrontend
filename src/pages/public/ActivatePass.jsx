@@ -24,9 +24,11 @@ import {
   ShieldCheck,
   MessageSquare,
   Send,
+  Download,
 } from 'lucide-react';
 import passService from '../../Api-Services/passService';
 import whatsappService from '../../Api-Services/whatsappService';
+import { generatePassImageBlob } from '../../utils/passImageGenerator';
 
 /**
  * Public Pass Activation States:
@@ -120,6 +122,8 @@ const ActivatePass = () => {
   const [submitError, setSubmitError] = useState(null);
   const [activationResult, setActivationResult] = useState(null);
   const [isAutoActivated, setIsAutoActivated] = useState(false);
+  const [passImagePreview, setPassImagePreview] = useState(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Guard to ensure auto-activation is only invoked once per scan
   const autoActivatedRef = useRef(false);
@@ -223,8 +227,23 @@ const ActivatePass = () => {
               rawToken: cleanToken,
               eventId: data.eventId,
             });
-            setActivationResult(autoRes.data || autoRes);
+            const autoData = autoRes.data || autoRes;
+            setActivationResult(autoData);
             setIsAutoActivated(true);
+
+            // Generate pass image and upload for WhatsApp template delivery
+            try {
+              const fullPass = { ...data, ...autoData };
+              const blob = await generatePassImageBlob(fullPass, autoData);
+              const dataUrl = URL.createObjectURL(blob);
+              setPassImagePreview(dataUrl);
+              if (autoData.id) {
+                await passService.uploadPassImage(autoData.id, blob);
+              }
+            } catch (imgErr) {
+              console.warn('Auto-activate pass image generation:', imgErr);
+            }
+
             setPageState(PAGE_STATES.ACTIVATION_SUCCESS);
             toast.success('Pass auto-activated successfully!');
             return;
@@ -430,6 +449,30 @@ const ActivatePass = () => {
       const response = await passService.activatePass(payload);
       const resData = response.data || response;
       setActivationResult(resData);
+
+      // Generate pass image and upload to backend for WhatsApp delivery
+      setIsGeneratingImage(true);
+      try {
+        const fullPassData = {
+          ...passData,
+          passNumber: resData.passNumber || passData.passNumber,
+          sequenceNumber: resData.sequenceNumber || passData.sequenceNumber,
+          category: resData.category || passData.category,
+          categoryName: resData.categoryName || passData.categoryName,
+        };
+        const blob = await generatePassImageBlob(fullPassData, resData);
+        const dataUrl = URL.createObjectURL(blob);
+        setPassImagePreview(dataUrl);
+
+        if (resData.id) {
+          await passService.uploadPassImage(resData.id, blob);
+        }
+      } catch (imgErr) {
+        console.warn('Pass image generation warning (non-blocking):', imgErr);
+      } finally {
+        setIsGeneratingImage(false);
+      }
+
       setPageState(PAGE_STATES.ACTIVATION_SUCCESS);
       toast.success('Your event pass has been successfully activated!');
     } catch (err) {
@@ -609,6 +652,32 @@ const ActivatePass = () => {
                   </div>
                 )}
               </div>
+
+              {/* Pass Image Card Preview */}
+              {passImagePreview && (
+                <div className="space-y-3 pt-2 text-center max-w-sm mx-auto">
+                  <div className="rounded-xl overflow-hidden shadow-md border border-gray-200">
+                    <img
+                      src={passImagePreview}
+                      alt="Activated Event Pass"
+                      className="w-full h-auto object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                    <a
+                      href={passImagePreview}
+                      download={`EventPass_${passData?.passNumber || activationResult?.passNumber || 'Pass'}.png`}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow transition"
+                    >
+                      <Download className="w-4 h-4" /> Download Pass Image
+                    </a>
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-100/70 py-1.5 px-3 rounded-lg border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Pass image queued for delivery via WhatsApp!</span>
+                  </div>
+                </div>
+              )}
 
               <p className="text-[11px] text-gray-500 pt-2">
                 Present this pass badge to the gatekeeper on event day for admission scan.
