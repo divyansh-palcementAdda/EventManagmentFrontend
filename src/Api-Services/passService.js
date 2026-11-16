@@ -71,6 +71,27 @@ export const passService = {
     }
   },
 
+  // Upload client-rendered pass image for WhatsApp template header delivery
+  uploadPassImage: async (passId, imageBlob) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', imageBlob, `${passId}.png`);
+      const response = await axiosInstance.post(
+        `/api/v1/passes/${passId}/pass-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.warn('Pass image upload warning (non-blocking):', error);
+      return null;
+    }
+  },
+
   // Public scan auto-activation (for SCAN_AUTO_ACTIVATE + NO_IDENTITY)
   autoActivatePass: async (data) => {
     try {
