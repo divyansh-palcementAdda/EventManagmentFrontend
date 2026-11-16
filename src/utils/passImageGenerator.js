@@ -75,6 +75,25 @@ const isNoQrPass = (passData) => {
   return cat.includes('VIP') || cat.includes('NO_QR') || num.includes('VIP');
 };
 
+const wrapCanvasText = (ctx, text, maxWidth) => {
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+};
+
 /**
  * generatePassCanvas
  * Renders the composite pass (Front + Back) with all dynamic overlays.
@@ -103,13 +122,98 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
   // 1. Draw Front Pass
   ctx.drawImage(frontImg, 0, 0, width, frontHeight);
 
-  // Date overlay on front pass
-  const dateText = buildDateLabel(passData.validDays);
+  // 2. Clear baked-in text area below brown pill to prevent overlapping
+  ctx.fillStyle = '#fef3e7';
+  ctx.fillRect(690, 390, 780, 255);
+
+  // 3. Subtle aesthetic separator line
+  ctx.strokeStyle = '#d8c8b8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(720, 405);
+  ctx.lineTo(1420, 405);
+  ctx.stroke();
+
+  // 4. Dynamic Top-Section Text Layout Engine
+  const contentStartX = 720;
+  const maxContentWidth = 700;
+  let currentY = 435;
+
+  // --- SECTION A: EVENT DATES ---
+  const dateText = buildDateLabel(passData.validDays) || passData.eventDate || '14TH – 16TH NOVEMBER, 2026';
   if (dateText) {
-    ctx.font = "300 24px 'Telegraf', 'Segoe UI', Arial, sans-serif";
-    ctx.fillStyle = '#000000';
-    ctx.letterSpacing = '0.5px';
-    ctx.fillText(dateText, width * 0.42, frontHeight * (1 - 0.22));
+    const datePrefix = 'EVENT DATES: ';
+    let dateFontSize = 22;
+    ctx.font = `bold ${dateFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
+
+    while (dateFontSize > 16 && (ctx.measureText(datePrefix).width + ctx.measureText(dateText).width) > maxContentWidth) {
+      dateFontSize -= 1;
+      ctx.font = `bold ${dateFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
+    }
+
+    ctx.fillStyle = '#6f3b25';
+    ctx.fillText(datePrefix, contentStartX, currentY);
+
+    const prefixW = ctx.measureText(datePrefix).width;
+    ctx.fillStyle = '#121212';
+    ctx.fillText(dateText, contentStartX + prefixW, currentY);
+
+    currentY += 40;
+  }
+
+  // --- SECTION B: VENUE & LOCATION ---
+  let rawVenue = passData.eventVenue || passData.venue || 'RENAISSANCE UNIVERSITY';
+  let effectiveVenue = rawVenue.trim();
+  let effectiveLocation = null;
+
+  if (effectiveVenue.includes(',')) {
+    const parts = effectiveVenue.split(',');
+    effectiveVenue = parts[0].trim();
+    effectiveLocation = parts.slice(1).join(',').trim();
+  } else if (effectiveVenue.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
+    effectiveLocation = 'CAMPUS, INDORE';
+  }
+
+  const venuePrefix = 'VENUE: ';
+  let venueFontSize = 23;
+  ctx.font = `bold ${venueFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
+  let vPrefixW = ctx.measureText(venuePrefix).width;
+  let remainingW = maxContentWidth - vPrefixW;
+
+  let venueLines = wrapCanvasText(ctx, effectiveVenue.toUpperCase(), remainingW);
+  while (venueLines.length > 2 && venueFontSize > 18) {
+    venueFontSize -= 1;
+    ctx.font = `bold ${venueFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
+    vPrefixW = ctx.measureText(venuePrefix).width;
+    remainingW = maxContentWidth - vPrefixW;
+    venueLines = wrapCanvasText(ctx, effectiveVenue.toUpperCase(), remainingW);
+  }
+
+  ctx.fillStyle = '#6f3b25';
+  ctx.fillText(venuePrefix, contentStartX, currentY);
+
+  ctx.fillStyle = '#121212';
+  if (venueLines.length > 0) {
+    ctx.fillText(venueLines[0], contentStartX + vPrefixW, currentY);
+  }
+  for (let i = 1; i < venueLines.length; i++) {
+    currentY += 30;
+    ctx.fillText(venueLines[i], contentStartX + vPrefixW, currentY);
+  }
+
+  currentY += 32;
+
+  // --- SECTION C: CAMPUS / LOCATION DETAILS ---
+  if (effectiveLocation) {
+    const locFontSize = 20;
+    ctx.font = `bold ${locFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
+    const locLines = wrapCanvasText(ctx, effectiveLocation.toUpperCase(), remainingW);
+
+    ctx.fillStyle = '#4a3525';
+    for (const lLine of locLines) {
+      ctx.fillText(lLine, contentStartX + vPrefixW, currentY);
+      currentY += 26;
+    }
   }
 
   // 2. Draw Back Pass

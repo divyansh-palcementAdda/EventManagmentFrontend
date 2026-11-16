@@ -92,6 +92,36 @@ export const whatsappService = {
       throw error.response?.data || error;
     }
   },
+
+  // List WhatsApp outbox items with state, attempts, timeout status
+  getOutbox: async (params = {}) => {
+    try {
+      const response = await axiosInstance.get(API_ROUTES.WHATSAPP.OUTBOX, { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Manually resend an ambiguous or failed outbox message (requires operator confirmation)
+  manualResend: async (outboxId) => {
+    try {
+      const response = await axiosInstance.post(API_ROUTES.WHATSAPP.MANUAL_RESEND(outboxId));
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Trigger reconciliation check for an outbox message
+  reconcileOutbox: async (outboxId) => {
+    try {
+      const response = await axiosInstance.post(API_ROUTES.WHATSAPP.RECONCILE(outboxId));
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default whatsappService;

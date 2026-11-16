@@ -30,6 +30,8 @@ const WhatsAppSettings = () => {
   const [saving, setSaving] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [retryingFailed, setRetryingFailed] = useState(false);
+  const [resendModalItem, setResendModalItem] = useState(null);
+  const [resendingItem, setResendingItem] = useState(false);
 
   // Settings State
   const [settings, setSettings] = useState({
@@ -160,6 +162,22 @@ const WhatsAppSettings = () => {
       toast.error(err.message || 'Failed to retry messages');
     } finally {
       setRetryingFailed(false);
+    }
+  };
+
+  const handleManualResend = async () => {
+    if (!resendModalItem) return;
+    setResendingItem(true);
+    try {
+      const res = await whatsappService.manualResend(resendModalItem.id);
+      toast.success(res.message || 'Message re-queued for delivery');
+      setResendModalItem(null);
+      fetchLogs(logPage);
+    } catch (err) {
+      console.error('Failed to manually resend message:', err);
+      toast.error(err.message || 'Failed to resend message');
+    } finally {
+      setResendingItem(false);
     }
   };
 
@@ -675,6 +693,9 @@ const WhatsAppSettings = () => {
             >
               <option value="ALL">All Statuses</option>
               <option value="SENT">Sent / Delivered</option>
+              <option value="UNKNOWN">Unknown (Timeout)</option>
+              <option value="MANUAL_REVIEW">Manual Review</option>
+              <option value="RETRY_WAIT">Retry Wait</option>
               <option value="FAILED">Failed</option>
               <option value="SUPPRESSED">Suppressed (Toggle Disabled)</option>
             </select>
@@ -693,19 +714,20 @@ const WhatsAppSettings = () => {
                 <th className="px-5 py-3">Template</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Provider Reference</th>
+                <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {logsLoading ? (
                 <tr>
-                  <td colSpan="7" className="px-5 py-8 text-center text-gray-500">
+                  <td colSpan="8" className="px-5 py-8 text-center text-gray-500">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600 mb-2" />
                     Loading message audit logs...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan="8" className="px-5 py-8 text-center text-gray-400">
                     No WhatsApp message logs found matching your filter criteria.
                   </td>
                 </tr>
@@ -742,6 +764,12 @@ const WhatsAppSettings = () => {
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           log.status === 'SENT' || log.status === 'DELIVERED'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : log.status === 'UNKNOWN'
+                            ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                            : log.status === 'MANUAL_REVIEW'
+                            ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                            : log.status === 'RETRY_WAIT'
+                            ? 'bg-sky-50 text-sky-700 border border-sky-200'
                             : log.status === 'SUPPRESSED'
                             ? 'bg-amber-50 text-amber-700 border border-amber-200'
                             : 'bg-red-50 text-red-700 border border-red-200'
@@ -751,12 +779,18 @@ const WhatsAppSettings = () => {
                           className={`w-1.5 h-1.5 rounded-full ${
                             log.status === 'SENT' || log.status === 'DELIVERED'
                               ? 'bg-emerald-500'
+                              : log.status === 'UNKNOWN'
+                              ? 'bg-purple-500 animate-pulse'
+                              : log.status === 'MANUAL_REVIEW'
+                              ? 'bg-orange-500'
+                              : log.status === 'RETRY_WAIT'
+                              ? 'bg-sky-500'
                               : log.status === 'SUPPRESSED'
                               ? 'bg-amber-500'
                               : 'bg-red-500'
                           }`}
                         />
-                        {log.status}
+                        {log.status === 'UNKNOWN' ? 'UNKNOWN (Timeout)' : log.status}
                       </span>
                       {log.errorMessage && (
                         <span className="block text-[10px] text-red-600 mt-0.5 max-w-xs truncate" title={log.errorMessage}>
@@ -766,6 +800,21 @@ const WhatsAppSettings = () => {
                     </td>
                     <td className="px-5 py-3 font-mono text-[10px] text-gray-500 truncate max-w-xs" title={log.providerMessageId}>
                       {log.providerMessageId || '—'}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      {(log.status === 'UNKNOWN' || log.status === 'MANUAL_REVIEW' || log.status === 'FAILED') ? (
+                        <button
+                          type="button"
+                          onClick={() => setResendModalItem(log)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors shadow-sm"
+                          title="Authorized manual resend with duplicate acknowledgment"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          Resend
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-[11px]">—</span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -848,6 +897,47 @@ const WhatsAppSettings = () => {
           )}
         </div>
       </div>
+
+      {/* Manual Resend Confirmation Modal */}
+      {resendModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-2">
+                Confirm Manual WhatsApp Resend
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                This message experienced an ambiguous delivery outcome (e.g. read timeout).
+                <span className="font-semibold text-amber-700 block mt-2 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
+                  ⚠️ Warning: The WhatsApp message may already have been delivered to {resendModalItem.maskedMobile || resendModalItem.recipientMobile}. Manually resending will dispatch another message and may result in a duplicate.
+                </span>
+              </p>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  disabled={resendingItem}
+                  onClick={() => setResendModalItem(null)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={resendingItem}
+                  onClick={handleManualResend}
+                  className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                >
+                  {resendingItem && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  I Understand, Resend Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

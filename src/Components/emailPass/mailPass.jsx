@@ -20,94 +20,96 @@ const PassEmailTemplate = ({
   seatOrSeq = '',
   category = '',
   validDays = [],
+  eventDate = '',
+  eventVenue = '',
 }) => {
 
- const ordinal = (n) => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return {
-    day: n,
-    suffix: s[(v - 20) % 10] || s[v] || s[0],
-  };
-};
-
-const buildDateLabel = (days) => {
-  if (!days || days.length === 0) return null;
-
-  const parsed = days
-    .filter((d) => d.eventDate)
-    .map((d) => {
-      const dt = new Date(d.eventDate + 'T00:00:00');
-      return {
-        day: dt.getDate(),
-        month: dt.toLocaleString('en-US', { month: 'long' }).toUpperCase(),
-        year: dt.getFullYear(),
-      };
-    });
-
-  if (parsed.length === 0) return null;
-
-  const renderOrdinal = (day, key) => {
-    const { suffix } = ordinal(day);
-
-    return (
-      <React.Fragment key={key}>
-        {day}
-        <sup
-          style={{
-            fontSize: '65%',
-            verticalAlign: 'super',
-            lineHeight: 0,
-            position: 'relative',
-            top: '1px',
-          }}
-        >
-          {suffix}
-        </sup>
-      </React.Fragment>
-    );
+  const ordinal = (n) => {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return {
+      day: n,
+      suffix: s[(v - 20) % 10] || s[v] || s[0],
+    };
   };
 
-  if (parsed.length === 1) {
-    const p = parsed[0];
+  const buildDateLabel = (days) => {
+    if (!days || days.length === 0) return null;
 
-    return (
-      <>
-        {renderOrdinal(p.day, 0)} {p.month}, {p.year}
-      </>
+    const parsed = days
+      .filter((d) => d.eventDate)
+      .map((d) => {
+        const dt = new Date(d.eventDate + 'T00:00:00');
+        return {
+          day: dt.getDate(),
+          month: dt.toLocaleString('en-US', { month: 'long' }).toUpperCase(),
+          year: dt.getFullYear(),
+        };
+      });
+
+    if (parsed.length === 0) return null;
+
+    const renderOrdinal = (day, key) => {
+      const { suffix } = ordinal(day);
+
+      return (
+        <React.Fragment key={key}>
+          {day}
+          <sup
+            style={{
+              fontSize: '65%',
+              verticalAlign: 'super',
+              lineHeight: 0,
+              position: 'relative',
+              top: '1px',
+            }}
+          >
+            {suffix}
+          </sup>
+        </React.Fragment>
+      );
+    };
+
+    if (parsed.length === 1) {
+      const p = parsed[0];
+
+      return (
+        <>
+          {renderOrdinal(p.day, 0)} {p.month}, {p.year}
+        </>
+      );
+    }
+
+    const allSameMonth = parsed.every(
+      (p) => p.month === parsed[0].month && p.year === parsed[0].year
     );
-  }
 
-  const allSameMonth = parsed.every(
-    (p) => p.month === parsed[0].month && p.year === parsed[0].year
-  );
+    if (allSameMonth) {
+      return (
+        <>
+          {parsed.map((p, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && ', '}
+              {renderOrdinal(p.day, i)}
+            </React.Fragment>
+          ))}{' '}
+          {parsed[0].month}, {parsed[0].year}
+        </>
+      );
+    }
 
-  if (allSameMonth) {
     return (
       <>
         {parsed.map((p, i) => (
           <React.Fragment key={i}>
             {i > 0 && ', '}
-            {renderOrdinal(p.day, i)}
+            {renderOrdinal(p.day, i)} {p.month}
           </React.Fragment>
-        ))}{' '}
-        {parsed[0].month}, {parsed[0].year}
+        ))}
+        , {parsed[parsed.length - 1].year}
       </>
     );
-  }
-
-  return (
-    <>
-      {parsed.map((p, i) => (
-        <React.Fragment key={i}>
-          {i > 0 && ', '}
-          {renderOrdinal(p.day, i)} {p.month}
-        </React.Fragment>
-      ))}
-      , {parsed[parsed.length - 1].year}
-    </>
-  );
-};
+  };
   return (
     /* ── Outer page wrapper ─────────────────────────────────────── */
     <div
@@ -149,33 +151,52 @@ const buildDateLabel = (days) => {
             }}
           />
 
-          {/* Day & Date overlay on front pass */}
-          {validDays && validDays.length > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '26%',
-                left: '42%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(1px, 0.4vw, 4px)',
-              }}
-            >
-              <span
+          {/* Top section details overlay on front pass */}
+          {(() => {
+            const dateStr = buildDateLabel(validDays) || eventDate || '14TH – 16TH NOVEMBER, 2026';
+            const rawV = (eventVenue || 'RENAISSANCE UNIVERSITY').trim();
+            let vName = rawV;
+            let vLoc = null;
+            if (rawV.includes(',')) {
+              const parts = rawV.split(',');
+              vName = parts[0].trim();
+              vLoc = parts.slice(1).join(',').trim();
+            } else if (rawV.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
+              vLoc = 'CAMPUS, INDORE';
+            }
+
+            return (
+              <div
                 style={{
-                  fontSize: 'clamp(7px, 1.5vw, 13px)',
-                  fontWeight: '700',
-                  color: '#000000',
-                  fontFamily: "Arial, Helvetica, sans-serif",
-                  letterSpacing: '0.5px',
-                  whiteSpace: 'nowrap',
-                  lineHeight: 2.4,
+                  position: 'absolute',
+                  top: '58%',
+                  left: '39.5%',
+                  width: '42%',
+                  backgroundColor: '#fef3e7',
+                  padding: 'clamp(2px, 0.4vw, 5px) 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(1px, 0.3vw, 4px)',
+                  lineHeight: 1.25,
                 }}
               >
-                {buildDateLabel(validDays)}
-              </span>
-            </div>
-          )}
+                <div style={{ height: '1px', backgroundColor: '#d8c8b8', marginBottom: 'clamp(1px, 0.2vw, 3px)', width: '100%' }} />
+                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <span style={{ color: '#6f3b25' }}>EVENT DATES: </span>
+                  {dateStr}
+                </div>
+                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212' }}>
+                  <span style={{ color: '#6f3b25' }}>VENUE: </span>
+                  {vName.toUpperCase()}
+                </div>
+                {vLoc && (
+                  <div style={{ fontSize: 'clamp(5.5px, 1.1vw, 10px)', fontWeight: '700', color: '#4a3525' }}>
+                    {vLoc.toUpperCase()}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── BACK PASS + QR overlay + badge text ──────────────────── */}
@@ -332,7 +353,7 @@ const buildDateLabel = (days) => {
                   marginTop: '9px',
                 }}
               >
-                 #{seatOrSeq}
+                #{seatOrSeq}
               </span>
             </div>
           )}

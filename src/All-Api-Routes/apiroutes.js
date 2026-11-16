@@ -142,6 +142,9 @@ const API_ROUTES = {
     OTP_SEND: '/whatsapp/otp/send',
     OTP_VERIFY: '/whatsapp/otp/verify',
     RETRY_FAILED: '/whatsapp/outbox/retry-failed',
+    OUTBOX: '/whatsapp/outbox',
+    MANUAL_RESEND: (id) => `/whatsapp/outbox/${id}/manual-resend`,
+    RECONCILE: (id) => `/whatsapp/outbox/${id}/reconcile`,
   },
 };
 
