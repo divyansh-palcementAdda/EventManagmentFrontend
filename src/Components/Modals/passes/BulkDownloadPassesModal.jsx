@@ -43,16 +43,24 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
       effectiveCategories.forEach((cat) => {
         const code = cat.categoryCode || cat.passCategoryCode || cat.code;
         const name = cat.categoryName || cat.passCategoryName || cat.name || code;
-        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
+        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' ||
+          cat.qrRequired === false ||
+          (code && code.toUpperCase() === 'VIP') ||
+          (name && name.toUpperCase().includes('VIP'));
         list.push({
           value: code,
           label: name,
           isNoQr,
         });
       });
+      // Ensure VIP is always available as an option for pass download/printing
+      const hasVip = list.some((c) => c.value?.toUpperCase() === 'VIP' || c.label?.toUpperCase()?.includes('VIP'));
+      if (!hasVip) {
+        list.push({ value: 'VIP', label: 'VIP (No QR Badge)', isNoQr: true });
+      }
     } else {
       list.push({ value: 'STUDENT', label: 'Student' });
-      list.push({ value: 'VIP', label: 'VIP', isNoQr: true });
+      list.push({ value: 'VIP', label: 'VIP (No QR Badge)', isNoQr: true });
       list.push({ value: 'OTHER', label: 'Other' });
     }
     return list;
@@ -62,18 +70,29 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
     if (!p) return false;
     if (p.qrRequired === false) return true;
     if (p.activationMode === 'NO_QR_WALK_IN') return true;
-    if (p.qrData === null || p.qrData === '') return true;
+    if (p.qrData === null || p.qrData === '' || p.qrData === undefined) return true;
+    const catCode = (p.categoryCode || '').toUpperCase();
+    const catName = (p.categoryName || '').toUpperCase();
     const passCat = (
       typeof p.category === 'string'
         ? p.category
         : p.category?.name || p.categoryCode || p.categoryName || ''
     ).toUpperCase();
-    if (passCat === 'VIP' || passCat.includes('VIP')) return true;
+    const passNum = (p.passNumber || '').toUpperCase();
+    if (
+      passCat === 'VIP' || passCat.includes('VIP') ||
+      catCode === 'VIP' || catCode.includes('VIP') ||
+      catName === 'VIP' || catName.includes('VIP') ||
+      passNum.includes('VIP')
+    ) {
+      return true;
+    }
     const matchCat = effectiveCategories.find((c) => {
       const cCode = (c.categoryCode || c.passCategoryCode || c.code || '').toUpperCase();
-      return cCode === passCat;
+      const cName = (c.categoryName || c.passCategoryName || c.name || '').toUpperCase();
+      return cCode === passCat || cCode === catCode || cName === passCat || cName === catName;
     });
-    if (matchCat && (matchCat.qrRequired === false || matchCat.activationMode === 'NO_QR_WALK_IN')) {
+    if (matchCat && (matchCat.qrRequired === false || matchCat.activationMode === 'NO_QR_WALK_IN' || (matchCat.categoryCode && matchCat.categoryCode.toUpperCase().includes('VIP')) || (matchCat.name && matchCat.name.toUpperCase().includes('VIP')))) {
       return true;
     }
     return false;
@@ -321,15 +340,36 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
             )}
 
             {/* Format explanation */}
-            <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-900 text-[11px] space-y-1">
-              <div className="font-bold flex items-center gap-1.5">
-                <QrCode className="w-4 h-4 text-purple-700" />
-                Print-Ready Event Passes & Badges
-              </div>
-              <p className="text-purple-700">
-                Generates print-ready QR badges or walk-in passes formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.
-              </p>
-            </div>
+            {(() => {
+              const selectedCatObj = categoryOptions.find((c) => c.value === categoryFilter);
+              const isSelectedCategoryNoQr = selectedCatObj?.isNoQr || categoryFilter?.toUpperCase() === 'VIP';
+              return (
+                <div className={`p-3 rounded-xl border text-[11px] space-y-1 ${
+                  isSelectedCategoryNoQr
+                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                    : 'bg-purple-50 border-purple-200 text-purple-900'
+                }`}>
+                  <div className="font-bold flex items-center gap-1.5">
+                    {isSelectedCategoryNoQr ? (
+                      <>
+                        <ShieldCheck className="w-4 h-4 text-amber-600" />
+                        Print-Ready Walk-In Badges (No QR Code)
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="w-4 h-4 text-purple-700" />
+                        Print-Ready Event Passes & Badges
+                      </>
+                    )}
+                  </div>
+                  <p className={isSelectedCategoryNoQr ? 'text-amber-800' : 'text-purple-700'}>
+                    {isSelectedCategoryNoQr
+                      ? 'VIP and walk-in passes do not contain QR codes. Badges will be generated with clear serial numbers and official security authentication.'
+                      : 'Generates print-ready QR badges or walk-in passes formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.'}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Actions */}
@@ -366,7 +406,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                 ) : (
                   <>
                     <Printer className="w-4 h-4" />
-                    Print Passes Sheet
+                    Print / Download PDF Passes
                   </>
                 )}
               </button>

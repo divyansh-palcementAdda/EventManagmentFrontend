@@ -82,6 +82,16 @@ export const whatsappService = {
       throw error.response?.data || error;
     }
   },
+
+  // Safely re-queue failed outbox messages for delivery
+  retryFailedMessages: async () => {
+    try {
+      const response = await axiosInstance.post(API_ROUTES.WHATSAPP.RETRY_FAILED);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default whatsappService;

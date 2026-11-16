@@ -19,6 +19,7 @@ import {
   Info,
   Server,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import whatsappService from '../../Api-Services/whatsappService';
@@ -27,6 +28,7 @@ const WhatsAppSettings = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [retryingFailed, setRetryingFailed] = useState(false);
 
   // Settings State
   const [settings, setSettings] = useState({
@@ -142,6 +144,20 @@ const WhatsAppSettings = () => {
       console.error('Failed to fetch message logs:', err);
     } finally {
       setLogsLoading(false);
+    }
+  };
+
+  const handleRetryFailedMessages = async () => {
+    setRetryingFailed(true);
+    try {
+      const res = await whatsappService.retryFailedMessages();
+      toast.success(res.message || 'Failed messages re-queued for delivery');
+      fetchLogs(0);
+    } catch (err) {
+      console.error('Failed to retry messages:', err);
+      toast.error(err.message || 'Failed to retry messages');
+    } finally {
+      setRetryingFailed(false);
     }
   };
 
@@ -586,15 +602,27 @@ const WhatsAppSettings = () => {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => fetchLogs(0)}
-            disabled={logsLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition self-start sm:self-auto"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${logsLoading ? 'animate-spin' : ''}`} />
-            Refresh Logs
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={handleRetryFailedMessages}
+              disabled={retryingFailed || logsLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs font-semibold hover:bg-amber-100 transition"
+              title="Safely re-queue failed messages after template payload correction"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${retryingFailed ? 'animate-spin' : ''}`} />
+              {retryingFailed ? 'Re-queuing...' : 'Retry Failed Messages'}
+            </button>
+            <button
+              type="button"
+              onClick={() => fetchLogs(0)}
+              disabled={logsLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${logsLoading ? 'animate-spin' : ''}`} />
+              Refresh Logs
+            </button>
+          </div>
         </div>
 
         {/* Filter Drawer */}

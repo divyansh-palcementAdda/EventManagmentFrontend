@@ -59,25 +59,49 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
   }, [categories, localCategories]);
 
   const categoryOptions = useMemo(() => {
-    const list = [{ value: 'ALL', label: 'All Categories' }];
+    const list = [];
     if (effectiveCategories && effectiveCategories.length > 0) {
       effectiveCategories.forEach((cat) => {
         const code = cat.categoryCode || cat.passCategoryCode || cat.code;
         const name = cat.categoryName || cat.passCategoryName || cat.name || code;
-        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' || cat.qrRequired === false;
+        const isNoQr = cat.activationMode === 'NO_QR_WALK_IN' ||
+          cat.qrRequired === false ||
+          (code && code.toUpperCase() === 'VIP') ||
+          (name && name.toUpperCase().includes('VIP'));
         list.push({
           value: code,
           label: name,
           isNoQr,
         });
       });
+      // Ensure VIP is always available as an option
+      const hasVip = list.some((c) => c.value?.toUpperCase() === 'VIP' || c.label?.toUpperCase()?.includes('VIP'));
+      if (!hasVip) {
+        list.push({ value: 'VIP', label: 'VIP (No QR Badge)', isNoQr: true });
+      }
     } else {
       list.push({ value: 'STUDENT', label: 'Student' });
-      list.push({ value: 'VIP', label: 'VIP', isNoQr: true });
+      list.push({ value: 'VIP', label: 'VIP (No QR Badge)', isNoQr: true });
       list.push({ value: 'OTHER', label: 'Other' });
     }
     return list;
   }, [effectiveCategories]);
+
+  const getCategoryAvailableCount = (catCode) => {
+    if (!passStats?.categoryStats) return null;
+    const stats = passStats.categoryStats[catCode] ||
+                  passStats.categoryStats[catCode?.toUpperCase()] ||
+                  Object.entries(passStats.categoryStats).find(([k]) => k.toUpperCase() === catCode?.toUpperCase())?.[1];
+    return stats ? stats.available : 0;
+  };
+
+  const getCategoryTotalCount = (catCode) => {
+    if (!passStats?.categoryStats) return null;
+    const stats = passStats.categoryStats[catCode] ||
+                  passStats.categoryStats[catCode?.toUpperCase()] ||
+                  Object.entries(passStats.categoryStats).find(([k]) => k.toUpperCase() === catCode?.toUpperCase())?.[1];
+    return stats ? stats.total : 0;
+  };
 
   useEffect(() => {
     if (isOpen && event?.id) {
@@ -98,11 +122,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
   useEffect(() => {
     if (isOpen && event) {
       setCurrentStep(1);
-      setSelectedCategory(
-        effectiveCategories && effectiveCategories.length > 0
-          ? effectiveCategories[0].categoryCode || effectiveCategories[0].passCategoryCode || effectiveCategories[0].code
-          : 'ALL'
-      );
+      setSelectedCategory('');
       setSelectionMode('AUTO');
       setFromSequence('');
       setToSequence('');
@@ -112,7 +132,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
       setActiveTab('ALL');
       fetchLiveStats();
     }
-  }, [isOpen, event, effectiveCategories]);
+  }, [isOpen, event]);
 
   const fetchLiveStats = async () => {
     if (!event?.id) return;
@@ -134,7 +154,12 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
   // Step 1 Navigation
   const handleProceedToUpload = () => {
     if (!selectedCategory) {
-      toast.error('Please select a pass category.');
+      toast.error('Please select a pass category first.');
+      return;
+    }
+    const catAvail = getCategoryAvailableCount(selectedCategory);
+    if (catAvail !== null && catAvail === 0) {
+      toast.error(`No available unactivated passes found for ${selectedCategory}.`);
       return;
     }
     if (selectionMode === 'RANGE') {
@@ -437,151 +462,215 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-bold text-gray-900">
-                    Step 1: Select Pass Category to Activate *
+                    Step 1: Select Target Pass Category to Activate *
                   </label>
                   <span className="text-xs text-purple-700 font-medium">
-                    Only passes in the chosen category will be assigned
+                    Please select a category first
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {categoryOptions.map((cat) => {
                     const isSelected = selectedCategory === cat.value;
+                    const catAvail = getCategoryAvailableCount(cat.value);
+                    const isZero = catAvail !== null && catAvail === 0;
+
                     return (
                       <button
                         key={cat.value}
                         type="button"
                         onClick={() => setSelectedCategory(cat.value)}
-                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between gap-3 ${
+                        className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-2 relative ${
                           isSelected
-                            ? 'border-purple-600 bg-purple-50 text-purple-900 ring-2 ring-purple-500/20 shadow-sm'
-                            : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                            ? 'border-purple-600 bg-purple-50/80 text-purple-900 ring-2 ring-purple-500/20 shadow-md'
+                            : isZero
+                            ? 'border-gray-200 bg-gray-50/60 text-gray-400 hover:bg-gray-100/60'
+                            : 'border-gray-200 bg-white hover:bg-purple-50/30 text-gray-700 shadow-sm'
                         }`}
                       >
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-xs truncate">{cat.label}</div>
-                          <div className="text-[10px] text-gray-400 font-mono truncate">
-                            {cat.value === 'ALL' ? 'All categories' : `Code: ${cat.value}`}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-bold text-xs truncate text-gray-900">
+                            {cat.label}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {cat.isNoQr && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                                No QR
+                              </span>
+                            )}
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center">
+                                <Check className="w-3.5 h-3.5" />
+                              </div>
+                            )}
                           </div>
                         </div>
-                        {cat.isNoQr && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200 shrink-0">
-                            No QR
+
+                        <div className="text-[11px] flex items-center justify-between pt-1 border-t border-gray-100">
+                          <span className="font-mono text-[10px] text-gray-400">
+                            Code: {cat.value}
                           </span>
-                        )}
-                        {isSelected && (
-                          <Check className="w-4 h-4 text-purple-600 shrink-0 ml-1" />
-                        )}
+                          <span className={isZero ? 'text-red-500 font-bold' : isSelected ? 'text-purple-700 font-bold' : 'text-green-700 font-semibold'}>
+                            {statsLoading ? '...' : (
+                              catAvail !== null ? `${catAvail} Available` : 'Available'
+                            )}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Step 1B: Selection Method */}
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2">
-                  Step 2: Select Pass Assignment Method
-                </label>
-                <div className="space-y-3">
-                  {/* Option A: Auto Available */}
-                  <label
-                    className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
-                      selectionMode === 'AUTO'
-                        ? 'border-purple-600 bg-purple-50/50 shadow-sm'
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="selectionMode"
-                      value="AUTO"
-                      checked={selectionMode === 'AUTO'}
-                      onChange={() => setSelectionMode('AUTO')}
-                      className="mt-1 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-gray-900">
-                        Option A: Select Available Passes Automatically
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Backend automatically assigns the earliest available unactivated passes in sequential order.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Option B: Range Selection */}
-                  <label
-                    className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
-                      selectionMode === 'RANGE'
-                        ? 'border-purple-600 bg-purple-50/50 shadow-sm'
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="selectionMode"
-                      value="RANGE"
-                      checked={selectionMode === 'RANGE'}
-                      onChange={() => setSelectionMode('RANGE')}
-                      className="mt-1 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="flex-1 space-y-3">
-                      <div>
-                        <div className="font-bold text-sm text-gray-900">
-                          Option B: Select a Pass-Number Sequence Range
+              {/* Notice when no category is selected */}
+              {!selectedCategory ? (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-medium flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    Select a target pass category above to configure assignment options and proceed to spreadsheet upload.
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {/* Category confirmation & availability status */}
+                  {(() => {
+                    const catAvail = getCategoryAvailableCount(selectedCategory);
+                    const selectedCatObj = categoryOptions.find((c) => c.value === selectedCategory);
+                    if (catAvail !== null && catAvail === 0) {
+                      return (
+                        <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold">No Available Passes in this category: </span>
+                            There are currently 0 unactivated passes for <strong>{selectedCatObj?.label || selectedCategory}</strong>.
+                            Please generate passes for this category first or select another category.
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Specify an explicit numeric series range (e.g. sequence 10 to 20). Calculates all positions in the series and flags any existing activations or revocations.
-                        </p>
+                      );
+                    }
+                    return (
+                      <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-purple-600 shrink-0" />
+                          <span>
+                            Selected Category: <strong>{selectedCatObj?.label || selectedCategory}</strong>
+                          </span>
+                        </div>
+                        {catAvail !== null && (
+                          <span className="font-bold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full border border-green-200">
+                            {catAvail} passes available
+                          </span>
+                        )}
                       </div>
+                    );
+                  })()}
 
-                      {selectionMode === 'RANGE' && (
-                        <div className="grid grid-cols-2 gap-3 pt-2 bg-white p-3 rounded-lg border border-purple-200">
+                  {/* Step 1B: Selection Method */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">
+                      Step 2: Select Pass Assignment Method
+                    </label>
+                    <div className="space-y-3">
+                      {/* Option A: Auto Available */}
+                      <label
+                        className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
+                          selectionMode === 'AUTO'
+                            ? 'border-purple-600 bg-purple-50/50 shadow-sm'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="selectionMode"
+                          value="AUTO"
+                          checked={selectionMode === 'AUTO'}
+                          onChange={() => setSelectionMode('AUTO')}
+                          className="mt-1 text-purple-600 focus:ring-purple-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-bold text-sm text-gray-900">
+                            Option A: Select Available Passes Automatically
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Backend automatically assigns the earliest available unactivated passes of the selected category in sequential order.
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Option B: Range Selection */}
+                      <label
+                        className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
+                          selectionMode === 'RANGE'
+                            ? 'border-purple-600 bg-purple-50/50 shadow-sm'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="selectionMode"
+                          value="RANGE"
+                          checked={selectionMode === 'RANGE'}
+                          onChange={() => setSelectionMode('RANGE')}
+                          className="mt-1 text-purple-600 focus:ring-purple-500"
+                        />
+                        <div className="flex-1 space-y-3">
                           <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">
-                              From Sequence #
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              placeholder="e.g. 1"
-                              value={fromSequence}
-                              onChange={(e) => setFromSequence(e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
-                            />
-                            <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                              {event.eventCode}-{event.passSeriesCode}-{String(fromSequence || '1').padStart(4, '0')}
+                            <div className="font-bold text-sm text-gray-900">
+                              Option B: Select a Pass-Number Sequence Range
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Specify an explicit numeric series range (e.g. sequence 10 to 20). Calculates all positions in the series and flags any existing activations or revocations.
                             </p>
                           </div>
 
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">
-                              To Sequence #
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              placeholder="e.g. 25"
-                              value={toSequence}
-                              onChange={(e) => setToSequence(e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
-                            />
-                            <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                              {event.eventCode}-{event.passSeriesCode}-{String(toSequence || '25').padStart(4, '0')}
-                            </p>
-                          </div>
+                          {selectionMode === 'RANGE' && (
+                            <div className="grid grid-cols-2 gap-3 pt-2 bg-white p-3 rounded-lg border border-purple-200">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                  From Sequence #
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="e.g. 1"
+                                  value={fromSequence}
+                                  onChange={(e) => setFromSequence(e.target.value)}
+                                  className="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+                                  {event.eventCode}-{event.passSeriesCode}-{String(fromSequence || '1').padStart(4, '0')}
+                                </p>
+                              </div>
 
-                          {calculateRangeCount() !== null && (
-                            <div className="col-span-2 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded">
-                              Selected Series Span: {calculateRangeCount()} total pass positions.
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                  To Sequence #
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="e.g. 25"
+                                  value={toSequence}
+                                  onChange={(e) => setToSequence(e.target.value)}
+                                  className="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+                                  {event.eventCode}-{event.passSeriesCode}-{String(toSequence || '25').padStart(4, '0')}
+                                </p>
+                              </div>
+
+                              {calculateRangeCount() !== null && (
+                                <div className="col-span-2 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded">
+                                  Selected Series Span: {calculateRangeCount()} total pass positions.
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
+                      </label>
                     </div>
-                  </label>
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -945,7 +1034,8 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
               <button
                 type="button"
                 onClick={handleProceedToUpload}
-                className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow"
+                disabled={!selectedCategory || (getCategoryAvailableCount(selectedCategory) !== null && getCategoryAvailableCount(selectedCategory) === 0)}
+                className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow disabled:opacity-50"
               >
                 Next: Upload Excel <ChevronRight className="w-4 h-4" />
               </button>
