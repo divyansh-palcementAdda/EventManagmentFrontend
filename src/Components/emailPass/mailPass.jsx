@@ -164,9 +164,9 @@ const buildDateLabel = (days) => {
               <span
                 style={{
                   fontSize: 'clamp(7px, 1.5vw, 13px)',
-                  fontWeight: '300',
+                  fontWeight: '700',
                   color: '#000000',
-                  fontFamily: "Telegraf",
+                  fontFamily: "Arial, Helvetica, sans-serif",
                   letterSpacing: '0.5px',
                   whiteSpace: 'nowrap',
                   lineHeight: 2.4,
@@ -258,9 +258,9 @@ const buildDateLabel = (days) => {
               <span
                 style={{
                   fontSize: 'clamp(6px, 1.6vw, 13px)',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   color: '#ffffff',
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   letterSpacing: '1.5px',
                   whiteSpace: 'nowrap',
                   textAlign: 'center',
@@ -289,9 +289,9 @@ const buildDateLabel = (days) => {
               <span
                 style={{
                   fontSize: 'clamp(6px, 1.6vw, 13px)',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   color: '#ffffff',
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   letterSpacing: '1.5px',
                   whiteSpace: 'nowrap',
                   textAlign: 'center',
@@ -322,9 +322,9 @@ const buildDateLabel = (days) => {
               <span
                 style={{
                   fontSize: 'clamp(4px, 1.1vw, 12px)',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   color: '#121212',
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   letterSpacing: '3.5px',
                   lineHeight: 2,
                   whiteSpace: 'nowrap',

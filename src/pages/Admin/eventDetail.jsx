@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import PassEmailTemplate from '../../Components/emailPass/mailPass';
 import { useParams, useNavigate } from 'react-router-dom';
 import eventsService from '../../Api-Services/eventsService';
@@ -131,25 +131,15 @@ const EventDetail = () => {
     return checkIsNoQr(activeFullPass);
   }, [activeFullPass, availableCategories]);
 
-  // Pass action dropdown (per-row)
-  const [passDropdownId, setPassDropdownId] = useState(null);
-  const passDropdownRef = useRef(null);
+  // Pass action modal (per-row)
+  const [passActionModalId, setPassActionModalId] = useState(null);
 
   // Revoke Modal
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
   const [passToRevoke, setPassToRevoke] = useState(null);
   const [revokeReason, setRevokeReason] = useState('');
 
-  // Close pass-action dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (passDropdownRef.current && !passDropdownRef.current.contains(e.target)) {
-        setPassDropdownId(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+
 
   // 300ms Search Debounce
   useEffect(() => {
@@ -515,6 +505,7 @@ const EventDetail = () => {
   useScrollLock(!!activePrintPass);
   useScrollLock(revokeModalOpen);
   useScrollLock(!!activeFullPass);
+  useScrollLock(!!passActionModalId);
 
   if (loading) {
     return (
@@ -1213,48 +1204,14 @@ const EventDetail = () => {
                             <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Validity</span>
                           </button>
 
-                          {/* Pass dropdown: QR Only / View Full Pass */}
-                          <div className="relative inline-block" ref={passDropdownId === p.id ? passDropdownRef : null}>
-                            <button
-                              type="button"
-                              onClick={() => setPassDropdownId(passDropdownId === p.id ? null : p.id)}
-                              className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-white border border-gray-300 rounded text-[10px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
-                            >
-                              <Printer className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Pass</span>
-                            </button>
-                            {passDropdownId === p.id && (
-                              <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                                {(() => {
-                                  const isNoQr = checkIsNoQr(p);
-                                  return (
-                                    <>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setActivePrintPass(p);
-                                          setPassDropdownId(null);
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                                      >
-                                        {isNoQr ? <ShieldCheck className="w-3.5 h-3.5 text-amber-600" /> : <QrCode className="w-3.5 h-3.5" />}
-                                        {isNoQr ? 'View Badge' : 'QR Card'}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setActiveFullPass(p);
-                                          setPassDropdownId(null);
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition"
-                                      >
-                                        <Printer className="w-3.5 h-3.5" /> View Full Pass
-                                      </button>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
+                          {/* Pass button: Opens action modal */}
+                          <button
+                            type="button"
+                            onClick={() => setPassActionModalId(p.id)}
+                            className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-1 bg-white border border-gray-300 rounded text-[10px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-xs"
+                          >
+                            <Printer className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Pass</span>
+                          </button>
 
                           {p.status !== 'REVOKED' && (
                             <button
@@ -1747,6 +1704,67 @@ const EventDetail = () => {
             </div>
           </div>
         )
+      }
+
+      {/* PASS ACTION MODAL */}
+      {
+        passActionModalId && (() => {
+          const p = passes.find(pass => pass.id === passActionModalId);
+          if (!p) return null;
+          const isNoQr = checkIsNoQr(p);
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <h3 className="text-base font-bold text-gray-900">Pass Options</h3>
+                  <button
+                    onClick={() => setPassActionModalId(null)}
+                    className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePrintPass(p);
+                      setPassActionModalId(null);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition text-left"
+                  >
+                    {isNoQr ? <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" /> : <QrCode className="w-5 h-5 text-purple-600 shrink-0" />}
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{isNoQr ? 'View Badge' : 'QR Card'}</div>
+                      <div className="text-xs text-gray-500">{isNoQr ? 'View walk-in badge pass' : 'View QR code card'}</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveFullPass(p);
+                      setPassActionModalId(null);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition text-left"
+                  >
+                    <Printer className="w-5 h-5 text-purple-600 shrink-0" />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">View Full Pass</div>
+                      <div className="text-xs text-gray-500">View complete pass details</div>
+                    </div>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPassActionModalId(null)}
+                  className="w-full py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+        })()
       }
 
       {/* MANAGE PASS VALIDITY MODAL */}
