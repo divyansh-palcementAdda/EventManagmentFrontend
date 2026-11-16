@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Tags,
   Plus,
@@ -13,7 +13,9 @@ import {
   X,
   Smartphone,
   UserCheck,
-  UserX
+  UserX,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import categoryService from '../../Api-Services/categoryService';
@@ -34,6 +36,10 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
   const [eventCategories, setEventCategories] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Pagination state
+  const [catPage, setCatPage] = useState(0);
+  const [catPageSize, setCatPageSize] = useState(10);
 
   // Configure New Category Modal
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -65,6 +71,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       const res = await categoryService.getEventCategories(eventId, false);
       const list = Array.isArray(res.data) ? res.data : (res.data?.content || []);
       setEventCategories(list);
+      setCatPage(0);
     } catch (err) {
       console.error('Failed to fetch event categories:', err);
       toast.error(err.message || 'Failed to fetch categories for this event');
@@ -170,6 +177,12 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
     }
   };
 
+  const totalCatPages = Math.ceil(eventCategories.length / catPageSize);
+  const paginatedCategories = useMemo(() => {
+    const start = catPage * catPageSize;
+    return eventCategories.slice(start, start + catPageSize);
+  }, [eventCategories, catPage, catPageSize]);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
@@ -236,7 +249,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 </td>
               </tr>
             ) : (
-              eventCategories.map((cat) => (
+              paginatedCategories.map((cat) => (
                 <tr key={cat.id} className="hover:bg-gray-50/70 transition-colors">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
@@ -350,6 +363,80 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {eventCategories.length > 0 && (
+        <div className="px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <span className="text-[10px] sm:text-xs">
+              {eventCategories.length > 0 ? (
+                <>
+                  Showing <strong className="text-gray-900">{catPage * catPageSize + 1}</strong> to{' '}
+                  <strong className="text-gray-900">
+                    {Math.min((catPage + 1) * catPageSize, eventCategories.length)}
+                  </strong>{' '}
+                  of <strong className="text-gray-900">{eventCategories.length}</strong> categories
+                </>
+              ) : (
+                'No categories found'
+              )}
+            </span>
+            {eventCategories.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] sm:text-xs">Per page:</span>
+                <select
+                  value={catPageSize}
+                  onChange={(e) => {
+                    setCatPageSize(parseInt(e.target.value));
+                    setCatPage(0);
+                  }}
+                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-[10px] sm:text-xs font-medium focus:outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalCatPages > 1 && (
+            <div className="flex items-center gap-1 self-center sm:self-auto">
+              <button
+                type="button"
+                disabled={catPage === 0}
+                onClick={() => setCatPage((p) => Math.max(0, p - 1))}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition text-xs font-medium"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalCatPages }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setCatPage(i)}
+                  className={`px-3 py-1.5 border rounded-lg transition text-xs font-medium ${
+                    catPage === i
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={catPage >= totalCatPages - 1}
+                onClick={() => setCatPage((p) => Math.min(totalCatPages - 1, p + 1))}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition text-xs font-medium"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Enable Category Modal */}
       {addModalOpen && (

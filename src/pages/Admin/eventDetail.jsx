@@ -297,8 +297,8 @@ const EventDetail = () => {
       const response = await passService.getPassesByEvent(eventId, params);
       const data = response.data;
       setPasses(data?.content || []);
-      setTotalPages(data?.totalPages || 0);
-      setTotalElements(data?.totalElements || 0);
+      setTotalPages(data?.page?.totalPages || 0);
+      setTotalElements(data?.page?.totalElements || 0);
     } catch (error) {
       console.error('Error fetching passes:', error);
       toast.error('Failed to fetch passes');
@@ -1280,60 +1280,78 @@ const EventDetail = () => {
         }
 
         {/* Server-Side Pagination Footer */}
-        {
-          totalElements > 0 && (
-            <div className="px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-600">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <span className="text-[10px] sm:text-xs">
-                  Showing <strong className="text-gray-900">{page * pageSize + 1}</strong> to{' '}
-                  <strong className="text-gray-900">
+        <div className="px-4 sm:px-5 py-4 border-t border-gray-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <span className="text-xs sm:text-sm text-gray-600">
+              {totalElements > 0 ? (
+                <>
+                  Showing <span className="font-bold text-purple-700">{page * pageSize + 1}</span> to{' '}
+                  <span className="font-bold text-purple-700">
                     {Math.min((page + 1) * pageSize, totalElements)}
-                  </strong>{' '}
-                  of <strong className="text-gray-900">{totalElements}</strong> passes
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] sm:text-xs">Per page:</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(parseInt(e.target.value));
-                      setPage(0);
-                    }}
-                    className="bg-white border border-gray-300 rounded px-1.5 py-0.5 text-[10px] sm:text-xs font-medium focus:outline-none"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
+                  </span>{' '}
+                  of <span className="font-bold text-purple-700">{totalElements}</span> passes
+                </>
+              ) : (
+                <span className="text-gray-500">No passes found</span>
+              )}
+            </span>
+            {totalElements > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value));
+                    setPage(0);
+                  }}
+                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 cursor-pointer hover:border-purple-400 transition"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
               </div>
+            )}
+          </div>
 
-              {/* Pagination Controls */}
-              <div className="flex items-center gap-1 self-center sm:self-auto">
+          {/* Pagination Controls */}
+          {totalElements > 0 && totalPages > 1 && (
+            <div className="flex items-center gap-1.5 self-center sm:self-auto">
+              <button
+                type="button"
+                disabled={page === 0 || passesLoading}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => (
                 <button
+                  key={i}
                   type="button"
-                  disabled={page === 0 || passesLoading}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  onClick={() => setPage(i)}
+                  disabled={passesLoading}
+                  className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
+                    page === i
+                      ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white border-purple-600 shadow-md hover:from-purple-700 hover:to-purple-800 transform hover:scale-105'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
+                  }`}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  {i + 1}
                 </button>
-                <span className="px-2 sm:px-3 py-1 font-semibold text-gray-900 text-[10px] sm:text-xs">
-                  {page + 1} / {Math.max(1, totalPages)}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages - 1 || passesLoading}
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  className="p-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              ))}
+              <button
+                type="button"
+                disabled={page >= totalPages - 1 || passesLoading}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
+              >
+                Next
+              </button>
             </div>
-          )
-        }
+          )}
+        </div>
       </div >
 
       {/* GENERATE PASSES MODAL */}
