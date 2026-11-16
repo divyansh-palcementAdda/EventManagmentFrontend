@@ -20,6 +20,8 @@ const PassEmailTemplate = ({
   seatOrSeq = '',
   category = '',
   validDays = [],
+  eventDate = '',
+  eventVenue = '',
 }) => {
 
  const ordinal = (n) => {
@@ -149,33 +151,52 @@ const buildDateLabel = (days) => {
             }}
           />
 
-          {/* Day & Date overlay on front pass */}
-          {validDays && validDays.length > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '26%',
-                left: '42%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(1px, 0.4vw, 4px)',
-              }}
-            >
-              <span
+          {/* Top section details overlay on front pass */}
+          {(() => {
+            const dateStr = buildDateLabel(validDays) || eventDate || '14TH – 16TH NOVEMBER, 2026';
+            const rawV = (eventVenue || 'RENAISSANCE UNIVERSITY').trim();
+            let vName = rawV;
+            let vLoc = null;
+            if (rawV.includes(',')) {
+              const parts = rawV.split(',');
+              vName = parts[0].trim();
+              vLoc = parts.slice(1).join(',').trim();
+            } else if (rawV.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
+              vLoc = 'CAMPUS, INDORE';
+            }
+
+            return (
+              <div
                 style={{
-                  fontSize: 'clamp(7px, 1.5vw, 13px)',
-                  fontWeight: '300',
-                  color: '#000000',
-                  fontFamily: "Telegraf",
-                  letterSpacing: '0.5px',
-                  whiteSpace: 'nowrap',
-                  lineHeight: 2.4,
+                  position: 'absolute',
+                  top: '58%',
+                  left: '39.5%',
+                  width: '42%',
+                  backgroundColor: '#fef3e7',
+                  padding: 'clamp(2px, 0.4vw, 5px) 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(1px, 0.3vw, 4px)',
+                  lineHeight: 1.25,
                 }}
               >
-                {buildDateLabel(validDays)}
-              </span>
-            </div>
-          )}
+                <div style={{ height: '1px', backgroundColor: '#d8c8b8', marginBottom: 'clamp(1px, 0.2vw, 3px)', width: '100%' }} />
+                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <span style={{ color: '#6f3b25' }}>EVENT DATES: </span>
+                  {dateStr}
+                </div>
+                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212' }}>
+                  <span style={{ color: '#6f3b25' }}>VENUE: </span>
+                  {vName.toUpperCase()}
+                </div>
+                {vLoc && (
+                  <div style={{ fontSize: 'clamp(5.5px, 1.1vw, 10px)', fontWeight: '700', color: '#4a3525' }}>
+                    {vLoc.toUpperCase()}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── BACK PASS + QR overlay + badge text ──────────────────── */}
