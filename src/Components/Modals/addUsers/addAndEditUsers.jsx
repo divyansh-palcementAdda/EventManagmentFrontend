@@ -116,7 +116,7 @@ const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-700 to-green-800 rounded-t-xl">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-violet-600 to-purple-700 rounded-t-xl">
           <h2 className="text-xl font-semibold text-white">
             {user ? 'Edit System User' : 'Add New System User'}
           </h2>
@@ -192,7 +192,7 @@ const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
               value={formData.roleId}
               onChange={handleChange}
               disabled={loadingRoles}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 ${
                 errors.roleId ? 'border-red-500' : 'border-gray-300'
               }`}
             >
@@ -216,7 +216,7 @@ const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
               name="accountStatus"
               value={formData.accountStatus}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
             >
               <option value="ACTIVE">ACTIVE</option>
               <option value="SUSPENDED">SUSPENDED</option>
@@ -239,7 +239,7 @@ const AddAndEditUsers = ({ isOpen, onClose, user, onSave, loading }) => {
               type="submit"
               variant="primary"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white"
+              className="flex-1 flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Saving...' : user ? 'Update User' : 'Create User'}

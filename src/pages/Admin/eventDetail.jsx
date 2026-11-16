@@ -1718,15 +1718,12 @@ const EventDetail = () => {
                 attendeeEmail={activeFullPass.attendeeEmail || ''}
                 passCode={activeFullPass.passNumber}
                 passCategory={activeFullPass.category || 'General'}
+                category={activeFullPass.categoryName || activeFullPass.category || ''}
                 eventName={event?.name || ''}
                 eventDate={`${formatDate(event?.startsAt)} – ${formatDate(event?.endsAt)}`}
                 eventVenue={event?.venue || ''}
                 seatOrSeq={activeFullPass.sequenceNumber ? String(activeFullPass.sequenceNumber).padStart(4, '0') : ''}
-                validDays={
-                  activeFullPass.validDays && activeFullPass.validDays.length > 0
-                    ? activeFullPass.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')
-                    : 'All Days'
-                }
+                validDays={activeFullPass.validDays || []}
                 qrImageUrl={isNoQrActiveFullPass ? null : getQrImageUrl(activeFullPass.rawToken || activeFullPass.passNumber)}
               />
             </div>

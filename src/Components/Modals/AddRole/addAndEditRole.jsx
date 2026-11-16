@@ -80,12 +80,12 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
         {/* Modal Header */}
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-700 to-green-800 rounded-t-xl text-white">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-violet-600 to-purple-700 rounded-t-xl text-white">
           <div>
             <h2 className="text-xl font-semibold">
               {role ? `Edit Role: ${role.name}` : 'Create New Dynamic Role'}
             </h2>
-            <p className="text-xs text-green-100 mt-0.5">
+            <p className="text-xs text-purple-100 mt-0.5">
               Define permissions and access boundaries for this role
             </p>
           </div>
@@ -128,7 +128,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
                 }}
                 disabled={role?.systemDefined}
                 placeholder="e.g. TICKET_SCANNER"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 uppercase font-mono disabled:bg-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 uppercase font-mono disabled:bg-gray-100"
                 required
               />
             </div>
@@ -141,7 +141,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description of responsibilities"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
                       <button
                         type="button"
                         onClick={() => handleSelectAllInResource(perms)}
-                        className="text-xs text-green-700 hover:text-green-800 font-medium"
+                        className="text-xs text-purple-600 hover:text-purple-800 font-medium"
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
                       </button>
@@ -188,7 +188,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
                             key={perm.id}
                             className={`flex items-start gap-2 p-2 rounded border cursor-pointer text-xs transition-colors ${
                               isChecked
-                                ? 'bg-green-50/70 border-green-500 text-green-900'
+                                ? 'bg-purple-50 border-purple-500 text-purple-900'
                                 : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
                             }`}
                           >
@@ -196,7 +196,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => togglePermission(perm.id)}
-                              className="mt-0.5 rounded text-green-700 focus:ring-green-700"
+                              className="mt-0.5 rounded text-purple-600 focus:ring-purple-600"
                             />
                             <div>
                               <div className="font-mono font-semibold">{perm.name}</div>
@@ -230,7 +230,7 @@ const AddAndEditRole = ({ isOpen, onClose, onSave, role, allPermissions = [], lo
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors text-sm font-semibold shadow-sm"
+              className="flex items-center gap-2 px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold shadow-sm"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Saving...' : role ? 'Update Role' : 'Create Role'}
