@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   MessageSquare,
   Smartphone,
@@ -20,6 +20,7 @@ import {
   Server,
   Zap,
   RotateCcw,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import whatsappService from '../../Api-Services/whatsappService';
@@ -63,6 +64,7 @@ const WhatsAppSettings = () => {
   const [logTypeFilter, setLogTypeFilter] = useState('');
   const [logStatusFilter, setLogStatusFilter] = useState('');
   const [logPage, setLogPage] = useState(0);
+  const [logPageSize, setLogPageSize] = useState(10);
   const [logTotalPages, setLogTotalPages] = useState(0);
   const [logTotalElements, setLogTotalElements] = useState(0);
 
@@ -126,7 +128,7 @@ const WhatsAppSettings = () => {
     try {
       const params = {
         page,
-        size: 10,
+        size: logPageSize,
         sortBy: 'createdAt',
         sortDir: 'desc',
       };
@@ -137,8 +139,8 @@ const WhatsAppSettings = () => {
       const res = await whatsappService.getLogs(params);
       const pageData = res.data || res;
       setLogs(pageData.content || []);
-      setLogTotalPages(pageData.totalPages || 0);
-      setLogTotalElements(pageData.totalElements || 0);
+      setLogTotalPages(pageData.totalPages || pageData.page?.totalPages || 0);
+      setLogTotalElements(pageData.totalElements || pageData.page?.totalElements || 0);
       setLogPage(page);
     } catch (err) {
       console.error('Failed to fetch message logs:', err);
@@ -649,6 +651,7 @@ const WhatsAppSettings = () => {
               onChange={(e) => {
                 setLogTypeFilter(e.target.value);
                 setLogPage(0);
+                fetchLogs(0);
               }}
               className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
@@ -666,6 +669,7 @@ const WhatsAppSettings = () => {
               onChange={(e) => {
                 setLogStatusFilter(e.target.value);
                 setLogPage(0);
+                fetchLogs(0);
               }}
               className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
@@ -682,6 +686,7 @@ const WhatsAppSettings = () => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-5 py-3 w-16">S.No</th>
                 <th className="px-5 py-3">Timestamp</th>
                 <th className="px-5 py-3">Recipient</th>
                 <th className="px-5 py-3">Type</th>
@@ -693,20 +698,23 @@ const WhatsAppSettings = () => {
             <tbody className="divide-y divide-gray-100">
               {logsLoading ? (
                 <tr>
-                  <td colSpan="6" className="px-5 py-8 text-center text-gray-500">
+                  <td colSpan="7" className="px-5 py-8 text-center text-gray-500">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600 mb-2" />
                     Loading message audit logs...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan="7" className="px-5 py-8 text-center text-gray-400">
                     No WhatsApp message logs found matching your filter criteria.
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
+                logs.map((log, index) => (
                   <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="px-5 py-3 font-mono font-semibold text-gray-600 text-[11px]">
+                      {logPage * logPageSize + index + 1}
+                    </td>
                     <td className="px-5 py-3 text-gray-500 whitespace-nowrap font-mono text-[11px]">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
@@ -767,34 +775,78 @@ const WhatsAppSettings = () => {
         </div>
 
         {/* Pagination Bar */}
-        {logTotalPages > 1 && (
-          <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between text-xs text-gray-600">
-            <span>
-              Showing {logs.length} of {logTotalElements} message logs
+        <div className="px-4 sm:px-5 py-4 border-t border-gray-200 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <span className="text-xs sm:text-sm text-gray-600">
+              {logTotalElements > 0 ? (
+                <>
+                  Showing <span className="font-bold text-emerald-700">{logPage * logPageSize + 1}</span> to{' '}
+                  <span className="font-bold text-emerald-700">
+                    {Math.min((logPage + 1) * logPageSize, logTotalElements)}
+                  </span>{' '}
+                  of <span className="font-bold text-emerald-700">{logTotalElements}</span> message logs
+                </>
+              ) : (
+                <span className="text-gray-500">No message logs found</span>
+              )}
             </span>
-            <div className="flex items-center gap-2">
+            {logTotalElements > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Rows per page:</span>
+                <select
+                  value={logPageSize}
+                  onChange={(e) => {
+                    setLogPageSize(parseInt(e.target.value));
+                    setLogPage(0);
+                  }}
+                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer hover:border-emerald-400 transition"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {logTotalElements > 0 && (
+            <div className="flex items-center gap-1.5 self-center sm:self-auto">
               <button
                 type="button"
+                disabled={logPage === 0 || logsLoading}
                 onClick={() => fetchLogs(Math.max(0, logPage - 1))}
-                disabled={logPage === 0}
-                className="px-2.5 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-40"
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                Previous
               </button>
-              <span className="font-mono text-xs">
-                Page {logPage + 1} of {logTotalPages}
-              </span>
+              {Array.from({ length: logTotalPages }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => fetchLogs(i)}
+                  disabled={logsLoading}
+                  className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
+                    logPage === i
+                      ? 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white border-emerald-600 shadow-md hover:from-emerald-700 hover:to-emerald-800 transform hover:scale-105'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
               <button
                 type="button"
+                disabled={logPage >= logTotalPages - 1 || logsLoading}
                 onClick={() => fetchLogs(Math.min(logTotalPages - 1, logPage + 1))}
-                disabled={logPage >= logTotalPages - 1}
-                className="px-2.5 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-40"
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                Next
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

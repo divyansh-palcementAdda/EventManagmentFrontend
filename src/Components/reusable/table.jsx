@@ -45,7 +45,7 @@ const Table = ({ columns, data, onRowClick, className = '', enablePagination = f
         </table>
       </div>
 
-      {enablePagination && totalElements > 5 && (
+      {enablePagination && totalElements > 0 && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mt-4 p-4">
           <Pagination
             currentPage={currentPage}

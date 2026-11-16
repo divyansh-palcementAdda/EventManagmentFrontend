@@ -1,6 +1,16 @@
 import React from 'react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange, className = '', totalElements = 0 }) => {
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  className = '',
+  totalElements = 0,
+  pageSize = 20,
+  onPageSizeChange,
+  pageSizes = [10, 20, 50, 100],
+  itemName = 'items'
+}) => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -29,20 +39,46 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '', tot
     return pages;
   };
 
+  const startItem = totalElements > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(currentPage * pageSize, totalElements);
+
   return (
     <div className={`flex items-center justify-between gap-4 ${className}`}>
-      <div className="text-sm text-gray-600 font-medium">
-        {totalElements > 0 ? (
-          <>Total <span className="text-blue-600 font-semibold">{totalElements}</span> attendees</>
-        ) : (
-          <>Showing page <span className="text-blue-600 font-semibold">{currentPage}</span> of <span className="text-blue-600 font-semibold">{totalPages}</span></>
+      <div className="flex items-center gap-4">
+        <span className="text-xs sm:text-sm text-gray-600">
+          {totalElements > 0 ? (
+            <>
+              Showing <span className="font-bold text-purple-700">{startItem}</span> to{' '}
+              <span className="font-bold text-purple-700">{endItem}</span> of{' '}
+              <span className="font-bold text-purple-700">{totalElements}</span> {itemName}
+            </>
+          ) : (
+            <span className="text-gray-500">No {itemName} found</span>
+          )}
+        </span>
+        {totalElements > 0 && onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
+              className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 cursor-pointer hover:border-purple-400 transition"
+            >
+              {pageSizes.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+          className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
         >
           Previous
         </button>
@@ -51,11 +87,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '', tot
             key={index}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
-            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+            className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
               page === currentPage
-                ? 'bg-blue-600 text-white border-blue-600 shadow-md hover:bg-blue-700'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
-            } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700`}
+                ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white border-purple-600 shadow-md hover:from-purple-700 hover:to-purple-800 transform hover:scale-105'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
+            }`}
           >
             {page}
           </button>
@@ -63,7 +99,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = '', tot
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+          className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-all duration-200 text-xs font-semibold shadow-sm"
         >
           Next
         </button>

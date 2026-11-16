@@ -36,8 +36,8 @@ const Events = () => {
     try {
       const response = await eventsService.getEvents(page - 1, pageSize, ['createdAt,desc'], search);
       setEvents(response.data.content || []);
-      setTotalPages(response.data.totalPages || 0);
-      setTotalElements(response.data.totalElements || 0);
+      setTotalPages(response.data.page?.totalPages || 0);
+      setTotalElements(response.data.page?.totalElements || 0);
     } catch (error) {
       toast.error('Failed to fetch events');
       console.error('Error fetching events:', error);
@@ -326,6 +326,7 @@ const Events = () => {
         onPageChange={handlePageChange}
         itemsPerPage={pageSize}
         useBackendPagination={true}
+        totalElements={totalElements}
         className="border-0 rounded-xl"
       />
 
