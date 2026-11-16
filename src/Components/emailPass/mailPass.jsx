@@ -1,21 +1,113 @@
 import React from 'react';
-// import forDivImg from '../../assets/for div.png';         
-// import RCFPassBack from '../../assets/RCF Pass back.png'
-import RCFPassBack from '../../assets/rcf-back.png'
+
+import frontPass from '../../assets/14.png'
+import backpass from '../../assets/final.png'
 
 /**
  * PassEmailTemplate
  *
  * Renders a fully responsive email-style pass card.
- * Uses RCFPassBack image as background with only a QR code overlay.
+ * Front pass (14.png) on top, back pass (final.png) below it.
+ * Back pass has QR overlay + serial number & category on the two brown badge strips.
  *
  * Props:
- *  - qrImageUrl : string  (data-URL or hosted URL for the QR code image)
+ *  - qrImageUrl  : string  (data-URL or hosted URL for the QR code image)
+ *  - seatOrSeq   : string  (serial number, e.g. "#0001")
+ *  - category    : string  (category label, e.g. "STANDARD")
  */
 const PassEmailTemplate = ({
   qrImageUrl = null,
   seatOrSeq = '',
+  category = '',
+  validDays = [],
 }) => {
+
+ const ordinal = (n) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return {
+    day: n,
+    suffix: s[(v - 20) % 10] || s[v] || s[0],
+  };
+};
+
+const buildDateLabel = (days) => {
+  if (!days || days.length === 0) return null;
+
+  const parsed = days
+    .filter((d) => d.eventDate)
+    .map((d) => {
+      const dt = new Date(d.eventDate + 'T00:00:00');
+      return {
+        day: dt.getDate(),
+        month: dt.toLocaleString('en-US', { month: 'long' }).toUpperCase(),
+        year: dt.getFullYear(),
+      };
+    });
+
+  if (parsed.length === 0) return null;
+
+  const renderOrdinal = (day, key) => {
+    const { suffix } = ordinal(day);
+
+    return (
+      <React.Fragment key={key}>
+        {day}
+        <sup
+          style={{
+            fontSize: '65%',
+            verticalAlign: 'super',
+            lineHeight: 0,
+            position: 'relative',
+            top: '1px',
+          }}
+        >
+          {suffix}
+        </sup>
+      </React.Fragment>
+    );
+  };
+
+  if (parsed.length === 1) {
+    const p = parsed[0];
+
+    return (
+      <>
+        {renderOrdinal(p.day, 0)} {p.month}, {p.year}
+      </>
+    );
+  }
+
+  const allSameMonth = parsed.every(
+    (p) => p.month === parsed[0].month && p.year === parsed[0].year
+  );
+
+  if (allSameMonth) {
+    return (
+      <>
+        {parsed.map((p, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && ', '}
+            {renderOrdinal(p.day, i)}
+          </React.Fragment>
+        ))}{' '}
+        {parsed[0].month}, {parsed[0].year}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {parsed.map((p, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && ', '}
+          {renderOrdinal(p.day, i)} {p.month}
+        </React.Fragment>
+      ))}
+      , {parsed[parsed.length - 1].year}
+    </>
+  );
+};
   return (
     /* ── Outer page wrapper ─────────────────────────────────────── */
     <div
@@ -43,11 +135,12 @@ const PassEmailTemplate = ({
           boxSizing: 'border-box',
         }}
       >
-        {/* ── RCF Pass Back image + QR overlay ─────────────────────── */}
+
+        {/* ── FRONT PASS ───────────────────────────────────────────── */}
         <div style={{ position: 'relative', width: '100%', lineHeight: 0 }}>
           <img
-            src={RCFPassBack}
-            alt="RCF Pass"
+            src={frontPass}
+            alt="RCF Pass Front"
             style={{
               width: '100%',
               height: 'auto',
@@ -56,13 +149,55 @@ const PassEmailTemplate = ({
             }}
           />
 
-          {/* QR Code — absolutely positioned inside the right-side box on the image */}
+          {/* Day & Date overlay on front pass */}
+          {validDays && validDays.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '26%',
+                left: '42%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(1px, 0.4vw, 4px)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(7px, 1.5vw, 13px)',
+                  fontWeight: '300',
+                  color: '#000000',
+                  fontFamily: "Telegraf",
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 2.4,
+                }}
+              >
+                {buildDateLabel(validDays)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── BACK PASS + QR overlay + badge text ──────────────────── */}
+        <div style={{ position: 'relative', width: '100%', lineHeight: 0 }}>
+          <img
+            src={backpass}
+            alt="RCF Pass Back"
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              objectFit: 'cover',
+            }}
+          />
+
+          {/* QR Code — positioned inside the square box on the right side of back pass */}
           <div
             style={{
               position: 'absolute',
-              top: '22%',
-              left: '11.5%',
-              width: '17%',
+              top: '20%',
+              right: '9.5%',
+              width: '15%',
               aspectRatio: '1 / 1',
               display: 'flex',
               alignItems: 'center',
@@ -106,13 +241,76 @@ const PassEmailTemplate = ({
             )}
           </div>
 
-          {/* Sequence Number — in the left brown strip, below STANDARD, rotated like STANDARD text */}
+          {/* Serial Number badge — first brown strip below the QR box */}
           {seatOrSeq && (
             <div
               style={{
                 position: 'absolute',
-                bottom: '12%',
-                left: '0%',
+                bottom: '17%',
+                right: '5.5%',
+                width: '22%',
+                height: '9%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(6px, 1.6vw, 13px)',
+                  fontWeight: '800',
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  letterSpacing: '1.5px',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                }}
+              >
+                #{seatOrSeq}
+              </span>
+            </div>
+          )}
+
+          {/* Category badge — second brown strip below serial number */}
+          {category && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '26%',
+                right: '5.5%',
+                width: '22%',
+                height: '9%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(6px, 1.6vw, 13px)',
+                  fontWeight: '900',
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  letterSpacing: '1.5px',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                }}
+              >
+                {category}
+              </span>
+            </div>
+          )}
+
+          {/* Sequence Number — in the left brown strip, rotated (kept from original) */}
+          {seatOrSeq && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '5%',
+                left: '-2%',
                 width: '5.5%',
                 display: 'flex',
                 alignItems: 'center',
@@ -126,15 +324,15 @@ const PassEmailTemplate = ({
                   fontSize: 'clamp(4px, 1.1vw, 12px)',
                   fontWeight: '900',
                   color: '#121212',
-                  fontFamily: 'monospace',
+                  fontFamily: 'Poppins',
                   letterSpacing: '3.5px',
                   lineHeight: 2,
                   whiteSpace: 'nowrap',
                   textAlign: 'center',
-                  marginTop: "9px",
+                  marginTop: '9px',
                 }}
               >
-                {seatOrSeq}
+                 #{seatOrSeq}
               </span>
             </div>
           )}

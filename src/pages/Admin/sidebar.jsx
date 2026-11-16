@@ -101,7 +101,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 overflow-y-auto">
+            <nav className="flex-1 p-4 overflow-y-auto hide-scrollbar">
               <ul className="space-y-2">
                 {filteredMenuItems.map((item) => {
                   const Icon = item.icon
@@ -152,7 +152,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 overflow-y-auto">
+        <nav className="flex-1 p-4 overflow-y-auto hide-scrollbar">
           <ul className="space-y-2">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon
