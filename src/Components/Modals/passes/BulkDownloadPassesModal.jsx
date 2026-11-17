@@ -453,7 +453,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                   style={{ minHeight: '360px' }}
                 >
                   {noQr ? (
-                    <div className="my-3">
+                    <div className="my-1">
                       <div className="p-4 flex flex-col items-center justify-center space-y-1 w-36 h-36 mx-auto">
                         <ShieldCheck className="w-10 h-10 text-amber-600 mb-1" />
                         <span className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide">
@@ -498,7 +498,7 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                       </div>
                     </div>
                   ) : (
-                    <div className="my-3">
+                    <div className="my-1">
                       <div className="p-2">
                         <img
                           src={getQrUrl(p)}
