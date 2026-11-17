@@ -28,7 +28,8 @@ import {
 } from 'lucide-react';
 import passService from '../../Api-Services/passService';
 import whatsappService from '../../Api-Services/whatsappService';
-import { generatePassImageBlob } from '../../utils/passImageGenerator';
+import { generatePassImageBlob, generatePassCanvas } from '../../utils/passImageGenerator';
+import jsPDF from 'jspdf';
 
 /**
  * Public Pass Activation States:
@@ -124,6 +125,7 @@ const ActivatePass = () => {
   const [isAutoActivated, setIsAutoActivated] = useState(false);
   const [passImagePreview, setPassImagePreview] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Guard to ensure auto-activation is only invoked once per scan
   const autoActivatedRef = useRef(false);
@@ -386,6 +388,32 @@ const ActivatePass = () => {
       toast.error(err.message || 'Invalid or expired WhatsApp OTP code.');
     } finally {
       setVerifyingOtp(false);
+    }
+  };
+
+  const handleDownloadPassPdf = async () => {
+    if (!passData) return;
+    setIsDownloadingPdf(true);
+    try {
+      const canvas = await generatePassCanvas(passData, passData);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const isLandscape = imgWidth > imgHeight;
+      const pdf = new jsPDF({
+        orientation: isLandscape ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [imgWidth, imgHeight],
+      });
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      const passNum = passData.passNumber || 'Pass';
+      pdf.save(`EventPass_${passNum}.pdf`);
+      toast.success('Pass PDF downloaded successfully!');
+    } catch (err) {
+      console.error('Failed to generate pass PDF:', err);
+      toast.error('Failed to generate Pass PDF. Please try again.');
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -794,18 +822,42 @@ const ActivatePass = () => {
                 If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
               </p>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setPageState(PAGE_STATES.INITIAL);
-                  setPassData(null);
-                  setInputToken('');
-                  navigate('/activate');
-                }}
-                className="text-xs font-semibold text-purple-600 hover:text-purple-800 underline"
-              >
-                Scan or enter another pass
-              </button>
+              {/* Download Pass PDF */}
+              <div className="pt-2 flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                <button
+                  type="button"
+                  onClick={handleDownloadPassPdf}
+                  disabled={isDownloadingPdf || !passData}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition"
+                >
+                  {isDownloadingPdf ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Generating Pass PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>Download Pass PDF</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageState(PAGE_STATES.INITIAL);
+                    setPassData(null);
+                    setInputToken('');
+                    navigate('/activate');
+                  }}
+                  className="text-xs font-semibold text-purple-600 hover:text-purple-800 underline"
+                >
+                  Scan or enter another pass
+                </button>
+              </div>
             </div>
           )}
 
