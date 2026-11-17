@@ -421,7 +421,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
   // Perform final Check-In mutation
   const executeCheckIn = async (passIdentifier = null, verifiedData = null) => {
-    const targetToken = passIdentifier || lastScannedPayloadRef.current || manualInput;
+    const rawTarget = passIdentifier || lastScannedPayloadRef.current || manualInput;
+    const targetToken = parseQrPayload(rawTarget);
     if (!targetToken || !selectedEventId) return;
 
     setMachineState(SCAN_STATES.CHECKING_IN);
@@ -521,7 +522,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
           // Engage lock synchronously BEFORE any async action
           isLockedRef.current = true;
           setMachineState(SCAN_STATES.PROCESSING);
-          lastScannedPayloadRef.current = rawText;
+          lastScannedPayloadRef.current = parseQrPayload(rawText);
 
           // Stop camera stream immediately
           stopScanner();
@@ -564,7 +565,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
     stopScanner();
     isLockedRef.current = true;
     setMachineState(SCAN_STATES.PROCESSING);
-    lastScannedPayloadRef.current = manualInput.trim();
+    lastScannedPayloadRef.current = parseQrPayload(manualInput.trim());
     processPassVerification(manualInput.trim());
   };
 
