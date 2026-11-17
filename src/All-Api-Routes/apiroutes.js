@@ -97,6 +97,15 @@ const API_ROUTES = {
     VERIFY: '/checkin/verify',
   },
 
+  // Pass Allotments Endpoints
+  ALLOTMENTS: {
+    SUMMARY: (eventId) => `/events/${eventId}/pass-allotments`,
+    SEQUENCES: (eventId) => `/events/${eventId}/pass-allotments/sequences`,
+    SEQUENCE_SUMMARY: (eventId) => `/events/${eventId}/pass-allotments/sequence-summary`,
+    CREATE: (eventId) => `/events/${eventId}/pass-allotments`,
+    ANALYTICS: (eventId) => `/events/${eventId}/pass-allotments/analytics`,
+  },
+
   // Pass Categories
   PASS_CATEGORIES: {
     LIST: '/pass-categories',
