@@ -4,11 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import eventsService from '../../Api-Services/eventsService';
 import passService from '../../Api-Services/passService';
 import categoryService from '../../Api-Services/categoryService';
+import passAllotmentService from '../../Api-Services/passAllotmentService';
 import EventCategoriesCard from '../../Components/eventCategories/EventCategoriesCard';
 import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownloadPassesModal';
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
 import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/GatekeeperManagementModal';
+import AllotPassesModal from '../../Components/Modals/passes/AllotPassesModal';
+import PassAllotmentAnalyticsModal from '../../Components/Modals/passes/PassAllotmentAnalyticsModal';
 import useScrollLock from '../../hooks/useScrollLock';
 import {
   ArrowLeft,
@@ -38,6 +41,10 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  Eye,
   ArrowUpDown,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -96,6 +103,18 @@ const EventDetail = () => {
   const [isValidityModalOpen, setIsValidityModalOpen] = useState(false);
   const [singlePassForValidity, setSinglePassForValidity] = useState(null);
   const [isGatekeeperModalOpen, setIsGatekeeperModalOpen] = useState(false);
+
+  // Pass Allotments State
+  const [allotmentsSummary, setAllotmentsSummary] = useState(null);
+  const [allotmentsLoading, setAllotmentsLoading] = useState(false);
+  const [isAllotModalOpen, setIsAllotModalOpen] = useState(false);
+  const [expandedRecipients, setExpandedRecipients] = useState({});
+  const [analyticsModalState, setAnalyticsModalState] = useState({
+    isOpen: false,
+    allottedTo: '',
+    categoryCode: '',
+    categoryName: '',
+  });
 
   // Printable Pass Modal
   const [activePrintPass, setActivePrintPass] = useState(null);
@@ -157,6 +176,7 @@ const EventDetail = () => {
     fetchPassStats();
     fetchGatekeepers();
     fetchConfiguredCategories();
+    fetchAllotmentsSummary();
   }, [eventId]);
 
   // Fetch Passes whenever filters, pagination, or sorting change
@@ -297,6 +317,27 @@ const EventDetail = () => {
     }
   };
 
+  const fetchAllotmentsSummary = useCallback(async () => {
+    if (!eventId) return;
+    setAllotmentsLoading(true);
+    try {
+      const res = await passAllotmentService.getAllotmentsSummary(eventId);
+      const data = res?.data?.overallStats ? res.data : (res?.data !== undefined ? res.data : res);
+      setAllotmentsSummary(data);
+    } catch (error) {
+      console.error('Error fetching pass allotments summary:', error);
+    } finally {
+      setAllotmentsLoading(false);
+    }
+  }, [eventId]);
+
+  const toggleRecipientExpand = (recipientName) => {
+    setExpandedRecipients((prev) => ({
+      ...prev,
+      [recipientName]: !prev[recipientName],
+    }));
+  };
+
   const handleRefreshAll = async () => {
     try {
       await Promise.all([
@@ -306,6 +347,7 @@ const EventDetail = () => {
         fetchPassStats(),
         fetchGatekeepers(),
         fetchConfiguredCategories(),
+        fetchAllotmentsSummary(),
       ]);
       toast.success('Event data refreshed!');
     } catch (err) {
@@ -679,6 +721,289 @@ const EventDetail = () => {
 
       {/* Dynamic Pass Categories & Policies Card */}
       <EventCategoriesCard eventId={eventId} eventCode={event?.eventCode} onCategoriesUpdated={fetchConfiguredCategories} />
+
+      {/* Pass Allotment Management Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Section Header */}
+        <div className="p-4 sm:p-5 border-b border-gray-200 space-y-4 bg-gradient-to-r from-gray-50/50 to-purple-50/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Pass Allotment Management</h2>
+                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                  Internal Tracking
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Track passes allotted to representatives, real-time activation rates, and entry check-ins.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAllotModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Allot Passes
+              </button>
+
+              <button
+                type="button"
+                onClick={fetchAllotmentsSummary}
+                className="p-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg transition shadow-sm"
+                title="Refresh Allotments"
+              >
+                <RefreshCw className={`w-4 h-4 ${allotmentsLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Top-Level Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 pt-1">
+            <div className="p-2.5 sm:p-3 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium uppercase tracking-wider block">
+                Total Allotted
+              </span>
+              <div className="text-sm sm:text-lg font-black text-gray-900 font-mono mt-0.5">
+                {allotmentsLoading ? '...' : (allotmentsSummary?.overallStats?.totalAllotted ?? 0)}
+              </div>
+            </div>
+
+            <div className="p-2.5 sm:p-3 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium uppercase tracking-wider block">
+                Total Activated
+              </span>
+              <div className="text-sm sm:text-lg font-black text-purple-800 font-mono mt-0.5">
+                {allotmentsLoading ? '...' : (allotmentsSummary?.overallStats?.totalActivated ?? 0)}
+              </div>
+            </div>
+
+            <div className="p-2.5 sm:p-3 bg-green-50/70 rounded-xl border border-green-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-green-700 font-medium uppercase tracking-wider block">
+                Total Available
+              </span>
+              <div className="text-sm sm:text-lg font-black text-green-800 font-mono mt-0.5">
+                {allotmentsLoading ? '...' : (allotmentsSummary?.overallStats?.totalAvailable ?? 0)}
+              </div>
+            </div>
+
+            <div className="p-2.5 sm:p-3 bg-blue-50/70 rounded-xl border border-blue-200 text-center shadow-xs">
+              <span className="text-[10px] sm:text-[11px] text-blue-700 font-medium uppercase tracking-wider block">
+                Total Checked In
+              </span>
+              <div className="text-sm sm:text-lg font-black text-blue-800 font-mono mt-0.5">
+                {allotmentsLoading ? '...' : (allotmentsSummary?.overallStats?.totalCheckedIn ?? 0)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recipients Table */}
+        <div className="overflow-x-auto">
+          {allotmentsLoading ? (
+            <div className="p-8 text-center text-gray-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+              <span className="text-xs">Loading allotment records...</span>
+            </div>
+          ) : !allotmentsSummary?.recipients || allotmentsSummary.recipients.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 space-y-2">
+              <div className="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-800">No passes allotted yet</h3>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                Allot passes to representatives, student heads, or departments to monitor distribution and entry check-ins.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsAllotModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition mt-2"
+              >
+                <Plus className="w-3.5 h-3.5" /> Allot First Batch
+              </button>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/80 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="py-3 px-4">Allotted To</th>
+                  <th className="py-3 px-4 text-center">Total Allotted</th>
+                  <th className="py-3 px-4">Category Distribution</th>
+                  <th className="py-3 px-4 text-center">Total Activated</th>
+                  <th className="py-3 px-4 text-center">Available</th>
+                  <th className="py-3 px-4 text-center">Checked In</th>
+                  <th className="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
+                {allotmentsSummary.recipients.map((recipient) => {
+                  const isExpanded = !!expandedRecipients[recipient.allottedTo];
+                  return (
+                    <React.Fragment key={recipient.allottedTo}>
+                      {/* Recipient Primary Row */}
+                      <tr
+                        className={`hover:bg-purple-50/30 transition-colors cursor-pointer ${
+                          isExpanded ? 'bg-purple-50/20' : ''
+                        }`}
+                        onClick={() => toggleRecipientExpand(recipient.allottedTo)}
+                      >
+                        {/* Allotted To */}
+                        <td className="py-3 px-4 font-semibold text-gray-900">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                              {recipient.allottedTo.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-sm font-bold text-gray-900">{recipient.allottedTo}</span>
+                          </div>
+                        </td>
+
+                        {/* Total Allotted */}
+                        <td className="py-3 px-4 text-center font-mono font-bold text-gray-900">
+                          {recipient.totalAllotted}
+                        </td>
+
+                        {/* Category Distribution */}
+                        <td className="py-3 px-4">
+                          <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-mono text-[11px]">
+                            {recipient.categoryDistribution || '—'}
+                          </span>
+                        </td>
+
+                        {/* Total Activated */}
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 font-mono">
+                            {recipient.totalActivated}
+                          </span>
+                        </td>
+
+                        {/* Available */}
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200 font-mono">
+                            {recipient.totalAvailable}
+                          </span>
+                        </td>
+
+                        {/* Checked In */}
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                            {recipient.totalCheckedIn}
+                          </span>
+                        </td>
+
+                        {/* Action - Expand Toggle */}
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRecipientExpand(recipient.allottedTo);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition"
+                          >
+                            <span>Categories ({recipient.categories?.length || 0})</span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Expanded Category Breakdown Table */}
+                      {isExpanded && (
+                        <tr className="bg-gray-50/60">
+                          <td colSpan="7" className="p-3 sm:p-4">
+                            <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-xs">
+                              <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
+                                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Layers className="w-3.5 h-3.5 text-purple-600" />
+                                  Category Breakdown for {recipient.allottedTo}
+                                </span>
+                              </div>
+
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                      <th className="py-2 px-3">Category</th>
+                                      <th className="py-2 px-3 text-center">Allotted</th>
+                                      <th className="py-2 px-3 text-center">Activated</th>
+                                      <th className="py-2 px-3 text-center">Available</th>
+                                      <th className="py-2 px-3 text-center">Checked In</th>
+                                      <th className="py-2 px-3 text-right">Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-100 text-xs">
+                                    {recipient.categories?.map((cat) => (
+                                      <tr key={cat.categoryCode} className="hover:bg-purple-50/20">
+                                        {/* Category */}
+                                        <td className="py-2 px-3">
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="font-semibold text-gray-900">{cat.categoryName}</span>
+                                            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-gray-100 text-gray-600 rounded">
+                                              {cat.categoryCode}
+                                            </span>
+                                          </div>
+                                        </td>
+
+                                        {/* Allotted */}
+                                        <td className="py-2 px-3 text-center font-mono font-bold text-gray-900">
+                                          {cat.allotted}
+                                        </td>
+
+                                        {/* Activated */}
+                                        <td className="py-2 px-3 text-center font-mono text-purple-700 font-semibold">
+                                          {cat.activated}
+                                        </td>
+
+                                        {/* Available */}
+                                        <td className="py-2 px-3 text-center font-mono text-green-700 font-semibold">
+                                          {cat.available}
+                                        </td>
+
+                                        {/* Checked In */}
+                                        <td className="py-2 px-3 text-center font-mono text-blue-700 font-semibold">
+                                          {cat.checkedIn}
+                                        </td>
+
+                                        {/* Action: View Analytics */}
+                                        <td className="py-2 px-3 text-right">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setAnalyticsModalState({
+                                                isOpen: true,
+                                                allottedTo: recipient.allottedTo,
+                                                categoryCode: cat.categoryCode,
+                                                categoryName: cat.categoryName,
+                                              });
+                                            }}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition"
+                                          >
+                                            <BarChart3 className="w-3.5 h-3.5 text-purple-600" />
+                                            <span>View Analytics</span>
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
       {/* Enhanced Passes for This Event Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1836,6 +2161,29 @@ const EventDetail = () => {
         event={event}
         categories={availableCategories}
         onActivationComplete={handleRefreshAll}
+      />
+
+      {/* ALLOT PASSES MODAL */}
+      <AllotPassesModal
+        isOpen={isAllotModalOpen}
+        onClose={() => setIsAllotModalOpen(false)}
+        eventId={eventId}
+        categories={availableCategories}
+        onAllotmentSuccess={() => {
+          fetchAllotmentsSummary();
+          fetchPassStats();
+          fetchPasses();
+        }}
+      />
+
+      {/* PASS ALLOTMENT ANALYTICS MODAL */}
+      <PassAllotmentAnalyticsModal
+        isOpen={analyticsModalState.isOpen}
+        onClose={() => setAnalyticsModalState((prev) => ({ ...prev, isOpen: false }))}
+        eventId={eventId}
+        allottedTo={analyticsModalState.allottedTo}
+        categoryCode={analyticsModalState.categoryCode}
+        categoryName={analyticsModalState.categoryName}
       />
     </div >
   );
