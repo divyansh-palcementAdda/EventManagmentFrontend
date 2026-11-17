@@ -186,6 +186,18 @@ const ActivatePass = () => {
     setFormErrors({});
     setPassData(null);
     setIsAutoActivated(false);
+    setFormData({
+      fullName: '',
+      email: '',
+      mobileNumber: '',
+      college: '',
+      course: '',
+      yearSemester: '',
+      studentId: '',
+      organization: '',
+      designation: '',
+    });
+    setDynamicAnswers({});
 
     try {
       const response = await passService.validatePass(cleanToken);
@@ -377,14 +389,27 @@ const ActivatePass = () => {
     }
     if (!formData.mobileNumber.trim()) {
       errors.mobileNumber = 'Mobile number is required';
-    } else if (!/^\+?[0-9]{7,15}$/.test(formData.mobileNumber.trim())) {
-      errors.mobileNumber = 'Please enter a valid mobile number (7 to 15 digits)';
+    } else {
+      const cleanDigits = formData.mobileNumber.replace(/[^0-9]/g, '');
+      if (cleanDigits.length < 7 || cleanDigits.length > 15) {
+        errors.mobileNumber = 'Please enter a valid mobile number (7 to 15 digits)';
+      }
     }
 
     if (hasCustomSchema) {
       passData.formSchema.fields.forEach((field) => {
+        const key = (field.fieldKey || '').toLowerCase();
+        // Skip standard identity fields already validated above
+        if (['fullname', 'name', 'email', 'mobilenumber', 'phone', 'contactnumber'].includes(key)) {
+          return;
+        }
         if (field.required && field.visible !== false) {
-          const val = dynamicAnswers[field.fieldKey];
+          const val =
+            dynamicAnswers[field.fieldKey] !== undefined &&
+            dynamicAnswers[field.fieldKey] !== null &&
+            dynamicAnswers[field.fieldKey] !== ''
+              ? dynamicAnswers[field.fieldKey]
+              : formData[field.fieldKey];
           if (val === undefined || val === null || val === '') {
             errors[field.fieldKey] = `${field.label} is required`;
           }
@@ -425,6 +450,31 @@ const ActivatePass = () => {
     setSubmitError(null);
 
     try {
+      const effectiveCollege = isStudent
+        ? (formData.college?.trim() || dynamicAnswers['college'] || dynamicAnswers['attendeeCollege'] || '')
+        : (dynamicAnswers['college'] || dynamicAnswers['attendeeCollege'] || '');
+      const effectiveCourse = isStudent
+        ? (formData.course?.trim() || dynamicAnswers['course'] || dynamicAnswers['attendeeCourse'] || '')
+        : (dynamicAnswers['course'] || dynamicAnswers['attendeeCourse'] || '');
+      const effectiveYearSemester = isStudent
+        ? (formData.yearSemester?.trim() || dynamicAnswers['yearSemester'] || dynamicAnswers['attendeeYearSemester'] || '')
+        : (dynamicAnswers['yearSemester'] || dynamicAnswers['attendeeYearSemester'] || '');
+      const effectiveStudentId = isStudent
+        ? (formData.studentId?.trim() || dynamicAnswers['studentId'] || dynamicAnswers['attendeeStudentId'] || '')
+        : (dynamicAnswers['studentId'] || dynamicAnswers['attendeeStudentId'] || '');
+      const effectiveOrganization = formData.organization?.trim() || dynamicAnswers['organization'] || (isStudent ? effectiveCollege : '');
+      const effectiveDesignation = formData.designation?.trim() || dynamicAnswers['designation'] || (isStudent ? 'Student' : '');
+
+      const mergedAnswers = {
+        ...dynamicAnswers,
+        ...(effectiveCollege ? { college: effectiveCollege } : {}),
+        ...(effectiveCourse ? { course: effectiveCourse } : {}),
+        ...(effectiveYearSemester ? { yearSemester: effectiveYearSemester } : {}),
+        ...(effectiveStudentId ? { studentId: effectiveStudentId } : {}),
+        ...(effectiveOrganization ? { organization: effectiveOrganization } : {}),
+        ...(effectiveDesignation ? { designation: effectiveDesignation } : {}),
+      };
+
       const payload = {
         rawToken: passData.passNumber || inputToken.trim(),
         eventId: passData.eventId,
@@ -432,18 +482,13 @@ const ActivatePass = () => {
         attendeeEmail: formData.email.trim().toLowerCase(),
         attendeeMobileNumber: formData.mobileNumber.trim(),
         verificationToken: verificationToken || null,
-        answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : null,
-        // Category specific fields
-        attendeeCollege: isStudent ? formData.college.trim() : null,
-        attendeeCourse: isStudent ? formData.course.trim() : null,
-        attendeeYearSemester: isStudent ? formData.yearSemester?.trim() || null : null,
-        attendeeStudentId: isStudent ? formData.studentId?.trim() || null : null,
-        attendeeOrganization: isStudent
-          ? formData.college.trim()
-          : formData.organization?.trim() || null,
-        attendeeDesignation: isStudent
-          ? formData.designation?.trim() || 'Student'
-          : formData.designation?.trim() || null,
+        answers: Object.keys(mergedAnswers).length > 0 ? mergedAnswers : null,
+        attendeeCollege: effectiveCollege || null,
+        attendeeCourse: effectiveCourse || null,
+        attendeeYearSemester: effectiveYearSemester || null,
+        attendeeStudentId: effectiveStudentId || null,
+        attendeeOrganization: effectiveOrganization || null,
+        attendeeDesignation: effectiveDesignation || null,
       };
 
       const response = await passService.activatePass(payload);
@@ -481,14 +526,20 @@ const ActivatePass = () => {
       setPageState(PAGE_STATES.READY_FOR_ACTIVATION);
 
       const errorMsg =
-        err.message ||
         err.response?.data?.message ||
+        err.message ||
         'Failed to activate pass. It may already be activated or expired.';
       setSubmitError(errorMsg);
       toast.error(errorMsg);
 
-      if (err.errors && typeof err.errors === 'object') {
-        setFormErrors(err.errors);
+      const fieldErrors =
+        err.response?.data?.fieldErrors ||
+        err.response?.data?.errors ||
+        err.fieldErrors ||
+        err.errors;
+
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        setFormErrors(fieldErrors);
       }
     }
   };
@@ -1069,7 +1120,11 @@ const ActivatePass = () => {
                         Additional Information
                       </div>
                       {passData.formSchema.fields
-                        .filter((f) => f.visible !== false)
+                        .filter((f) => {
+                          if (f.visible === false) return false;
+                          const key = (f.fieldKey || '').toLowerCase();
+                          return !['fullname', 'name', 'email', 'mobilenumber', 'phone', 'contactnumber'].includes(key);
+                        })
                         .map((field) => (
                           <div key={field.fieldKey} className="space-y-1">
                             <label className="text-xs font-semibold text-gray-700 block">

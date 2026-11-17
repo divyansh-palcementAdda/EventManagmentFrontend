@@ -43,7 +43,15 @@ const AllotPassesModal = ({
     });
   }, [categories]);
 
-  // When modal opens, initialize or reset
+  // Derived effective category (guarantees synchronous fallback to first category option)
+  const effectiveCategory = useMemo(() => {
+    if (selectedCategory && categoryOptions.some((c) => c.code === selectedCategory)) {
+      return selectedCategory;
+    }
+    return categoryOptions.length > 0 ? categoryOptions[0].code : '';
+  }, [selectedCategory, categoryOptions]);
+
+  // When modal opens, initialize or reset fields
   useEffect(() => {
     if (isOpen) {
       setErrorMsg('');
@@ -56,9 +64,9 @@ const AllotPassesModal = ({
     }
   }, [isOpen, categoryOptions]);
 
-  // Fetch sequences whenever selectedCategory changes
+  // Fetch sequences whenever effectiveCategory changes
   useEffect(() => {
-    if (!isOpen || !eventId || !selectedCategory) {
+    if (!isOpen || !eventId || !effectiveCategory) {
       setSequences([]);
       setSelectedSequenceKey('');
       return;
@@ -69,13 +77,15 @@ const AllotPassesModal = ({
       setLoadingSequences(true);
       setErrorMsg('');
       try {
-        const data = await passAllotmentService.getSequencesForCategory(eventId, selectedCategory);
+        const data = await passAllotmentService.getSequencesForCategory(eventId, effectiveCategory);
         if (isMounted) {
           const list = Array.isArray(data)
             ? data
             : Array.isArray(data?.data)
               ? data.data
-              : [];
+              : Array.isArray(data?.content)
+                ? data.content
+                : [];
           setSequences(list);
           if (list.length > 0) {
             setSelectedSequenceKey(`${list[0].fromSequence}-${list[0].toSequence}`);
@@ -100,12 +110,19 @@ const AllotPassesModal = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, eventId, selectedCategory]);
+  }, [isOpen, eventId, effectiveCategory]);
 
   // Current selected sequence object
   const currentSequence = useMemo(() => {
-    if (!selectedSequenceKey || sequences.length === 0) return null;
-    return sequences.find((s) => `${s.fromSequence}-${s.toSequence}` === selectedSequenceKey) || null;
+    if (sequences.length === 0) return null;
+    if (!selectedSequenceKey) return sequences[0];
+    return (
+      sequences.find(
+        (s) =>
+          `${s.fromSequence}-${s.toSequence}` === selectedSequenceKey ||
+          s.sequenceId === selectedSequenceKey
+      ) || sequences[0]
+    );
   }, [selectedSequenceKey, sequences]);
 
   const maxAvailable = currentSequence ? currentSequence.availablePasses : 0;
@@ -128,7 +145,7 @@ const AllotPassesModal = ({
     e.preventDefault();
     setErrorMsg('');
 
-    if (!selectedCategory) {
+    if (!effectiveCategory) {
       setErrorMsg('Please select a category.');
       return;
     }
@@ -151,7 +168,7 @@ const AllotPassesModal = ({
     }
 
     const payload = {
-      categoryCode: selectedCategory,
+      categoryCode: effectiveCategory,
       fromSequence: currentSequence.fromSequence,
       toSequence: currentSequence.toSequence,
       sequenceIdentifier: currentSequence.sequenceId || currentSequence.displayName,
@@ -163,7 +180,7 @@ const AllotPassesModal = ({
     setSubmitting(true);
     try {
       await passAllotmentService.createAllotment(eventId, payload);
-      toast.success(`Successfully allotted ${numQuantity} ${currentSequence.categoryName || selectedCategory} passes to ${trimmedRecipient}`);
+      toast.success(`Successfully allotted ${numQuantity} ${currentSequence.categoryName || effectiveCategory} passes to ${trimmedRecipient}`);
       if (onAllotmentSuccess) {
         onAllotmentSuccess();
       }
@@ -216,7 +233,7 @@ const AllotPassesModal = ({
               <Tag className="w-3.5 h-3.5 text-purple-600" /> Pass Category
             </label>
             <select
-              value={selectedCategory}
+              value={effectiveCategory}
               onChange={handleCategoryChange}
               disabled={submitting || categoryOptions.length === 0}
               className="w-full text-xs sm:text-sm px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition"
@@ -246,7 +263,7 @@ const AllotPassesModal = ({
               )}
             </div>
             <select
-              value={selectedSequenceKey}
+              value={selectedSequenceKey || (sequences.length > 0 ? `${sequences[0].fromSequence}-${sequences[0].toSequence}` : '')}
               onChange={handleSequenceChange}
               disabled={submitting || loadingSequences || sequences.length === 0}
               className="w-full text-xs sm:text-sm px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition"
