@@ -314,7 +314,18 @@ const ActivatePass = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'mobileNumber') {
+      let clean = value.replace(/\D/g, '');
+      if (clean.length > 10 && clean.startsWith('91')) {
+        clean = clean.slice(2);
+      } else if (clean.length > 10 && clean.startsWith('0')) {
+        clean = clean.slice(1);
+      }
+      clean = clean.slice(0, 10);
+      setFormData((prev) => ({ ...prev, mobileNumber: clean ? `+91${clean}` : '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -331,8 +342,9 @@ const ActivatePass = () => {
 
   const handleSendOtp = async () => {
     const mobile = formData.mobileNumber.trim();
-    if (!mobile || !/^\+?[0-9]{7,15}$/.test(mobile)) {
-      toast.error('Please enter a valid mobile number first.');
+    const cleanDigits = mobile.replace(/[^0-9]/g, '');
+    if (!mobile || cleanDigits.length !== 12) {
+      toast.error('Please enter a valid 10-digit mobile number first.');
       return;
     }
     setSendingOtp(true);
@@ -391,8 +403,8 @@ const ActivatePass = () => {
       errors.mobileNumber = 'Mobile number is required';
     } else {
       const cleanDigits = formData.mobileNumber.replace(/[^0-9]/g, '');
-      if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-        errors.mobileNumber = 'Please enter a valid mobile number (7 to 15 digits)';
+      if (cleanDigits.length !== 12) {
+        errors.mobileNumber = 'Please enter a valid 10-digit mobile number';
       }
     }
 
@@ -1012,19 +1024,26 @@ const ActivatePass = () => {
                       <label className="text-xs font-semibold text-gray-700 block mb-1">
                         Mobile Number <span className="text-rose-500">*</span>
                       </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <div
+                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${
+                          formErrors.mobileNumber
+                            ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
+                            : 'border-gray-300 focus-within:ring-purple-500 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-r border-gray-200 text-gray-700 select-none text-xs sm:text-sm font-semibold shrink-0">
+                          <Phone className="w-3.5 h-3.5 text-gray-400" />
+                          <span>+91</span>
+                        </div>
                         <input
                           type="tel"
                           name="mobileNumber"
-                          value={formData.mobileNumber}
+                          value={formData.mobileNumber ? formData.mobileNumber.replace(/^\+91/, '') : ''}
                           onChange={handleChange}
                           disabled={pageState === PAGE_STATES.SUBMITTING}
-                          placeholder="e.g. +919876543210"
-                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.mobileNumber
-                              ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                              : 'border-gray-300 focus:ring-purple-500'
-                            }`}
+                          placeholder="9876543210"
+                          maxLength={10}
+                          className="w-full px-3 py-2 text-xs sm:text-sm bg-transparent focus:outline-none"
                         />
                       </div>
                       {formErrors.mobileNumber && (
