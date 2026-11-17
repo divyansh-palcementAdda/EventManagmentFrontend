@@ -91,7 +91,7 @@ const AddAndEditAttendees = ({ isOpen, onClose, attendee, onSave, events = [], s
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-700 to-green-800 rounded-t-xl text-white">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl text-white">
           <h2 className="text-xl font-semibold">
             {attendee ? 'Edit Attendee' : 'Register New Attendee'}
           </h2>
@@ -115,7 +115,7 @@ const AddAndEditAttendees = ({ isOpen, onClose, attendee, onSave, events = [], s
                 name="eventId"
                 value={formData.eventId}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                   errors.eventId ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -197,7 +197,7 @@ const AddAndEditAttendees = ({ isOpen, onClose, attendee, onSave, events = [], s
               name="registrationStatus"
               value={formData.registrationStatus}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
             >
               <option value="CONFIRMED">CONFIRMED</option>
               <option value="PENDING">PENDING</option>
@@ -220,7 +220,7 @@ const AddAndEditAttendees = ({ isOpen, onClose, attendee, onSave, events = [], s
               type="submit"
               variant="primary"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white"
+              className="flex-1 flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Saving...' : attendee ? 'Update Attendee' : 'Register Attendee'}

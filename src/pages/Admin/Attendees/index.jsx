@@ -181,7 +181,7 @@ const Attendees = () => {
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             title="View Details"
           >
-            <Eye className="w-4 h-4 text-blue-600" />
+            <Eye className="w-4 h-4 text-purple-600" />
           </button>
           {canUpdate('ATTENDEE') && (
             <button

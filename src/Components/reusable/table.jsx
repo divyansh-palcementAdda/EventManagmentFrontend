@@ -10,7 +10,7 @@ const Table = ({ columns, data, onRowClick, className = '', enablePagination = f
     <div className={`w-full ${className}`}>
       <div className="relative overflow-x-auto bg-white rounded-xl shadow-lg border border-gray-200">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+          <thead className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
             <tr>
               {columns.map((column, index) => (
                 <th key={index} scope="col" className="px-6 py-4 font-semibold text-sm tracking-wide uppercase">
@@ -30,7 +30,7 @@ const Table = ({ columns, data, onRowClick, className = '', enablePagination = f
               paginatedData.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`border-b border-gray-100 hover:bg-purple-50 transition-colors duration-200 ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={() => onRowClick && onRowClick(row)}
                 >
                   {columns.map((column, colIndex) => (

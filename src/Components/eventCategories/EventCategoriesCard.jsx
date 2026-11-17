@@ -189,9 +189,9 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       <div className="p-4 sm:p-5 border-b border-gray-200 bg-gradient-to-r from-gray-50/70 to-indigo-50/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Tags className="w-5 h-5 text-indigo-600" />
+            <Tags className="w-5 h-5 text-purple-600" />
             <h2 className="text-lg font-bold text-gray-900">Pass Categories & Activation Policies</h2>
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">
+            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
               {eventCategories.length} Configured
             </span>
           </div>
@@ -213,7 +213,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
           >
             <Plus className="w-4 h-4" /> Enable Category
           </button>
@@ -224,7 +224,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs sm:text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <tr className="bg-gradient-to-r from-purple-600 to-purple-700 border-b border-gray-200 text-xs font-semibold text-white uppercase tracking-wider">
               <th className="px-5 py-3">Category</th>
               <th className="px-5 py-3">Activation Mode</th>
               <th className="px-5 py-3">Identity Policy</th>
@@ -238,7 +238,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
             {loading && eventCategories.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-5 py-8 text-center text-gray-500">
-                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-indigo-500 mb-1" />
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-purple-500 mb-1" />
                   Loading categories...
                 </td>
               </tr>
@@ -254,7 +254,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-900">{cat.categoryName}</span>
-                      <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                      <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200">
                         {cat.categoryCode}
                       </span>
                     </div>
@@ -286,7 +286,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   <td className="px-5 py-3.5">
                     {cat.identityPolicy === 'COLLECT_IDENTITY' ? (
                       <span className="inline-flex items-center gap-1 text-xs text-gray-700 font-medium">
-                        <UserCheck className="w-3.5 h-3.5 text-blue-600" /> Collect Identity
+                        <UserCheck className="w-3.5 h-3.5 text-purple-600" /> Collect Identity
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs text-purple-700 font-medium">
@@ -309,7 +309,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
 
                   <td className="px-5 py-3.5 text-center">
                     {cat.currentFormVersionNumber ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 font-mono">
                         v{cat.currentFormVersionNumber} Published
                       </span>
                     ) : (
@@ -342,7 +342,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => handleOpenFormBuilder(cat)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
                         title="Customize Dynamic Form"
                       >
                         <FileText className="w-3.5 h-3.5" /> Form Builder
@@ -350,7 +350,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
 
                       <button
                         onClick={() => handleOpenEditPolicy(cat)}
-                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Configure Category Policy"
                       >
                         <Settings2 className="w-4 h-4" />
@@ -418,7 +418,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   onClick={() => setCatPage(i)}
                   className={`px-3 py-1.5 border rounded-lg transition text-xs font-medium ${
                     catPage === i
-                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      ? 'bg-purple-600 text-white border-purple-600'
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
@@ -458,7 +458,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   required
                   value={addForm.categoryId}
                   onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">-- Choose Category --</option>
                   {availableCategories.map((c) => (
@@ -483,7 +483,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                       qrRequired: mode === 'NO_QR_WALK_IN' ? false : addForm.qrRequired
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {ACTIVATION_MODES.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -500,7 +500,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 <select
                   value={addForm.identityPolicy}
                   onChange={(e) => setAddForm({ ...addForm, identityPolicy: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {IDENTITY_POLICIES.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -517,7 +517,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   disabled={addForm.activationMode === 'NO_QR_WALK_IN'}
                   checked={addForm.activationMode === 'NO_QR_WALK_IN' ? false : addForm.qrRequired}
                   onChange={(e) => setAddForm({ ...addForm, qrRequired: e.target.checked })}
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                  className="rounded text-purple-600 focus:ring-indigo-500"
                 />
                 <label htmlFor="addQrRequired" className="text-xs font-semibold text-gray-700 cursor-pointer">
                   Generate Physical / Digital QR Codes for passes
@@ -533,7 +533,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   placeholder="Unlimited"
                   value={addForm.passLimit || ''}
                   onChange={(e) => setAddForm({ ...addForm, passLimit: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
 
@@ -547,7 +547,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold"
+                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold"
                 >
                   Enable Category
                 </button>
@@ -585,7 +585,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                       qrRequired: mode === 'NO_QR_WALK_IN' ? false : policyForm.qrRequired
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {ACTIVATION_MODES.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -602,7 +602,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 <select
                   value={policyForm.identityPolicy}
                   onChange={(e) => setPolicyForm({ ...policyForm, identityPolicy: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {IDENTITY_POLICIES.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -619,7 +619,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   disabled={policyForm.activationMode === 'NO_QR_WALK_IN'}
                   checked={policyForm.activationMode === 'NO_QR_WALK_IN' ? false : policyForm.qrRequired}
                   onChange={(e) => setPolicyForm({ ...policyForm, qrRequired: e.target.checked })}
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                  className="rounded text-purple-600 focus:ring-indigo-500"
                 />
                 <label htmlFor="editQrRequired" className="text-xs font-semibold text-gray-700 cursor-pointer">
                   Generate Physical / Digital QR Codes for passes
@@ -635,7 +635,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                   placeholder="Unlimited"
                   value={policyForm.passLimit || ''}
                   onChange={(e) => setPolicyForm({ ...policyForm, passLimit: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
 
@@ -649,7 +649,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold"
+                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold"
                 >
                   Save Policy
                 </button>

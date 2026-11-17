@@ -193,7 +193,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
         <div className="px-6 py-4 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
-              <ShieldCheck className="w-6 h-6 text-indigo-200" />
+              <ShieldCheck className="w-6 h-6 text-purple-200" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                   {event.eventCode}
                 </span>
               </div>
-              <p className="text-xs text-indigo-200 mt-0.5">
+              <p className="text-xs text-purple-200 mt-0.5">
                 Authorized staff permitted to validate passes and record check-ins for {event.name}
               </p>
             </div>
@@ -222,7 +222,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
             onClick={() => setActiveTab('assigned')}
             className={`pb-3 px-3 border-b-2 flex items-center gap-1.5 transition ${
               activeTab === 'assigned'
-                ? 'border-indigo-600 text-indigo-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -230,7 +230,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
             <span
               className={`px-1.5 py-0.2 rounded-full text-[10px] ${
                 activeTab === 'assigned'
-                  ? 'bg-indigo-100 text-indigo-800'
+                  ? 'bg-purple-100 text-purple-800'
                   : 'bg-gray-200 text-gray-700'
               }`}
             >
@@ -246,7 +246,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
             }}
             className={`pb-3 px-3 border-b-2 flex items-center gap-1.5 transition ${
               activeTab === 'search_assign'
-                ? 'border-indigo-600 text-indigo-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -258,7 +258,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
             onClick={() => setActiveTab('create')}
             className={`pb-3 px-3 border-b-2 flex items-center gap-1.5 transition ${
               activeTab === 'create'
-                ? 'border-indigo-600 text-indigo-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -291,7 +291,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
 
               {loadingAssigned ? (
                 <div className="p-10 text-center text-gray-400">
-                  <Loader2 className="w-7 h-7 animate-spin mx-auto text-indigo-600" />
+                  <Loader2 className="w-7 h-7 animate-spin mx-auto text-purple-600" />
                   <p className="text-xs mt-2">Loading authorized gatekeepers...</p>
                 </div>
               ) : assignedList.length === 0 ? (
@@ -307,7 +307,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                     <button
                       type="button"
                       onClick={() => setActiveTab('search_assign')}
-                      className="px-3.5 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition"
+                      className="px-3.5 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition"
                     >
                       Assign Existing Staff
                     </button>
@@ -338,7 +338,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                           <tr key={g.id || g.userId} className="hover:bg-gray-50/70 transition">
                             <td className="px-4 py-3 font-medium text-gray-900">
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs uppercase">
+                                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs uppercase">
                                   {g.fullName ? g.fullName.charAt(0) : 'U'}
                                 </div>
                                 <div>
@@ -417,7 +417,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
               {/* Search Results */}
               {loadingEligible ? (
                 <div className="p-8 text-center text-gray-400">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-600" />
                   <p className="text-xs mt-2">Searching gatekeepers...</p>
                 </div>
               ) : eligibleList.length === 0 ? (
@@ -437,7 +437,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                         className="p-3 flex items-center justify-between hover:bg-gray-50 transition text-xs"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs uppercase">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs uppercase">
                             {user.fullName ? user.fullName.charAt(0) : 'U'}
                           </div>
                           <div>
@@ -459,7 +459,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                               type="button"
                               onClick={() => handleAssignExisting(user)}
                               disabled={assigningUserId === user.userId}
-                              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-xs transition disabled:opacity-50 flex items-center gap-1.5 shadow-xs"
+                              className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-xs transition disabled:opacity-50 flex items-center gap-1.5 shadow-xs"
                             >
                               {assigningUserId === user.userId ? (
                                 <>
@@ -582,7 +582,7 @@ const GatekeeperManagementModal = ({ isOpen, onClose, event, onGatekeepersChange
                   <button
                     type="button"
                     onClick={generateRandomPassword}
-                    className="text-[11px] text-indigo-600 hover:underline font-semibold"
+                    className="text-[11px] text-purple-600 hover:underline font-semibold"
                   >
                     Generate Random
                   </button>

@@ -262,7 +262,7 @@ const Attendees = () => {
             case 'UNACTIVATED':
               return 'bg-amber-50 text-amber-800 border-amber-200';
             default:
-              return 'bg-blue-50 text-blue-800 border-blue-200';
+              return 'bg-purple-50 text-purple-800 border-purple-200';
           }
         };
 
@@ -348,7 +348,7 @@ const Attendees = () => {
           </button>
           <button
             onClick={() => handleEditAttendee(row)}
-            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            className="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
             title="Edit Attendee"
           >
             <Edit className="w-4 h-4" />
@@ -418,8 +418,8 @@ const Attendees = () => {
           <div className="text-2xl font-bold text-green-700 mt-1">{stats?.confirmedAttendees ?? attendees.filter(a => a.registrationStatus === 'CONFIRMED').length}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-medium text-blue-600 uppercase tracking-wider">Passes Assigned</div>
-          <div className="text-2xl font-bold text-blue-700 mt-1">{stats?.withPass ?? attendees.filter(a => a.passNumber || a.passId || a.hasPass).length}</div>
+          <div className="text-xs font-medium text-purple-600 uppercase tracking-wider">Passes Assigned</div>
+          <div className="text-2xl font-bold text-purple-700 mt-1">{stats?.withPass ?? attendees.filter(a => a.passNumber || a.passId || a.hasPass).length}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <div className="text-xs font-medium text-emerald-600 uppercase tracking-wider">Checked In</div>

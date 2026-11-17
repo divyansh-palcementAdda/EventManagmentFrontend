@@ -485,7 +485,7 @@ const WhatsAppSettings = () => {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
+                  <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
@@ -749,7 +749,7 @@ const WhatsAppSettings = () => {
                           log.notificationType === 'OTP'
                             ? 'bg-purple-50 text-purple-700 border border-purple-200'
                             : log.notificationType === 'PASS_ACTIVATION'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            ? 'bg-purple-50 text-purple-700 border border-purple-200'
                             : 'bg-amber-50 text-amber-700 border border-amber-200'
                         }`}
                       >

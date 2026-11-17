@@ -249,7 +249,7 @@ const AllUsers = () => {
           {canUpdate('USER') && (
             <button
               onClick={() => handleEditUser(row)}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
               title="Edit User"
             >
               <Edit className="w-4 h-4" />

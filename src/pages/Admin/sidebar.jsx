@@ -24,20 +24,29 @@ const Sidebar = ({ isOpen, onClose }) => {
   console.log('Sidebar permissions:', permissions)
 
   useEffect(() => {
-    const routeToItemMap = {
-      '/dashboard': 'dashboard',
-      '/admin': 'dashboard',
-      '/admin/attendees': 'attendees',
-      '/admin/events': 'events',
-      '/admin/checkin': 'checkin',
-      '/admin/users': 'users',
-      '/admin/roles': 'roles',
-      '/admin/categories': 'categories',
-      '/admin/walkin': 'walkin',
-      '/admin/whatsapp': 'whatsapp'
-    }
+    const routeToItemMap = [
+      { route: '/dashboard', item: 'dashboard' },
+      { route: '/admin/attendees', item: 'attendees' },
+      { route: '/admin/events', item: 'events' },
+      { route: '/admin/checkin', item: 'checkin' },
+      { route: '/admin/users', item: 'users' },
+      { route: '/admin/roles', item: 'roles' },
+      { route: '/admin/categories', item: 'categories' },
+      { route: '/admin/walkin', item: 'walkin' },
+      { route: '/admin/whatsapp', item: 'whatsapp' },
+      { route: '/admin', item: 'dashboard' }
+    ]
     const currentRoute = location.pathname
-    setActiveItem(routeToItemMap[currentRoute] || 'dashboard')
+
+    // Find the matching route by checking if currentRoute starts with any key
+    let matchedItem = 'dashboard'
+    for (const { route, item } of routeToItemMap) {
+      if (currentRoute === route || currentRoute.startsWith(route + '/')) {
+        matchedItem = item
+        break
+      }
+    }
+    setActiveItem(matchedItem)
   }, [location.pathname])
 
   const menuItems = [
@@ -122,7 +131,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                           className="w-5 h-5"
                           style={{ color: item.color }}
                         />
-                        <span className="font-medium">{item.label}</span>
+                        <span className="font-normal text-sm">{item.label}</span>
                       </button>
                     </li>
                   )
@@ -173,7 +182,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                       className="w-5 h-5"
                       style={{ color: item.color }}
                     />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium text-sm">{item.label}</span>
                   </button>
                 </li>
               )

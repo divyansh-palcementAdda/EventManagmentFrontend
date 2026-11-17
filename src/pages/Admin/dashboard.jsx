@@ -52,8 +52,8 @@ const Dashboard = () => {
       value: statsData?.totalEvents ?? 0,
       subtext: `${statsData?.activeEvents ?? 0} active / ${statsData?.upcomingEvents ?? 0} draft`,
       icon: Calendar,
-      color: '#3b82f6',
-      bgColor: 'bg-blue-50',
+      color: '#7c3aed',
+      bgColor: 'bg-purple-50',
     },
     {
       title: 'Passes Generated',

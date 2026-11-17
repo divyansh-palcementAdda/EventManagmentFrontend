@@ -526,7 +526,7 @@ const RolesAndPermissions = () => {
                       <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => handleEditRole(role)}
-                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                          className="p-1 text-gray-400 hover:text-purple-600 rounded transition-colors"
                           title="Edit Role Details"
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -599,8 +599,8 @@ const RolesAndPermissions = () => {
 
               {/* SUPER_ADMIN Notice Banner */}
               {selectedRole.name === 'SUPER_ADMIN' && (
-                <div className="p-3.5 bg-blue-50 text-blue-900 text-xs rounded-lg border border-blue-200 flex items-center gap-2.5 shadow-sm">
-                  <ShieldCheck className="w-5 h-5 flex-shrink-0 text-blue-600" />
+                <div className="p-3.5 bg-purple-50 text-purple-900 text-xs rounded-lg border border-purple-200 flex items-center gap-2.5 shadow-sm">
+                  <ShieldCheck className="w-5 h-5 flex-shrink-0 text-purple-600" />
                   <div className="leading-relaxed">
                     <span className="font-semibold">System Guarantee: </span>
                     The <span className="font-mono font-bold">SUPER_ADMIN</span> role permanently retains all system permissions across all modules. Permissions cannot be modified.
@@ -729,7 +729,7 @@ const RolesAndPermissions = () => {
                                 onClick={() => !isImmutable && handleTogglePermission(perm.id)}
                                 className={`p-2.5 rounded-lg border transition-all flex items-start gap-2.5 ${
                                   isImmutable
-                                    ? 'bg-blue-50/40 border-blue-200 text-blue-950 cursor-default'
+                                    ? 'bg-purple-50/40 border-purple-200 text-purple-950 cursor-default'
                                     : isGranted
                                     ? 'bg-green-50/70 border-green-500 text-green-950 cursor-pointer shadow-xs'
                                     : 'bg-white border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50/60 cursor-pointer'
@@ -738,7 +738,7 @@ const RolesAndPermissions = () => {
                                 <div
                                   className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${
                                     isImmutable
-                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                      ? 'bg-purple-600 border-purple-600 text-white'
                                       : isGranted
                                       ? 'bg-green-700 border-green-700 text-white'
                                       : 'border-gray-300 bg-white'

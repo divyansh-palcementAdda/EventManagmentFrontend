@@ -620,7 +620,7 @@ const ActivatePass = () => {
                   <span
                     className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
                       isStudent
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
                         : 'bg-purple-50 text-purple-700 border border-purple-200'
                     }`}
                   >
@@ -701,22 +701,22 @@ const ActivatePass = () => {
 
           {/* ALREADY ACTIVATED TERMINAL STATE */}
           {pageState === PAGE_STATES.ALREADY_ACTIVATED && (
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center space-y-4">
-              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600">
+            <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6 text-center space-y-4">
+              <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mx-auto text-purple-600">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-blue-950">Pass Already Claimed</h3>
-                <p className="text-xs text-blue-700 mt-1">
+                <h3 className="text-lg font-bold text-purple-950">Pass Already Claimed</h3>
+                <p className="text-xs text-purple-700 mt-1">
                   {errorMessage || 'This badge has already been activated.'}
                 </p>
               </div>
 
               {passData && (
-                <div className="bg-white rounded-xl p-4 border border-blue-100 text-left text-xs space-y-2 max-w-sm mx-auto">
+                <div className="bg-white rounded-xl p-4 border border-purple-100 text-left text-xs space-y-2 max-w-sm mx-auto">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Pass Number:</span>
-                    <span className="font-mono font-bold text-blue-900">{passData.passNumber}</span>
+                    <span className="font-mono font-bold text-purple-900">{passData.passNumber}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Category:</span>
@@ -729,7 +729,7 @@ const ActivatePass = () => {
                 </div>
               )}
 
-              <p className="text-xs text-blue-800/80 max-w-sm mx-auto">
+              <p className="text-xs text-purple-800/80 max-w-sm mx-auto">
                 If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
               </p>
 
@@ -741,7 +741,7 @@ const ActivatePass = () => {
                   setInputToken('');
                   navigate('/activate');
                 }}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+                className="text-xs font-semibold text-purple-600 hover:text-purple-800 underline"
               >
                 Scan or enter another pass
               </button>
@@ -834,25 +834,19 @@ const ActivatePass = () => {
                 <div
                   className={`border rounded-xl p-4 space-y-2 ${
                     isStudent
-                      ? 'bg-blue-50/70 border-blue-200/60'
+                      ? 'bg-purple-50/70 border-purple-200/60'
                       : 'bg-purple-50/70 border-purple-200/60'
                   }`}
                 >
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider ${
-                          isStudent ? 'bg-blue-600' : 'bg-purple-600'
-                        }`}
+                        className="px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider bg-purple-600"
                       >
                         Eligible for Activation
                       </span>
                       <span
-                        className={`px-2 py-0.5 text-[10px] font-bold rounded border ${
-                          isStudent
-                            ? 'bg-blue-100 text-blue-800 border-blue-300'
-                            : 'bg-purple-100 text-purple-800 border-purple-300'
-                        }`}
+                        className="px-2 py-0.5 text-[10px] font-bold rounded border bg-purple-100 text-purple-800 border-purple-300"
                       >
                         {passData.categoryName || passData.categoryCode || passData.category || 'GENERAL'} CATEGORY
                       </span>
@@ -1358,11 +1352,7 @@ const ActivatePass = () => {
                     <button
                       type="submit"
                       disabled={pageState === PAGE_STATES.SUBMITTING}
-                      className={`w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 ${
-                        isStudent
-                          ? 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
-                          : 'bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500'
-                      }`}
+                      className="w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500"
                     >
                       {pageState === PAGE_STATES.SUBMITTING ? (
                         <>

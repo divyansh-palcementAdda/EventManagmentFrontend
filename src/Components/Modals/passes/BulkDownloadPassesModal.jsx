@@ -458,8 +458,6 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         noQr
                           ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                          : p.category === 'STUDENT'
-                          ? 'bg-blue-100 text-blue-800 border border-blue-200'
                           : 'bg-purple-100 text-purple-800 border border-purple-200'
                       }`}>
                         {p.category || 'PASS'} {noQr ? '• NO QR' : ''}

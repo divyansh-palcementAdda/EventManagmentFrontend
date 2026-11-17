@@ -951,7 +951,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : errorDisplay.severity === 'warning'
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                 }`}
             >
               {errorDisplay.severity === 'danger' ? (
@@ -977,7 +977,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
                   : errorDisplay.severity === 'warning'
                     ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                    : 'bg-blue-500/10 border border-blue-500/20 text-blue-200'
+                    : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
                 }`}
             >
               <p className="leading-relaxed">{errorDisplay.explanation}</p>

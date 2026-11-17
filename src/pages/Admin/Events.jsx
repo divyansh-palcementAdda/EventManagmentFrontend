@@ -182,7 +182,7 @@ const Events = () => {
   const getStatusBadge = (status) => {
     const statusStyles = {
       DRAFT: 'bg-gray-100 text-gray-700',
-      PUBLISHED: 'bg-blue-100 text-blue-700',
+      PUBLISHED: 'bg-purple-100 text-purple-700',
       ACTIVE: 'bg-green-100 text-green-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-red-100 text-red-700',
@@ -269,7 +269,7 @@ const Events = () => {
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               title="Edit"
             >
-              <Edit className="w-4 h-4 text-blue-600" />
+              <Edit className="w-4 h-4 text-purple-600" />
             </button>
           )}
           {canDelete('EVENT') && (

@@ -215,7 +215,7 @@ const PassCategories = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg">
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
               <Tags className="w-6 h-6" />
             </div>
             <div>
@@ -238,7 +238,7 @@ const PassCategories = () => {
           </button>
           <button
             onClick={handleOpenAddModal}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
@@ -287,7 +287,7 @@ const PassCategories = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr className="bg-gradient-to-r from-purple-600 to-purple-700 border-b border-gray-200 text-xs font-semibold text-white uppercase tracking-wider">
                 <th className="px-6 py-3.5">S.No</th>
                 <th className="px-6 py-3.5">Category</th>
                 <th className="px-6 py-3.5">Code</th>
@@ -302,7 +302,7 @@ const PassCategories = () => {
               {loading && categories.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-500" />
                     Loading pass categories...
                   </td>
                 </tr>
@@ -329,7 +329,7 @@ const PassCategories = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         {cat.code}
                       </span>
                     </td>
@@ -384,7 +384,7 @@ const PassCategories = () => {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleOpenEditModal(cat)}
-                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                         title="Edit Category"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -416,7 +416,7 @@ const PassCategories = () => {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                   <Tags className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">
@@ -479,7 +479,7 @@ const PassCategories = () => {
                     <label
                       className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
                         formData.scope === 'GLOBAL'
-                          ? 'border-indigo-600 bg-indigo-50/50 text-indigo-900 shadow-sm'
+                          ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
                           : 'border-gray-200 hover:bg-gray-50 text-gray-700'
                       }`}
                     >
@@ -489,7 +489,7 @@ const PassCategories = () => {
                         value="GLOBAL"
                         checked={formData.scope === 'GLOBAL'}
                         onChange={(e) => setFormData({ ...formData, scope: e.target.value, eventId: '' })}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-purple-600 focus:ring-indigo-500"
                       />
                       <div>
                         <div className="font-semibold text-sm">Global</div>
@@ -500,7 +500,7 @@ const PassCategories = () => {
                     <label
                       className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
                         formData.scope === 'EVENT_SPECIFIC'
-                          ? 'border-indigo-600 bg-indigo-50/50 text-indigo-900 shadow-sm'
+                          ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
                           : 'border-gray-200 hover:bg-gray-50 text-gray-700'
                       }`}
                     >
@@ -510,7 +510,7 @@ const PassCategories = () => {
                         value="EVENT_SPECIFIC"
                         checked={formData.scope === 'EVENT_SPECIFIC'}
                         onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-purple-600 focus:ring-indigo-500"
                       />
                       <div>
                         <div className="font-semibold text-sm">Event-Specific</div>
@@ -581,7 +581,7 @@ const PassCategories = () => {
                           onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                         <span className="ms-3 text-sm font-medium text-gray-700">
                           {formData.active ? 'Active' : 'Inactive'}
                         </span>
@@ -602,7 +602,7 @@ const PassCategories = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-60"
+                  className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-60"
                 >
                   {isSubmitting ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
                 </button>

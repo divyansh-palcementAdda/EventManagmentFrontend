@@ -282,7 +282,7 @@ const WalkInAdmission = () => {
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 max-w-md mx-auto text-left text-sm space-y-3">
             <div className="flex justify-between items-center border-b pb-2">
               <span className="text-gray-500">Allocated Pass Number:</span>
-              <span className="font-mono font-bold text-indigo-700 text-base">
+              <span className="font-mono font-bold text-purple-700 text-base">
                 {admissionResult.passNumber}
               </span>
             </div>
@@ -315,7 +315,7 @@ const WalkInAdmission = () => {
           <div className="pt-2">
             <button
               onClick={handleResetForNext}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 mx-auto text-sm"
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 mx-auto text-sm"
             >
               <UserPlus className="w-4 h-4" />
               <span>Admit Next Walk-In Attendee</span>
@@ -328,7 +328,7 @@ const WalkInAdmission = () => {
           {/* Step 1: Event & Category Configuration */}
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-indigo-600" />
+              <Calendar className="w-4 h-4 text-purple-600" />
               1. Event & Category Selection
             </h3>
 
@@ -341,7 +341,7 @@ const WalkInAdmission = () => {
                 <select
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 >
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>
@@ -362,7 +362,7 @@ const WalkInAdmission = () => {
                 <select
                   value={selectedDayId}
                   onChange={(e) => setSelectedDayId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 >
                   {eventDays.length === 0 ? (
                     <option value="">Single Day Admission</option>
@@ -387,7 +387,7 @@ const WalkInAdmission = () => {
                 <select
                   value={selectedCategoryId}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 >
                   {walkInCategories.length === 0 ? (
                     <option value="">No Walk-In Categories Configured</option>
@@ -415,7 +415,7 @@ const WalkInAdmission = () => {
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                <User className="w-4 h-4 text-indigo-600" />
+                <User className="w-4 h-4 text-purple-600" />
                 2. Attendee Registration Information
               </h3>
               {getSelectedCategory()?.identityPolicy === 'NO_IDENTITY' && (
@@ -490,7 +490,7 @@ const WalkInAdmission = () => {
                     value={formData.attendeeMobileNumber}
                     onChange={handleChange}
                     placeholder="+919876543210"
-                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
@@ -509,7 +509,7 @@ const WalkInAdmission = () => {
                     value={formData.attendeeOrganization}
                     onChange={handleChange}
                     placeholder="e.g. Acme Corp / University"
-                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
@@ -526,7 +526,7 @@ const WalkInAdmission = () => {
                     value={formData.attendeeDesignation}
                     onChange={handleChange}
                     placeholder="e.g. Guest / Delegate"
-                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
@@ -584,7 +584,7 @@ const WalkInAdmission = () => {
                                 setFormErrors({ ...formErrors, [field.fieldKey]: null });
                               }
                             }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           >
                             <option value="">{field.placeholder || '-- Select an option --'}</option>
                             {field.options?.map((opt, oIdx) => (
@@ -604,7 +604,7 @@ const WalkInAdmission = () => {
                                 [field.fieldKey]: e.target.value
                               })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                         )}
                         {formErrors[field.fieldKey] && (
@@ -624,7 +624,7 @@ const WalkInAdmission = () => {
             <button
               type="submit"
               disabled={submitting || walkInCategories.length === 0}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-sm disabled:opacity-50"
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-sm disabled:opacity-50"
             >
               {submitting ? (
                 <>

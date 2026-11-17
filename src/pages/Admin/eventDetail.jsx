@@ -461,7 +461,7 @@ const EventDetail = () => {
   const getStatusBadge = (status) => {
     const statusStyles = {
       DRAFT: 'bg-yellow-100 text-yellow-800',
-      PUBLISHED: 'bg-blue-100 text-blue-800',
+      PUBLISHED: 'bg-purple-100 text-purple-800',
       ACTIVE: 'bg-green-100 text-green-800',
       COMPLETED: 'bg-gray-100 text-gray-800',
       CANCELLED: 'bg-red-100 text-red-800',
@@ -574,17 +574,17 @@ const EventDetail = () => {
 
           <button
             onClick={() => setIsGatekeeperModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs sm:text-sm font-bold rounded-lg hover:bg-indigo-100 transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-50 border border-purple-200 text-purple-700 text-xs sm:text-sm font-bold rounded-lg hover:bg-purple-100 transition shadow-sm"
           >
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Gatekeepers
-            <span className="bg-indigo-200 text-indigo-900 text-xs px-1.5 py-0.2 rounded-full font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" /> Gatekeepers
+            <span className="bg-purple-200 text-purple-900 text-xs px-1.5 py-0.2 rounded-full font-mono">
               {gatekeeperCount}
             </span>
           </button>
 
           <button
             onClick={() => navigate(`/admin/checkin/${event.id}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-600 text-white text-xs sm:text-sm font-bold rounded-lg hover:bg-purple-700 transition shadow-sm"
           >
             <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Gate Scanner
           </button>
@@ -647,7 +647,7 @@ const EventDetail = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Check-in Policy:</span>
-              <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+              <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700">
                 {event.checkInPolicy?.replace('_', ' ')}
               </span>
             </div>
@@ -740,9 +740,9 @@ const EventDetail = () => {
               <button
                 type="button"
                 onClick={() => setIsBulkActivateOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Bulk Activate
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" /> Bulk Activate
               </button>
 
               <button
@@ -750,7 +750,7 @@ const EventDetail = () => {
                 onClick={() => setIsGatekeeperModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
-                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" /> Gatekeepers ({gatekeeperCount})
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" /> Gatekeepers ({gatekeeperCount})
               </button>
 
               <button
@@ -790,9 +790,9 @@ const EventDetail = () => {
                 {statsLoading ? '...' : passStats?.revokedPasses ?? 0}
               </div>
             </div>
-            <div className="p-2 sm:p-2.5 bg-blue-50/70 rounded-xl border border-blue-200 text-center shadow-xs col-span-2 sm:col-span-3 lg:col-span-1">
-              <span className="text-[10px] sm:text-[11px] text-blue-700 font-medium">Checked-In</span>
-              <div className="text-sm sm:text-base font-black text-blue-800">
+            <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs col-span-2 sm:col-span-3 lg:col-span-1">
+              <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Checked-In</span>
+              <div className="text-sm sm:text-base font-black text-purple-800">
                 {statsLoading ? '...' : passStats?.checkedInCount ?? 0}
               </div>
             </div>
@@ -1126,7 +1126,7 @@ const EventDetail = () => {
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${p.category === 'STUDENT'
-                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
                                 : 'bg-purple-50 text-purple-700 border-purple-200'
                                 }`}
                             >
@@ -1283,21 +1283,48 @@ const EventDetail = () => {
               >
                 Previous
               </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setPage(i)}
-                  disabled={passesLoading}
-                  className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
-                    page === i
-                      ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white border-purple-600 shadow-md hover:from-purple-700 hover:to-purple-800 transform hover:scale-105'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {(() => {
+                const maxVisible = 3;
+                let startPage, endPage;
+
+                if (totalPages <= maxVisible) {
+                  startPage = 0;
+                  endPage = totalPages - 1;
+                } else {
+                  const half = Math.floor(maxVisible / 2);
+                  if (page <= half) {
+                    startPage = 0;
+                    endPage = maxVisible - 1;
+                  } else if (page >= totalPages - half - 1) {
+                    startPage = totalPages - maxVisible;
+                    endPage = totalPages - 1;
+                  } else {
+                    startPage = page - half;
+                    endPage = page + half;
+                  }
+                }
+
+                const visiblePages = [];
+                for (let i = startPage; i <= endPage; i++) {
+                  visiblePages.push(i);
+                }
+
+                return visiblePages.map((pageIndex) => (
+                  <button
+                    key={pageIndex}
+                    type="button"
+                    onClick={() => setPage(pageIndex)}
+                    disabled={passesLoading}
+                    className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
+                      page === pageIndex
+                        ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white border-purple-600 shadow-md hover:from-purple-700 hover:to-purple-800 transform hover:scale-105'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
+                    }`}
+                  >
+                    {pageIndex + 1}
+                  </button>
+                ));
+              })()}
               <button
                 type="button"
                 disabled={page >= totalPages - 1 || passesLoading}
@@ -1562,7 +1589,7 @@ const EventDetail = () => {
                   <div className="mt-1">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${activePrintPass.category === 'STUDENT'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        ? 'bg-purple-50 text-purple-700 border-purple-200'
                         : 'bg-purple-50 text-purple-700 border-purple-200'
                         }`}
                     >

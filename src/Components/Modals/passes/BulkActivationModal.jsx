@@ -803,9 +803,9 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                     {previewData.totalUploadedRows}
                   </div>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
-                  <div className="text-blue-700 text-[11px]">Target Passes</div>
-                  <div className="text-base font-bold text-blue-900 mt-0.5">
+                <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 text-center">
+                  <div className="text-purple-700 text-[11px]">Target Passes</div>
+                  <div className="text-base font-bold text-purple-900 mt-0.5">
                     {previewData.totalTargetPasses}
                   </div>
                 </div>
