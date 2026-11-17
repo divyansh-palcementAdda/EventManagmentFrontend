@@ -463,15 +463,15 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                           No QR Code
                         </span>
                       </div>
-                      <div className="mt-2 flex flex-col flex-nowrap gap-1 items-center">
-                        <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-8 w-32">
+                      <div className="mt-1 flex flex-col flex-nowrap gap-0.5 items-center">
+                        <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-6 w-32">
                           {p.category || 'PASS'}
                         </div>
-                        <div className="flex items-center justify-center font-mono font-black text-xs text-black h-8 w-32">
+                        <div className="flex items-center justify-center font-mono font-black text-xs text-black h-6 w-32">
                           {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
                         </div>
                         {p.validDays && p.validDays.length > 0 && (
-                          <div className="flex items-center justify-center text-[10px] font-medium text-black h-8 w-32">
+                          <div className="flex items-center justify-center text-[10px] font-medium text-black h-6 w-32">
                             {(() => {
                               const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
                               if (dates.length === 0) return '-';
@@ -510,15 +510,15 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                     </div>
                   )}
 
-                  <div className="w-full flex flex-col flex-nowrap gap-1 items-center">
-                    <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-8 w-32">
+                  <div className="w-full flex flex-col flex-nowrap gap-0.5 items-center">
+                    <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-6 w-32">
                       {p.category || 'PASS'}
                     </div>
-                    <div className="flex items-center justify-center font-mono font-black text-xs text-black h-8 w-32">
+                    <div className="flex items-center justify-center font-mono font-black text-xs text-black h-6 w-32">
                       {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
                     </div>
                     {p.validDays && p.validDays.length > 0 && (
-                      <div className="flex items-center justify-center text-[10px] font-medium text-black h-8 w-32">
+                      <div className="flex items-center justify-center text-[10px] font-medium text-black h-6 w-32">
                         {(() => {
                           const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
                           if (dates.length === 0) return '-';
