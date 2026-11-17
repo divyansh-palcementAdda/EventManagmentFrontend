@@ -47,13 +47,8 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
           cat.qrRequired === false ||
           (code && code.toUpperCase() === 'VIP') ||
           (name && name.toUpperCase().includes('VIP'));
-        list.push({
-          value: code,
-          label: name,
-          isNoQr,
-        });
+        list.push({ value: code, label: name, isNoQr });
       });
-      // Ensure VIP is always available as an option for pass download/printing
       const hasVip = list.some((c) => c.value?.toUpperCase() === 'VIP' || c.label?.toUpperCase()?.includes('VIP'));
       if (!hasVip) {
         list.push({ value: 'VIP', label: 'VIP (No QR Badge)', isNoQr: true });
@@ -168,10 +163,161 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
     }
   };
 
+  const getQrUrl = (tokenOrPass) => {
+    const identifier = typeof tokenOrPass === 'string'
+      ? tokenOrPass
+      : (tokenOrPass?.passNumber || tokenOrPass?.qrData || '');
+    const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(identifier)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(activationUrl)}`;
+  };
+
+  // ─── KEY FIX: Opens a fresh browser window with 1 pass per page ───────────
+  const openPrintWindow = (data) => {
+    const formatDate = (p) => {
+      if (!p.validDays || p.validDays.length === 0) return '';
+      const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
+      const parsed = dates.map(d => new Date(d)).filter(d => !isNaN(d));
+      if (parsed.length === 0) return dates[0] || '';
+      if (parsed.length === 1)
+        return parsed[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const sorted = parsed.sort((a, b) => a - b);
+      const first = sorted[0], last = sorted[sorted.length - 1];
+      if (first.toDateString() === last.toDateString())
+        return first.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const mo = first.toLocaleDateString('en-US', { month: 'short' });
+      return `${mo} ${first.getDate()}–${last.getDate()}, ${first.getFullYear()}`;
+    };
+
+    const cardsHtml = data.map((p) => {
+      const noQr = isNoQrPass(p);
+      const category = p.category || 'PASS';
+      const seqNum = p.sequenceNumber
+        ? String(p.sequenceNumber).padStart(4, '0')
+        : (p.passNumber?.split('-')?.pop() || '');
+      const dateStr = formatDate(p);
+      const qrUrl = noQr ? null : getQrUrl(p);
+
+      return `
+        <div class="pass-page">
+          <div class="pass-card">
+            ${noQr
+          ? `<div class="no-qr-box">
+                   <div class="no-qr-icon">&#10003;</div>
+                   <div class="badge-label">Badge Pass</div>
+                   <div class="no-qr-label">Walk-In · No QR Code</div>
+                 </div>`
+          : `<img src="${qrUrl}" alt="QR" class="qr-img" />`
+        }
+            <div class="category">${category}</div>
+            <div class="seq-num">${seqNum}</div>
+            ${dateStr ? `<div class="date">${dateStr}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Passes – ${event.eventCode || event.name}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: white; font-family: Arial, sans-serif; }
+
+    /* ── 1 pass per page ── */
+    .pass-page {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      page-break-after: always;
+      break-after: page;
+    }
+    .pass-page:last-of-type {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    .pass-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 60px;
+      min-width: 280px;
+    }
+
+    .qr-img     { width: 220px; height: 220px; display: block; }
+    .category   { font-weight: 800; font-size: 18px; text-transform: uppercase;
+                  letter-spacing: 3px; margin-top: 20px; color: #111; }
+    .seq-num    { font-family: 'Courier New', monospace; font-weight: 900;
+                  font-size: 24px; color: #111; margin-top: 6px; }
+    .date       { font-size: 13px; color: #555; margin-top: 8px; }
+
+    .no-qr-box  { display: flex; flex-direction: column; align-items: center;
+                  gap: 6px; margin-bottom: 8px; }
+    .no-qr-icon { font-size: 56px; color: #d97706; line-height: 1; }
+    .badge-label{ font-weight: 800; font-size: 15px; color: #92400e;
+                  text-transform: uppercase; letter-spacing: 2px; }
+    .no-qr-label{ font-size: 11px; color: #b45309; }
+
+    @media print {
+      @page { margin: 0; size: A4 portrait; }
+      body  { margin: 0; }
+      .pass-page {
+        width: 100vw;
+        height: 100vh;
+        page-break-after: always;
+        break-after: page;
+      }
+      .pass-page:last-of-type {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  ${cardsHtml}
+  <script>
+    // Wait for QR images to load, then auto-print
+    var imgs = document.querySelectorAll('img');
+    var total = imgs.length;
+    if (total === 0) {
+      window.print();
+    } else {
+      var loaded = 0;
+      function tryPrint() { if (++loaded >= total) window.print(); }
+      imgs.forEach(function(img) {
+        if (img.complete) { tryPrint(); }
+        else { img.onload = tryPrint; img.onerror = tryPrint; }
+      });
+      // Safety fallback: print after 4 s regardless
+      setTimeout(function() { window.print(); }, 4000);
+    }
+  <\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      toast.error('Pop-up blocked! Please allow pop-ups for this site and try again.');
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   const handlePrintCards = async () => {
     const data = await fetchPassesForExport();
     if (data && data.length > 0) {
+      setPassesData(data);
       setIsPrintViewOpen(true);
+      openPrintWindow(data);
     }
   };
 
@@ -179,7 +325,6 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
     const data = await fetchPassesForExport();
     if (!data || data.length === 0) return;
 
-    // Build CSV content
     const headers = ['Pass Number', 'Sequence', 'Category', 'Status', 'Attendee Name', 'Attendee Email', 'Event Code', 'Event Name', 'Venue'];
     const rows = data.map((p) => [
       `"${p.passNumber || ''}"`,
@@ -202,14 +347,6 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
     link.click();
     document.body.removeChild(link);
     toast.success(`Exported ${data.length} passes to CSV`);
-  };
-
-  const getQrUrl = (tokenOrPass) => {
-    const identifier = typeof tokenOrPass === 'string'
-      ? tokenOrPass
-      : (tokenOrPass?.passNumber || tokenOrPass?.qrData || '');
-    const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(identifier)}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(activationUrl)}`;
   };
 
   return (
@@ -248,11 +385,10 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                     key={cat.value}
                     type="button"
                     onClick={() => setCategoryFilter(cat.value)}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
-                      categoryFilter === cat.value
-                        ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
-                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${categoryFilter === cat.value
+                      ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     <span>{cat.label}</span>
                     {cat.isNoQr && (
@@ -344,11 +480,10 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
               const selectedCatObj = categoryOptions.find((c) => c.value === categoryFilter);
               const isSelectedCategoryNoQr = selectedCatObj?.isNoQr || categoryFilter?.toUpperCase() === 'VIP';
               return (
-                <div className={`p-3 rounded-xl border text-[11px] space-y-1 ${
-                  isSelectedCategoryNoQr
-                    ? 'bg-amber-50 border-amber-200 text-amber-900'
-                    : 'bg-purple-50 border-purple-200 text-purple-900'
-                }`}>
+                <div className={`p-3 rounded-xl border text-[11px] space-y-1 ${isSelectedCategoryNoQr
+                  ? 'bg-amber-50 border-amber-200 text-amber-900'
+                  : 'bg-purple-50 border-purple-200 text-purple-900'
+                  }`}>
                   <div className="font-bold flex items-center gap-1.5">
                     {isSelectedCategoryNoQr ? (
                       <>
@@ -358,14 +493,14 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                     ) : (
                       <>
                         <QrCode className="w-4 h-4 text-purple-700" />
-                        Print-Ready Event Passes & Badges
+                        Print-Ready Event Passes &amp; Badges — 1 QR per page
                       </>
                     )}
                   </div>
                   <p className={isSelectedCategoryNoQr ? 'text-amber-800' : 'text-purple-700'}>
                     {isSelectedCategoryNoQr
                       ? 'VIP and walk-in passes do not contain QR codes. Badges will be generated with clear serial numbers and official security authentication.'
-                      : 'Generates print-ready QR badges or walk-in passes formatted with event title, category, pass ID, venue, and dates. Unactivated passes omit personal data for security.'}
+                      : 'Opens a new print window with exactly 1 QR pass per page. 200 passes = 200 PDF pages.'}
                   </p>
                 </div>
               );
@@ -415,23 +550,22 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
         </div>
       </div>
 
-      {/* PRINT PREVIEW OVERLAY / WINDOW */}
+      {/* Screen-only preview (non-printable) */}
       {isPrintViewOpen && (
-        <div className="fixed inset-0 z-[60] bg-white overflow-y-auto p-6 text-gray-900 print:p-0">
-          {/* Top Bar for Screen only */}
-          <div className="no-print max-w-6xl mx-auto mb-6 p-4 bg-gray-900 text-white rounded-xl shadow-lg flex items-center justify-between">
+        <div className="fixed inset-0 z-[60] bg-white overflow-y-auto p-6 text-gray-900">
+          <div className="max-w-4xl mx-auto mb-6 p-4 bg-gray-900 text-white rounded-xl shadow-lg flex items-center justify-between">
             <div>
               <h3 className="font-bold text-base">Print Preview ({passesData.length} Passes)</h3>
               <p className="text-xs text-gray-400">
-                Click "Print Now" to generate print-ready physical cards or PDF badges.
+                A new print tab was opened automatically — 1 QR per page. If it didn&apos;t open, click &quot;Re-open Print Window&quot;.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => window.print()}
+                onClick={() => openPrintWindow(passesData)}
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow"
               >
-                <Printer className="w-4 h-4" /> Print Now (PDF / Paper)
+                <Printer className="w-4 h-4" /> Re-open Print Window
               </button>
               <button
                 onClick={() => setIsPrintViewOpen(false)}
@@ -442,115 +576,42 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 print:grid-cols-2 print:gap-4">
+          {/* Screen preview grid – visual reference only */}
+          <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {passesData.map((p, idx) => {
               const noQr = isNoQrPass(p);
               return (
                 <div
                   key={p.passId || idx}
-                  className="rounded-2xl p-5 bg-white flex flex-col items-center justify-center text-center relative print:shadow-none print:border-gray-800 print:break-inside-avoid print:page-break-after-avoid"
-                  style={{ minHeight: '360px' }}
+                  className="rounded-xl p-4 bg-white flex flex-col items-center justify-center text-center"
+                  style={{ minHeight: '220px' }}
                 >
                   {noQr ? (
-                    <div className="my-1">
-                      <div className="p-4 flex flex-col items-center justify-center space-y-1 w-36 h-36 mx-auto">
-                        <ShieldCheck className="w-10 h-10 text-amber-600 mb-1" />
-                        <span className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide">
-                          Badge Pass
-                        </span>
-                        <span className="text-[9px] font-bold text-amber-700">
-                          No QR Code
-                        </span>
-                      </div>
-                      <div className="mt-2 flex flex-col flex-nowrap gap-1 items-center">
-                        <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-8 w-32">
-                          {p.category || 'PASS'}
-                        </div>
-                        <div className="flex items-center justify-center font-mono font-black text-xs text-black h-8 w-32">
-                          {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
-                        </div>
-                        {p.validDays && p.validDays.length > 0 && (
-                          <div className="flex items-center justify-center text-[10px] font-medium text-black h-8 w-32">
-                            {(() => {
-                              const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
-                              if (dates.length === 0) return '-';
-                              const parsedDates = dates.map(d => new Date(d)).filter(d => !isNaN(d));
-                              if (parsedDates.length === 0) return dates[0] || '-';
-                              if (parsedDates.length === 1) {
-                                return parsedDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                              }
-                              const sortedDates = parsedDates.sort((a, b) => a - b);
-                              const firstDate = sortedDates[0];
-                              const lastDate = sortedDates[sortedDates.length - 1];
-                              const isSameDay = firstDate.toDateString() === lastDate.toDateString();
-                              if (isSameDay) {
-                                return firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                              }
-                              const startMonth = firstDate.toLocaleDateString('en-US', { month: 'short' });
-                              const startDay = firstDate.getDate();
-                              const endDay = lastDate.getDate();
-                              const year = firstDate.getFullYear();
-                              return `${startMonth} ${startDay}–${endDay}, ${year}`;
-                            })()}
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <ShieldCheck className="w-10 h-10 text-amber-500" />
+                      <span className="font-bold text-[10px] text-amber-800 uppercase tracking-wide">No QR</span>
                     </div>
                   ) : (
-                    <div className="my-1">
-                      <div className="p-2">
-                        <img
-                          src={getQrUrl(p)}
-                          alt={`QR for ${p.passNumber}`}
-                          className="w-36 h-36 object-contain mx-auto"
-                          loading="lazy"
-                        />
-                      </div>
-                    </div>
+                    <img
+                      src={getQrUrl(p)}
+                      alt={`QR for ${p.passNumber}`}
+                      className="w-24 h-24 object-contain mx-auto"
+                      loading="lazy"
+                    />
                   )}
-
-                  <div className="w-full flex flex-col flex-nowrap gap-1 items-center">
-                    <div className="flex items-center justify-center font-bold text-xs text-black uppercase tracking-wider h-8 w-32">
-                      {p.category || 'PASS'}
-                    </div>
-                    <div className="flex items-center justify-center font-mono font-black text-xs text-black h-8 w-32">
+                  <div className="mt-2 font-bold text-xs text-black uppercase tracking-widest">{p.category || 'PASS'}</div>
+                    <div className="font-mono font-black text-xs text-black">
                       {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
                     </div>
-                    {p.validDays && p.validDays.length > 0 && (
-                      <div className="flex items-center justify-center text-[10px] font-medium text-black h-8 w-32">
-                        {(() => {
-                          const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
-                          if (dates.length === 0) return '-';
-                          const parsedDates = dates.map(d => new Date(d)).filter(d => !isNaN(d));
-                          if (parsedDates.length === 0) return dates[0] || '-';
-                          if (parsedDates.length === 1) {
-                            return parsedDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                          }
-                          const sortedDates = parsedDates.sort((a, b) => a - b);
-                          const firstDate = sortedDates[0];
-                          const lastDate = sortedDates[sortedDates.length - 1];
-                          const isSameDay = firstDate.toDateString() === lastDate.toDateString();
-                          if (isSameDay) {
-                            return firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                          }
-                          const startMonth = firstDate.toLocaleDateString('en-US', { month: 'short' });
-                          const startDay = firstDate.getDate();
-                          const endDay = lastDate.getDate();
-                          const year = firstDate.getFullYear();
-                          return `${startMonth} ${startDay}–${endDay}, ${year}`;
-                        })()}
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
+                  );
             })}
-          </div>
-        </div>
-      )}
-    </>
-  );
+                </div>
+                        </div>
+          )
+                    }
+        </>
+      );
 };
 
-export default BulkDownloadPassesModal;
+      export default BulkDownloadPassesModal;
