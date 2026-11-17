@@ -5,7 +5,7 @@ import backpass from '../assets/final.png';
  * Preload an image from a URL or Base64 into an HTMLImageElement
  */
 const loadImage = (src) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!src) {
       resolve(null);
       return;
@@ -98,39 +98,29 @@ export const renderPassToCanvas = async (pass, bgImg) => {
       ctx.beginPath();
       ctx.roundRect(qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight, 16);
       ctx.fill();
-
-      ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 4;
-      ctx.setLineDash([12, 10]);
+      ctx.strokeStyle = '#f59e0b';
       ctx.stroke();
-      ctx.setLineDash([]);
 
       ctx.fillStyle = '#92400e';
-      ctx.font = 'bold 36px Arial, Helvetica, sans-serif';
+      ctx.font = 'bold 24px Arial, Helvetica, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('BADGE', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 - 16);
-
-      ctx.fillStyle = '#b45309';
-      ctx.font = 'bold 26px Arial, Helvetica, sans-serif';
-      ctx.fillText('NO QR', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 + 24);
-    } else if (qrImg) {
-      ctx.drawImage(qrImg, qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight);
+      ctx.fillText('WALK-IN', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 - 14);
+      ctx.font = 'bold 16px Arial, Helvetica, sans-serif';
+      ctx.fillText('NO QR REQUIRED', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 + 16);
     }
-  } else {
+  } else if (qrImg) {
     ctx.drawImage(qrImg, qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight);
   }
 
-  // Pass details
-  const seq = pass.sequenceNumber
-    ? String(pass.sequenceNumber).padStart(4, '0')
-    : pass.passNumber?.split('-')?.pop() || '';
-  const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
+  // 3. Category Badge Text
   const cat = (
     pass.categoryName ||
     pass.category ||
     pass.categoryCode ||
-    'GENERAL'
+    pass.passCategoryName ||
+    ''
   ).toUpperCase();
 
   const catBoxWidth = Math.round(1826 * 0.22); // ~402px
@@ -138,22 +128,26 @@ export const renderPassToCanvas = async (pass, bgImg) => {
   const catBoxX = Math.round(1826 - 1826 * 0.055 - catBoxWidth); // ~1324px
   const catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09)); // ~446px
 
-  // 3. Category Badge (Upper brown box)
   if (cat) {
     ctx.save();
     ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillText(cat, catBoxX + catBoxWidth / 2 + 2, catBoxY + catBoxHeight / 2 + 2);
     ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
     ctx.fillText(cat, catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
     ctx.restore();
   }
 
-  // 4. Serial Number Badge (Lower brown box)
-  const serialBoxWidth = catBoxWidth;
-  const serialBoxHeight = catBoxHeight;
+  // 4. Sequence Number Badge Text
+  const seq = pass.sequenceNumber
+    ? String(pass.sequenceNumber).padStart(4, '0')
+    : pass.passNumber?.split('-')?.pop() || '';
+  const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
+
   const serialBoxX = catBoxX;
   const serialBoxY = Math.round(686 * (1.0 - 0.17 - 0.09)); // ~508px
 
@@ -184,30 +178,24 @@ export const renderPassToCanvas = async (pass, bgImg) => {
 };
 
 /**
- * Generate a standalone PDF containing ONLY the passes (exact pass dimensions, 0mm margin, zero blank background)
- *
- * @param {Array} passList Array of pass objects
- * @param {Object} event Event object
- * @param {Function} onProgress Optional progress callback (current, total)
- * @returns {Promise<jsPDF>} The generated jsPDF document
+ * Exact pass dimensions in millimeters: 182.6mm width, 68.6mm height
  */
-export const generatePassesPdf = async (passList, event = {}, onProgress = null) => {
+export const PASS_WIDTH_MM = 182.6;
+export const PASS_HEIGHT_MM = 68.6;
+
+/**
+ * Build the jsPDF document containing ONLY the passes (exact pass dimensions, 0mm margin, zero blank background)
+ */
+export const createPassesPdfDoc = async (passList, event = {}, onProgress = null) => {
   if (!passList || passList.length === 0) {
     throw new Error('No passes provided for PDF generation');
   }
 
-  // Preload base pass image
   const bgImg = await loadImage(backpass);
-
-  // Exact pass dimensions in millimeters: 182.6mm width, 68.6mm height
-  const passWidthMm = 182.6;
-  const passHeightMm = 68.6;
-
-  // Initialize jsPDF with exact custom format [height, width] in landscape mode
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: [passHeightMm, passWidthMm],
+    format: [PASS_HEIGHT_MM, PASS_WIDTH_MM],
     compress: true,
   });
 
@@ -221,18 +209,134 @@ export const generatePassesPdf = async (passList, event = {}, onProgress = null)
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
     if (i > 0) {
-      doc.addPage([passHeightMm, passWidthMm], 'landscape');
+      doc.addPage([PASS_HEIGHT_MM, PASS_WIDTH_MM], 'landscape');
     }
 
-    doc.addImage(dataUrl, 'JPEG', 0, 0, passWidthMm, passHeightMm, undefined, 'FAST');
+    doc.addImage(dataUrl, 'JPEG', 0, 0, PASS_WIDTH_MM, PASS_HEIGHT_MM, undefined, 'FAST');
   }
 
+  return doc;
+};
+
+/**
+ * Generate a standalone PDF containing ONLY the passes and trigger file download
+ */
+export const generatePassesPdf = async (passList, event = {}, onProgress = null) => {
+  const doc = await createPassesPdfDoc(passList, event, onProgress);
+  const total = passList.length;
   const sanitizedEventName = (event?.eventCode || event?.name || 'Event')
     .replace(/[^a-zA-Z0-9_-]/g, '_');
   const filename = `${sanitizedEventName}_Passes_${total}.pdf`;
-
   doc.save(filename);
   return doc;
+};
+
+/**
+ * Open the pass-only PDF directly in a new browser tab/window
+ * ZERO white background, exact pass size (182.6mm x 68.6mm)
+ * Optionally triggers print inside the PDF viewer
+ */
+export const openPassesPdfPreview = async (
+  passList,
+  event = {},
+  { autoPrint = false, onProgress = null } = {}
+) => {
+  const doc = await createPassesPdfDoc(passList, event, onProgress);
+  if (autoPrint) {
+    doc.autoPrint();
+  }
+  const blob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank');
+  return blobUrl;
+};
+
+/**
+ * Generate an A4 Sheet PDF fitting 3 passes per A4 portrait page with light cut guidelines.
+ * Ideal for physical printing onto standard A4 paper/cardstock without wasting paper.
+ */
+export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = null) => {
+  if (!passList || passList.length === 0) {
+    throw new Error('No passes provided for A4 sheet PDF generation');
+  }
+
+  const bgImg = await loadImage(backpass);
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4', // 210 x 297 mm
+    compress: true,
+  });
+
+  const a4Width = 210;
+  const a4Height = 297;
+  const passW = PASS_WIDTH_MM; // 182.6 mm
+  const passH = PASS_HEIGHT_MM; // 68.6 mm
+  const marginX = (a4Width - passW) / 2; // ~13.7 mm
+  const startY = 12; // top margin
+  const gapY = 8; // gap between passes
+  const passesPerPage = 3;
+
+  const total = passList.length;
+
+  for (let i = 0; i < total; i++) {
+    if (onProgress) onProgress(i + 1, total);
+
+    const slotIndex = i % passesPerPage;
+    if (i > 0 && slotIndex === 0) {
+      doc.addPage('a4', 'portrait');
+    }
+
+    const pass = passList[i];
+    const canvas = await renderPassToCanvas(pass, bgImg);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+    const y = startY + slotIndex * (passH + gapY);
+
+    // Draw pass image
+    doc.addImage(dataUrl, 'JPEG', marginX, y, passW, passH, undefined, 'FAST');
+
+    // Draw thin crop/cut guidelines around each pass
+    doc.saveGraphicsState();
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.rect(marginX, y, passW, passH);
+    doc.restoreGraphicsState();
+  }
+
+  return doc;
+};
+
+/**
+ * Generate A4 Sheet PDF and trigger file download
+ */
+export const downloadA4SheetPdf = async (passList, event = {}, onProgress = null) => {
+  const doc = await createA4SheetPdfDoc(passList, event, onProgress);
+  const total = passList.length;
+  const sanitizedEventName = (event?.eventCode || event?.name || 'Event')
+    .replace(/[^a-zA-Z0-9_-]/g, '_');
+  const filename = `${sanitizedEventName}_A4_Print_Sheets_${total}.pdf`;
+  doc.save(filename);
+  return doc;
+};
+
+/**
+ * Open A4 Sheet PDF directly in a new browser tab/window
+ */
+export const openA4SheetPdfPreview = async (
+  passList,
+  event = {},
+  { autoPrint = false, onProgress = null } = {}
+) => {
+  const doc = await createA4SheetPdfDoc(passList, event, onProgress);
+  if (autoPrint) {
+    doc.autoPrint();
+  }
+  const blob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank');
+  return blobUrl;
 };
 
 export default generatePassesPdf;

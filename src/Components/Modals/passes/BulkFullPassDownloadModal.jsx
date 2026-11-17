@@ -13,13 +13,19 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
+  FileText,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 import useScrollLock from '../../../hooks/useScrollLock';
 import BulkDownloadPass, { frontPass, backpass, buildDateLabelText } from '../../emailPass/bulkDownloadpass';
-import { generatePassesPdf } from '../../../utils/passPdfGenerator';
+import {
+  generatePassesPdf,
+  openPassesPdfPreview,
+  downloadA4SheetPdf,
+  openA4SheetPdfPreview,
+} from '../../../utils/passPdfGenerator';
 
 const BulkFullPassDownloadModal = ({
   isOpen,
@@ -568,15 +574,15 @@ const BulkFullPassDownloadModal = ({
     /* Default Print Mode: EXACT PASS ONLY (ZERO BACKGROUND / NO EXTRA BLANK PAGE) */
     @media print {
       @page {
-        size: 182.6mm 68.6mm;
-        margin: 0mm;
+        size: landscape;
+        margin: 0;
       }
       *, *::before, *::after {
         box-sizing: border-box !important;
       }
       html, body {
-        width: 182.6mm !important;
-        height: auto !important;
+        width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
@@ -587,17 +593,15 @@ const BulkFullPassDownloadModal = ({
         display: none !important;
       }
       .pass-page {
-        width: 182.6mm !important;
-        height: 68.6mm !important;
-        max-height: 68.6mm !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
         min-height: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         padding: 0 !important;
-        display: block !important;
-        position: relative !important;
-        overflow: hidden !important;
-        page-break-before: auto !important;
-        break-before: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         page-break-after: always !important;
         break-after: page !important;
         page-break-inside: avoid !important;
@@ -609,11 +613,11 @@ const BulkFullPassDownloadModal = ({
         break-after: avoid !important;
       }
       .bulk-pass-card {
-        width: 182.6mm !important;
-        height: 68.6mm !important;
-        max-width: 182.6mm !important;
-        max-height: 68.6mm !important;
-        margin: 0 !important;
+        width: 100% !important;
+        max-width: 98vw !important;
+        height: auto !important;
+        max-height: 96vh !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         box-shadow: none !important;
         border-radius: 0 !important;
@@ -623,16 +627,17 @@ const BulkFullPassDownloadModal = ({
         position: relative !important;
       }
       .pass-back {
-        width: 182.6mm !important;
-        height: 68.6mm !important;
+        width: 100% !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
         position: relative !important;
       }
       .pass-img {
-        width: 182.6mm !important;
-        height: 68.6mm !important;
-        object-fit: fill !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 96vh !important;
+        object-fit: contain !important;
         display: block !important;
       }
       .serial-badge span, .category-badge span {
@@ -778,28 +783,18 @@ const BulkFullPassDownloadModal = ({
       doc.save('Passes_' + cards.length + '.pdf');
     }
 
+    // Images loaded handler for manual print button
     var imgs = Array.from(document.querySelectorAll('img'));
     var total = imgs.length;
     var loaded = 0;
-    function tryPrint() {
-      loaded++;
-      if (loaded >= total) {
-        setTimeout(function() { window.print(); }, 400);
+    imgs.forEach(function(img) {
+      if (img.complete) {
+        loaded++;
+      } else {
+        img.onload = function() { loaded++; };
+        img.onerror = function() { loaded++; };
       }
-    }
-    if (total === 0) {
-      window.print();
-    } else {
-      imgs.forEach(function(img) {
-        if (img.complete) {
-          tryPrint();
-        } else {
-          img.onload = tryPrint;
-          img.onerror = tryPrint;
-        }
-      });
-      setTimeout(function() { window.print(); }, 4500);
-    }
+    });
   </script>
 </body>
 </html>`;
@@ -843,7 +838,7 @@ const BulkFullPassDownloadModal = ({
     }
   };
 
-  const handleOpenPrintWindow = async () => {
+  const handleOpenPrintWindow = async (autoPrint = false) => {
     const targetCount = parseInt(count, 10);
     if (isNaN(targetCount) || targetCount < 1) {
       toast.error('Please enter a valid count greater than 0');
@@ -852,9 +847,50 @@ const BulkFullPassDownloadModal = ({
 
     const data = await fetchPasses(targetCount);
     if (data && data.length > 0) {
-      triggerPdfPrintWindow(data);
-      toast.success(`Opened print window with ${data.length} full passes.`);
-      onClose();
+      try {
+        setLoading(true);
+        setLoadingMsg(`Generating pass PDF (1/${data.length})...`);
+        await openPassesPdfPreview(data, event, {
+          autoPrint,
+          onProgress: (curr, tot) => {
+            setLoadingMsg(`Generating pass PDF (${curr}/${tot})...`);
+          },
+        });
+        toast.success(`Opened pass-only PDF preview (${data.length} passes) with zero background!`);
+      } catch (err) {
+        console.error('Pass preview error, falling back to print window:', err);
+        triggerPdfPrintWindow(data);
+      } finally {
+        setLoading(false);
+        setLoadingMsg('');
+      }
+    }
+  };
+
+  const handleDownloadA4Sheet = async () => {
+    const targetCount = parseInt(count, 10);
+    if (isNaN(targetCount) || targetCount < 1) {
+      toast.error('Please enter a valid count greater than 0');
+      return;
+    }
+
+    const data = await fetchPasses(targetCount);
+    if (data && data.length > 0) {
+      try {
+        setLoading(true);
+        setLoadingMsg(`Generating A4 print sheets (1/${data.length})...`);
+        await downloadA4SheetPdf(data, event, (curr, tot) => {
+          setLoadingMsg(`Generating A4 print sheets (${curr}/${tot})...`);
+        });
+        toast.success(`Downloaded ${data.length} passes on A4 print sheets!`);
+        onClose();
+      } catch (err) {
+        console.error('A4 sheet PDF error:', err);
+        toast.error('Failed to generate A4 print sheets.');
+      } finally {
+        setLoading(false);
+        setLoadingMsg('');
+      }
     }
   };
 
@@ -1115,10 +1151,20 @@ const BulkFullPassDownloadModal = ({
                 </span>
                 <button
                   type="button"
-                  onClick={() => triggerPdfPrintWindow(previewPasses)}
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      await openPassesPdfPreview(previewPasses, event, { autoPrint: false });
+                    } catch (e) {
+                      console.error('Preview error:', e);
+                      triggerPdfPrintWindow(previewPasses);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
                 >
-                  <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+                  <Eye className="w-3.5 h-3.5" /> View Pass-Only PDF
                 </button>
               </div>
 
@@ -1190,13 +1236,24 @@ const BulkFullPassDownloadModal = ({
 
             <button
               type="button"
-              onClick={handleOpenPrintWindow}
+              onClick={() => handleOpenPrintWindow(false)}
+              disabled={loading}
+              className="px-3 py-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+              title="Open pass-only PDF preview with zero white background"
+            >
+              <Eye className="w-3.5 h-3.5 text-purple-600" />
+              Preview Pass PDF
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadA4Sheet}
               disabled={loading}
               className="px-3 py-2 border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
-              title="Open browser print window"
+              title="Print 3 passes per A4 page with cut guides"
             >
-              <Printer className="w-3.5 h-3.5 text-gray-500" />
-              Print Preview
+              <FileText className="w-3.5 h-3.5 text-gray-500" />
+              A4 Print Sheet (3/page)
             </button>
 
             <button
@@ -1213,7 +1270,7 @@ const BulkFullPassDownloadModal = ({
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download {count || 10} Passes (PDF)</span>
+                  <span>Download Passes (PDF)</span>
                 </>
               )}
             </button>

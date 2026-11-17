@@ -15,7 +15,7 @@ import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/Gatek
 import AllotPassesModal from '../../Components/Modals/passes/AllotPassesModal';
 import PassAllotmentAnalyticsModal from '../../Components/Modals/passes/PassAllotmentAnalyticsModal';
 import useScrollLock from '../../hooks/useScrollLock';
-import { generatePassesPdf } from '../../utils/passPdfGenerator';
+import { generatePassesPdf, openPassesPdfPreview } from '../../utils/passPdfGenerator';
 import {
   ArrowLeft,
   Calendar,
@@ -326,8 +326,16 @@ const EventDetail = () => {
     win.document.close();
   };
 
-  const handlePrintSingleFullPass = (p) => {
+  const handlePrintSingleFullPass = async (p) => {
     if (!p) return;
+    try {
+      await openPassesPdfPreview([p], event, { autoPrint: false });
+      toast.success(`Opened pass-only PDF for ${p.passNumber}`);
+      return;
+    } catch (err) {
+      console.warn('Direct PDF preview failed, falling back to window print:', err);
+    }
+
     const isNoQr = checkIsNoQr(p);
     const qrUrl = isNoQr ? null : getQrImageUrl(p.rawToken || p.passNumber, event?.id || eventId);
     const seq = p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop() || '';
@@ -637,9 +645,9 @@ const EventDetail = () => {
     }
 
     var img = document.querySelector('.pass-img');
-    if (img && img.complete) setTimeout(function(){ window.print(); }, 400);
-    else if (img) img.onload = function(){ setTimeout(function(){ window.print(); }, 400); };
-    else setTimeout(function(){ window.print(); }, 400);
+    if (img && !img.complete) {
+      img.onload = function() { /* ready */ };
+    }
   <\/script>
 </body>
 </html>`;
