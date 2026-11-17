@@ -264,17 +264,22 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
     .no-qr-label{ font-size: 11px; color: #b45309; }
 
     @media print {
-      @page { margin: 0; size: A4 portrait; }
-      body  { margin: 0; }
+      @page { margin: 0; size: auto; }
+      body  { margin: 0; background: transparent !important; }
       .pass-page {
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        max-height: 100vh;
         page-break-after: always;
         break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
-      .pass-page:last-of-type {
-        page-break-after: avoid;
-        break-after: avoid;
+      .pass-page:last-of-type,
+      .pass-page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
     }
   </style>

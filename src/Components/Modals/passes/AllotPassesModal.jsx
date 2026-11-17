@@ -36,16 +36,18 @@ const AllotPassesModal = ({
 
   // Normalize category options
   const categoryOptions = useMemo(() => {
-    return categories.map((cat) => {
-      const code = cat.categoryCode || cat.passCategoryCode || cat.code;
-      const name = cat.categoryName || cat.passCategoryName || cat.name || code;
-      return { code, name };
-    });
+    return (categories || [])
+      .map((cat) => {
+        const code = (cat.categoryCode || cat.passCategoryCode || cat.code || '').trim();
+        const name = (cat.categoryName || cat.passCategoryName || cat.name || code).trim();
+        return { code, name };
+      })
+      .filter((cat) => cat.code.length > 0);
   }, [categories]);
 
   // Derived effective category (guarantees synchronous fallback to first category option)
   const effectiveCategory = useMemo(() => {
-    if (selectedCategory && categoryOptions.some((c) => c.code === selectedCategory)) {
+    if (selectedCategory && categoryOptions.some((c) => c.code.toUpperCase() === selectedCategory.toUpperCase())) {
       return selectedCategory;
     }
     return categoryOptions.length > 0 ? categoryOptions[0].code : '';
@@ -58,8 +60,10 @@ const AllotPassesModal = ({
       setQuantity('');
       setAllottedTo('');
       setRemarks('');
-      if (categoryOptions.length > 0 && !selectedCategory) {
-        setSelectedCategory(categoryOptions[0].code);
+      if (categoryOptions.length > 0) {
+        if (!selectedCategory || !categoryOptions.some((c) => c.code.toUpperCase() === selectedCategory.toUpperCase())) {
+          setSelectedCategory(categoryOptions[0].code);
+        }
       }
     }
   }, [isOpen, categoryOptions]);
@@ -88,7 +92,8 @@ const AllotPassesModal = ({
                 : [];
           setSequences(list);
           if (list.length > 0) {
-            setSelectedSequenceKey(`${list[0].fromSequence}-${list[0].toSequence}`);
+            const key = list[0].sequenceId || `${list[0].fromSequence}-${list[0].toSequence}`;
+            setSelectedSequenceKey(key);
           } else {
             setSelectedSequenceKey('');
           }
@@ -263,7 +268,7 @@ const AllotPassesModal = ({
               )}
             </div>
             <select
-              value={selectedSequenceKey || (sequences.length > 0 ? `${sequences[0].fromSequence}-${sequences[0].toSequence}` : '')}
+              value={selectedSequenceKey || (sequences.length > 0 ? (sequences[0].sequenceId || `${sequences[0].fromSequence}-${sequences[0].toSequence}`) : '')}
               onChange={handleSequenceChange}
               disabled={submitting || loadingSequences || sequences.length === 0}
               className="w-full text-xs sm:text-sm px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition"
@@ -273,11 +278,14 @@ const AllotPassesModal = ({
                   {loadingSequences ? 'Loading sequences...' : 'No generated passes found for category'}
                 </option>
               ) : (
-                sequences.map((s) => (
-                  <option key={`${s.fromSequence}-${s.toSequence}`} value={`${s.fromSequence}-${s.toSequence}`}>
-                    {s.displayName || `Seq: ${s.fromSequence} - ${s.toSequence}`} ({s.availablePasses} available)
-                  </option>
-                ))
+                sequences.map((s) => {
+                  const key = s.sequenceId || `${s.fromSequence}-${s.toSequence}`;
+                  return (
+                    <option key={key} value={key}>
+                      {s.displayName || `Seq: ${s.fromSequence} - ${s.toSequence}`} ({s.availablePasses} available)
+                    </option>
+                  );
+                })
               )}
             </select>
           </div>
