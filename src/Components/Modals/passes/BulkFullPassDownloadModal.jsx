@@ -19,6 +19,7 @@ import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 import useScrollLock from '../../../hooks/useScrollLock';
 import BulkDownloadPass, { frontPass, backpass, buildDateLabelText } from '../../emailPass/bulkDownloadpass';
+import { generatePassesPdf } from '../../../utils/passPdfGenerator';
 
 const BulkFullPassDownloadModal = ({
   isOpen,
@@ -315,27 +316,53 @@ const BulkFullPassDownloadModal = ({
       print-color-adjust: exact !important;
     }
 
-    /* Screen toolbar */
+    /* Screen Toolbar */
     .screen-toolbar {
       position: fixed;
       top: 16px;
       right: 16px;
       z-index: 9999;
       display: flex;
+      align-items: center;
       gap: 10px;
-      background: rgba(17, 24, 39, 0.9);
-      backdrop-filter: blur(8px);
-      padding: 10px 16px;
-      border-radius: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      background: rgba(17, 24, 39, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      color: #fff;
+    }
+    .toolbar-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .mode-badge {
+      font-size: 10px;
+      font-weight: 800;
+      background: #10b981;
+      color: #064e3b;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+    }
+    .toolbar-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .screen-btn {
       border: none;
       background: #9333ea;
       color: white;
       font-weight: 700;
-      font-size: 13px;
-      padding: 8px 18px;
+      font-size: 12px;
+      padding: 8px 16px;
       border-radius: 20px;
       cursor: pointer;
       display: flex;
@@ -343,20 +370,31 @@ const BulkFullPassDownloadModal = ({
       gap: 6px;
       transition: all 0.2s;
     }
-    .screen-btn:hover { background: #7e22ce; }
-    .screen-btn-secondary {
-      background: rgba(255, 255, 255, 0.2);
+    .screen-btn:hover { background: #7e22ce; transform: translateY(-1px); }
+    .screen-btn-download {
+      background: #059669;
     }
-    .screen-btn-secondary:hover { background: rgba(255, 255, 255, 0.3); }
+    .screen-btn-download:hover { background: #047857; }
+    .screen-btn-mode {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .screen-btn-mode:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    .screen-btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .screen-btn-secondary:hover { background: rgba(255, 255, 255, 0.22); }
 
-    /* Pass Page - 1 per page */
+    /* Pass Page on Screen */
     .pass-page {
       width: 100%;
-      min-height: 100vh;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px 16px;
+      padding: 20px 16px;
       page-break-after: always;
       break-after: page;
     }
@@ -368,7 +406,7 @@ const BulkFullPassDownloadModal = ({
     /* Card styling */
     .bulk-pass-card {
       width: 100%;
-      max-width: 540px;
+      max-width: 600px;
       background: #ffffff;
       overflow: hidden;
       box-shadow: 0 8px 30px rgba(0,0,0,0.12);
@@ -525,51 +563,221 @@ const BulkFullPassDownloadModal = ({
       margin-top: 9px;
     }
 
-    /* Print media rules */
+  </style>
+  <style id="dynamicPrintStyle">
+    /* Default Print Mode: EXACT PASS ONLY (ZERO BACKGROUND / NO EXTRA BLANK PAGE) */
     @media print {
       @page {
-        size: A4 portrait;
-        margin: 0;
+        size: 182.6mm 68.6mm;
+        margin: 0mm;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box !important;
+      }
+      html, body {
+        width: 182.6mm !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       .screen-toolbar {
         display: none !important;
       }
-      body {
-        background: #ffffff !important;
-        margin: 0 !important;
-      }
       .pass-page {
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 182.6mm !important;
+        height: 68.6mm !important;
+        max-height: 68.6mm !important;
+        min-height: 0 !important;
+        margin: 0 !important;
         padding: 0 !important;
+        display: block !important;
+        position: relative !important;
+        overflow: hidden !important;
+        page-break-before: auto !important;
+        break-before: auto !important;
         page-break-after: always !important;
         break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
-      .pass-page:last-of-type {
+      .pass-page:last-of-type,
+      .pass-page:last-child {
         page-break-after: avoid !important;
         break-after: avoid !important;
       }
       .bulk-pass-card {
-        max-width: 520px !important;
+        width: 182.6mm !important;
+        height: 68.6mm !important;
+        max-width: 182.6mm !important;
+        max-height: 68.6mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
         box-shadow: none !important;
         border-radius: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
+        position: relative !important;
+      }
+      .pass-back {
+        width: 182.6mm !important;
+        height: 68.6mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+      }
+      .pass-img {
+        width: 182.6mm !important;
+        height: 68.6mm !important;
+        object-fit: fill !important;
+        display: block !important;
+      }
+      .serial-badge span, .category-badge span {
+        font-size: 13px !important;
+      }
+      .left-seq-strip span {
+        font-size: 11px !important;
       }
     }
   </style>
 </head>
 <body>
   <div class="screen-toolbar">
-    <button class="screen-btn" onclick="window.print()">
-      &#128424; Print / Save as PDF
-    </button>
-    <button class="screen-btn screen-btn-secondary" onclick="window.close()">
-      Close
-    </button>
+    <div class="toolbar-info">
+      <span class="toolbar-title">&#128424; Passes (${passList.length})</span>
+      <span class="mode-badge" id="modeBadge">PASS ONLY (NO BACKGROUND)</span>
+    </div>
+    <div class="toolbar-btns">
+      <button class="screen-btn screen-btn-download" onclick="downloadViaCanvasPdf()">
+        📥 Download Pass-Only PDF
+      </button>
+      <button class="screen-btn" onclick="window.print()">
+        &#128424; Print / Save as PDF
+      </button>
+      <button class="screen-btn screen-btn-mode" id="btnToggleMode" onclick="togglePrintMode()">
+        Switch to A4 Landscape
+      </button>
+      <button class="screen-btn screen-btn-secondary" onclick="window.close()">
+        Close
+      </button>
+    </div>
   </div>
 
   ${cardsHtml}
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
+    var currentMode = 'pass-only';
+    function setPrintMode(mode) {
+      currentMode = mode;
+      var styleEl = document.getElementById('dynamicPrintStyle');
+      var badge = document.getElementById('modeBadge');
+      var btn = document.getElementById('btnToggleMode');
+      if (mode === 'a4') {
+        badge.textContent = 'A4 LANDSCAPE';
+        btn.textContent = 'Switch to Pass Only (No Background)';
+        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+      } else {
+        badge.textContent = 'PASS ONLY (NO BACKGROUND)';
+        btn.textContent = 'Switch to A4 Landscape';
+        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0mm; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-before: auto !important; break-before: auto !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+      }
+    }
+    function togglePrintMode() {
+      setPrintMode(currentMode === 'pass-only' ? 'a4' : 'pass-only');
+    }
+
+    async function downloadViaCanvasPdf() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library is loading, please try again in a few seconds.');
+        return;
+      }
+      var cards = Array.from(document.querySelectorAll('.pass-page'));
+      if (cards.length === 0) return;
+      var doc = new window.jspdf.jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [68.6, 182.6],
+        compress: true
+      });
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i].querySelector('.bulk-pass-card');
+        if (!card) continue;
+        var bgImg = card.querySelector('.pass-img');
+        var qrImg = card.querySelector('.qr-img');
+        var catSpan = card.querySelector('.category-badge span');
+        var seqSpan = card.querySelector('.serial-badge span');
+        var leftSpan = card.querySelector('.left-seq-strip span');
+
+        var canvas = document.createElement('canvas');
+        canvas.width = 1826;
+        canvas.height = 686;
+        var ctx = canvas.getContext('2d');
+        if (bgImg && bgImg.naturalWidth) {
+          ctx.drawImage(bgImg, 0, 0, 1826, 686);
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, 1826, 686);
+        }
+
+        var qrBoxWidth = Math.round(1826 * 0.15);
+        var qrBoxHeight = qrBoxWidth;
+        var qrBoxX = Math.round(1826 - (1826 * 0.095) - qrBoxWidth);
+        var qrBoxY = Math.round(686 * 0.20);
+        if (qrImg && qrImg.naturalWidth) {
+          ctx.drawImage(qrImg, qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight);
+        }
+
+        var catBoxWidth = Math.round(1826 * 0.22);
+        var catBoxHeight = Math.round(686 * 0.09);
+        var catBoxX = Math.round(1826 - (1826 * 0.055) - catBoxWidth);
+        var catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09));
+        if (catSpan && catSpan.textContent) {
+          ctx.save();
+          ctx.font = 'bold 32px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(catSpan.textContent.trim(), catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
+          ctx.restore();
+        }
+
+        var serialBoxWidth = catBoxWidth;
+        var serialBoxHeight = catBoxHeight;
+        var serialBoxX = catBoxX;
+        var serialBoxY = Math.round(686 * (1.0 - 0.17 - 0.09));
+        if (seqSpan && seqSpan.textContent) {
+          ctx.save();
+          ctx.font = 'bold 32px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(seqSpan.textContent.trim(), serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+          ctx.restore();
+        }
+
+        if (leftSpan && leftSpan.textContent) {
+          ctx.save();
+          ctx.translate(34, 620);
+          ctx.rotate(-Math.PI / 2);
+          ctx.font = 'bold 22px Arial, sans-serif';
+          ctx.fillStyle = '#121212';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(leftSpan.textContent.trim(), 0, 0);
+          ctx.restore();
+        }
+
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) doc.addPage([68.6, 182.6], 'landscape');
+        doc.addImage(dataUrl, 'JPEG', 0, 0, 182.6, 68.6);
+      }
+      doc.save('Passes_' + cards.length + '.pdf');
+    }
+
     var imgs = Array.from(document.querySelectorAll('img'));
     var total = imgs.length;
     var loaded = 0;
@@ -615,8 +823,37 @@ const BulkFullPassDownloadModal = ({
 
     const data = await fetchPasses(targetCount);
     if (data && data.length > 0) {
+      try {
+        setLoading(true);
+        setLoadingMsg(`Generating pass PDF (1/${data.length})...`);
+        await generatePassesPdf(data, event, (curr, tot) => {
+          setLoadingMsg(`Generating pass PDF (${curr}/${tot})...`);
+        });
+        toast.success(`Successfully downloaded ${data.length} passes as PDF!`);
+        onClose();
+      } catch (err) {
+        console.error('Direct PDF export error, opening print fallback:', err);
+        triggerPdfPrintWindow(data);
+        toast.success(`Prepared ${data.length} full passes for printing.`);
+        onClose();
+      } finally {
+        setLoading(false);
+        setLoadingMsg('');
+      }
+    }
+  };
+
+  const handleOpenPrintWindow = async () => {
+    const targetCount = parseInt(count, 10);
+    if (isNaN(targetCount) || targetCount < 1) {
+      toast.error('Please enter a valid count greater than 0');
+      return;
+    }
+
+    const data = await fetchPasses(targetCount);
+    if (data && data.length > 0) {
       triggerPdfPrintWindow(data);
-      toast.success(`Prepared ${data.length} full passes for PDF download!`);
+      toast.success(`Opened print window with ${data.length} full passes.`);
       onClose();
     }
   };
@@ -944,12 +1181,23 @@ const BulkFullPassDownloadModal = ({
                 type="button"
                 onClick={handlePreview}
                 disabled={loading}
-                className="px-3.5 py-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+                className="px-3 py-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
               >
                 <Eye className="w-3.5 h-3.5" />
                 Preview
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={handleOpenPrintWindow}
+              disabled={loading}
+              className="px-3 py-2 border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+              title="Open browser print window"
+            >
+              <Printer className="w-3.5 h-3.5 text-gray-500" />
+              Print Preview
+            </button>
 
             <button
               type="button"
@@ -964,8 +1212,8 @@ const BulkFullPassDownloadModal = ({
                 </>
               ) : (
                 <>
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Download {count || 10} Full Passes (PDF)</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download {count || 10} Passes (PDF)</span>
                 </>
               )}
             </button>

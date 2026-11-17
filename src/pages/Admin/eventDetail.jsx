@@ -8,13 +8,14 @@ import passAllotmentService from '../../Api-Services/passAllotmentService';
 import EventCategoriesCard from '../../Components/eventCategories/EventCategoriesCard';
 import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownloadPassesModal';
 import BulkFullPassDownloadModal from '../../Components/Modals/passes/BulkFullPassDownloadModal';
-import BulkDownloadPass from '../../Components/emailPass/bulkDownloadpass';
+import BulkDownloadPass, { backpass } from '../../Components/emailPass/bulkDownloadpass';
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
 import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/GatekeeperManagementModal';
 import AllotPassesModal from '../../Components/Modals/passes/AllotPassesModal';
 import PassAllotmentAnalyticsModal from '../../Components/Modals/passes/PassAllotmentAnalyticsModal';
 import useScrollLock from '../../hooks/useScrollLock';
+import { generatePassesPdf } from '../../utils/passPdfGenerator';
 import {
   ArrowLeft,
   Calendar,
@@ -214,6 +215,438 @@ const EventDetail = () => {
   const isNoQrActiveFullPass = useMemo(() => {
     return checkIsNoQr(activeFullPass);
   }, [activeFullPass, availableCategories]);
+
+  const handlePrintSinglePass = (pass) => {
+    if (!pass) return;
+    const isNoQr = checkIsNoQr(pass);
+    const qrUrl = isNoQr ? null : getQrImageUrl(pass.rawToken || pass.passNumber, event?.id || eventId);
+    const win = window.open('', '_blank');
+    if (!win) {
+      toast.error('Pop-up blocked! Please allow pop-ups for this site.');
+      return;
+    }
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Pass ${pass.passNumber || ''}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .screen-toolbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(17, 24, 39, 0.94);
+      padding: 8px 16px;
+      border-radius: 30px;
+      color: #fff;
+    }
+    .screen-btn {
+      border: none;
+      background: #9333ea;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .screen-btn-secondary { background: rgba(255, 255, 255, 0.15); }
+    .pass-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .title { font-size: 15px; font-weight: 800; color: #111; margin-top: 8px; }
+    .venue { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .qr-box { margin: 16px auto; width: 180px; height: 180px; }
+    .qr-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .pass-num { font-family: monospace; font-size: 18px; font-weight: 900; color: #6b21a8; letter-spacing: 1px; }
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #f3e8ff; color: #7e22ce; margin-top: 6px; }
+    .attendee { margin-top: 12px; font-size: 12px; color: #374151; background: #faf5ff; padding: 6px; border-radius: 6px; }
+    @media print {
+      @page { size: auto; margin: 0; }
+      .screen-toolbar { display: none !important; }
+      html, body { background: transparent !important; margin: 0 !important; padding: 0 !important; }
+      .pass-container { min-height: 0 !important; height: auto !important; padding: 0 !important; background: transparent !important; display: block !important; }
+      .card { border: none !important; box-shadow: none !important; margin: 0 auto !important; max-width: 100% !important; page-break-after: avoid !important; break-after: avoid !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <button class="screen-btn" onclick="window.print()">&#128424; Print Pass</button>
+    <button class="screen-btn screen-btn-secondary" onclick="window.close()">Close</button>
+  </div>
+  <div class="pass-container">
+    <div class="card">
+      <div style="font-size: 9px; font-weight: 900; letter-spacing: 2px; color: #7e22ce;">OFFICIAL EVENT PASS</div>
+      <div class="title">${event?.name || ''}</div>
+      <div class="venue">${event?.venue || ''}</div>
+      ${qrUrl ? `<div class="qr-box"><img src="${qrUrl}" alt="QR" class="qr-img"/></div>` : `<div style="padding: 24px; color: #b45309; font-weight: 700; font-size: 12px;">WALK-IN BADGE (NO QR)</div>`}
+      <div class="pass-num">${pass.passNumber}</div>
+      <div class="badge">${(pass.category || 'GENERAL').toUpperCase()} PASS</div>
+      ${pass.attendeeName ? `<div class="attendee">Attendee: <strong>${pass.attendeeName}</strong></div>` : ''}
+    </div>
+  </div>
+  <script>
+    var img = document.querySelector('.qr-img');
+    if (img && img.complete) setTimeout(function(){ window.print(); }, 350);
+    else if (img) img.onload = function(){ setTimeout(function(){ window.print(); }, 350); };
+    else setTimeout(function(){ window.print(); }, 350);
+  <\/script>
+</body>
+</html>`;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
+
+  const handlePrintSingleFullPass = (p) => {
+    if (!p) return;
+    const isNoQr = checkIsNoQr(p);
+    const qrUrl = isNoQr ? null : getQrImageUrl(p.rawToken || p.passNumber, event?.id || eventId);
+    const seq = p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop() || '';
+    const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
+    const cat = (p.categoryName || p.category || p.categoryCode || 'GENERAL').toUpperCase();
+    const win = window.open('', '_blank');
+    if (!win) {
+      toast.error('Pop-up blocked! Please allow pop-ups for this site.');
+      return;
+    }
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Pass ${p.passNumber || ''}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .screen-toolbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(17, 24, 39, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      color: #fff;
+    }
+    .mode-badge {
+      font-size: 10px;
+      font-weight: 800;
+      background: #10b981;
+      color: #064e3b;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+    .screen-btn {
+      border: none;
+      background: #9333ea;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .screen-btn-mode {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .screen-btn-download {
+      background: #059669;
+    }
+    .screen-btn-download:hover { background: #047857; }
+    .screen-btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .pass-page {
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+    }
+    .bulk-pass-card {
+      width: 100%;
+      max-width: 600px;
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      border-radius: 8px;
+      position: relative;
+    }
+    .pass-back { position: relative; width: 100%; line-height: 0; }
+    .pass-img { width: 100%; height: auto; display: block; object-fit: cover; }
+    .qr-container {
+      position: absolute;
+      top: 20%;
+      right: 9.5%;
+      width: 15%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qr-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .serial-badge {
+      position: absolute;
+      bottom: 17%;
+      right: 5.5%;
+      width: 22%;
+      height: 9%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .serial-badge span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+    .category-badge {
+      position: absolute;
+      bottom: 26%;
+      right: 5.5%;
+      width: 22%;
+      height: 9%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .category-badge span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .left-seq-strip {
+      position: absolute;
+      bottom: 5%;
+      left: -2%;
+      width: 5.5%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-90deg);
+      transform-origin: center center;
+    }
+    .left-seq-strip span {
+      font-size: 10px;
+      font-weight: 700;
+      color: #121212;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 3.5px;
+      line-height: 2;
+      white-space: nowrap;
+      margin-top: 9px;
+    }
+  </style>
+  <style id="dynamicPrintStyle">
+    @media print {
+      @page { size: 182.6mm 68.6mm; margin: 0; }
+      *, *::before, *::after { box-sizing: border-box !important; }
+      html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .screen-toolbar { display: none !important; }
+      .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-after: avoid !important; break-after: avoid !important; }
+      .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; }
+      .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; }
+      .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; }
+      .serial-badge span, .category-badge span { font-size: 13px !important; }
+      .left-seq-strip span { font-size: 11px !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-size:13px; font-weight:700;">&#128424; Pass ${p.passNumber}</span>
+      <span class="mode-badge" id="modeBadge">PASS ONLY (NO BACKGROUND)</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="screen-btn screen-btn-download" onclick="downloadViaCanvasPdf()">📥 Download Pass-Only PDF</button>
+      <button class="screen-btn" onclick="window.print()">&#128424; Print / Save as PDF</button>
+      <button class="screen-btn screen-btn-mode" id="btnToggleMode" onclick="togglePrintMode()">Switch to A4 Landscape</button>
+      <button class="screen-btn screen-btn-secondary" onclick="window.close()">Close</button>
+    </div>
+  </div>
+  <div class="pass-page">
+    <div class="bulk-pass-card">
+      <div class="pass-back">
+        <img src="${backpass}" alt="Pass Back" class="pass-img" />
+        <div class="qr-container">
+          ${qrUrl ? `<img src="${qrUrl}" alt="QR" class="qr-img" />` : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#92400e;background-color:#fef3c7;border:1.5px dashed #f59e0b;border-radius:4px;"><span>BADGE</span><span style="font-size:6px;font-weight:600;color:#b45309;">NO QR</span></div>`}
+        </div>
+        ${seqBadge ? `<div class="serial-badge"><span>${seqBadge}</span></div>` : ''}
+        ${cat ? `<div class="category-badge"><span>${cat}</span></div>` : ''}
+        ${seqBadge ? `<div class="left-seq-strip"><span>${seqBadge}</span></div>` : ''}
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    var currentMode = 'pass-only';
+    function setPrintMode(mode) {
+      currentMode = mode;
+      var styleEl = document.getElementById('dynamicPrintStyle');
+      var badge = document.getElementById('modeBadge');
+      var btn = document.getElementById('btnToggleMode');
+      if (mode === 'a4') {
+        badge.textContent = 'A4 LANDSCAPE';
+        btn.textContent = 'Switch to Pass Only (No Background)';
+        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+      } else {
+        badge.textContent = 'PASS ONLY (NO BACKGROUND)';
+        btn.textContent = 'Switch to A4 Landscape';
+        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+      }
+    }
+    function togglePrintMode() {
+      setPrintMode(currentMode === 'pass-only' ? 'a4' : 'pass-only');
+    }
+    function downloadViaCanvasPdf() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library is loading, please try again in a few seconds.');
+        return;
+      }
+      var card = document.querySelector('.bulk-pass-card');
+      if (!card) return;
+      var bgImg = card.querySelector('.pass-img');
+      var qrImg = card.querySelector('.qr-img');
+      var catSpan = card.querySelector('.category-badge span');
+      var seqSpan = card.querySelector('.serial-badge span');
+      var leftSpan = card.querySelector('.left-seq-strip span');
+
+      var canvas = document.createElement('canvas');
+      canvas.width = 1826;
+      canvas.height = 686;
+      var ctx = canvas.getContext('2d');
+      if (bgImg && bgImg.naturalWidth) {
+        ctx.drawImage(bgImg, 0, 0, 1826, 686);
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1826, 686);
+      }
+
+      var qrBoxWidth = Math.round(1826 * 0.15);
+      var qrBoxHeight = qrBoxWidth;
+      var qrBoxX = Math.round(1826 - (1826 * 0.095) - qrBoxWidth);
+      var qrBoxY = Math.round(686 * 0.20);
+      if (qrImg && qrImg.naturalWidth) {
+        ctx.drawImage(qrImg, qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight);
+      }
+
+      var catBoxWidth = Math.round(1826 * 0.22);
+      var catBoxHeight = Math.round(686 * 0.09);
+      var catBoxX = Math.round(1826 - (1826 * 0.055) - catBoxWidth);
+      var catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09));
+      if (catSpan && catSpan.textContent) {
+        ctx.save();
+        ctx.font = 'bold 32px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(catSpan.textContent.trim(), catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
+        ctx.restore();
+      }
+
+      var serialBoxWidth = catBoxWidth;
+      var serialBoxHeight = catBoxHeight;
+      var serialBoxX = catBoxX;
+      var serialBoxY = Math.round(686 * (1.0 - 0.17 - 0.09));
+      if (seqSpan && seqSpan.textContent) {
+        ctx.save();
+        ctx.font = 'bold 32px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(seqSpan.textContent.trim(), serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+        ctx.restore();
+      }
+
+      if (leftSpan && leftSpan.textContent) {
+        ctx.save();
+        ctx.translate(34, 620);
+        ctx.rotate(-Math.PI / 2);
+        ctx.font = 'bold 22px Arial, sans-serif';
+        ctx.fillStyle = '#121212';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(leftSpan.textContent.trim(), 0, 0);
+        ctx.restore();
+      }
+
+      var doc = new window.jspdf.jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [68.6, 182.6],
+        compress: true
+      });
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      doc.addImage(dataUrl, 'JPEG', 0, 0, 182.6, 68.6);
+      doc.save('Pass_${p.passNumber}.pdf');
+    }
+
+    var img = document.querySelector('.pass-img');
+    if (img && img.complete) setTimeout(function(){ window.print(); }, 400);
+    else if (img) img.onload = function(){ setTimeout(function(){ window.print(); }, 400); };
+    else setTimeout(function(){ window.print(); }, 400);
+  <\/script>
+</body>
+</html>`;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
 
   // Dynamic category cards list for interactive filter cards
   const categoryCardsList = useMemo(() => {
@@ -2306,7 +2739,7 @@ const EventDetail = () => {
               <div className="p-4 bg-gray-50 border-t flex gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={() => handlePrintSinglePass(activePrintPass)}
                   className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print Pass
@@ -2400,6 +2833,39 @@ const EventDetail = () => {
                 validDays={activeFullPass.validDays || []}
                 qrImageUrl={isNoQrActiveFullPass ? null : getQrImageUrl(activeFullPass.rawToken || activeFullPass.passNumber)}
               />
+
+              {/* Print actions footer */}
+              <div className="p-3 bg-gray-50 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await generatePassesPdf([activeFullPass], event);
+                      toast.success(`Downloaded pass ${activeFullPass.passNumber} as PDF!`);
+                    } catch (e) {
+                      console.error('PDF error:', e);
+                      handlePrintSingleFullPass(activeFullPass);
+                    }
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download Pass (PDF)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrintSingleFullPass(activeFullPass)}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveFullPass(null)}
+                  className="px-4 py-2 border bg-white rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )
