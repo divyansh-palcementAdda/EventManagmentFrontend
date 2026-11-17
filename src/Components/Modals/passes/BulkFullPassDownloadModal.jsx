@@ -19,13 +19,8 @@ import passService from '../../../Api-Services/passService';
 import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 import useScrollLock from '../../../hooks/useScrollLock';
-import BulkDownloadPass, { frontPass, backpass, buildDateLabelText } from '../../emailPass/bulkDownloadpass';
-import {
-  generatePassesPdf,
-  openPassesPdfPreview,
-  downloadA4SheetPdf,
-  openA4SheetPdfPreview,
-} from '../../../utils/passPdfGenerator';
+import BulkDownloadPass, { frontPass, backpass, buildDateLabelText, formatPassDisplayDate } from '../../emailPass/bulkDownloadpass';
+import { generatePassesPdf } from '../../../utils/passPdfGenerator';
 
 const BulkFullPassDownloadModal = ({
   isOpen,
@@ -112,11 +107,11 @@ const BulkFullPassDownloadModal = ({
       typeof tokenOrPass === 'string'
         ? tokenOrPass
         : tokenOrPass?.rawToken ||
-          tokenOrPass?.passNumber ||
-          tokenOrPass?.qrData ||
-          tokenOrPass?.token ||
-          tokenOrPass?.id ||
-          '';
+        tokenOrPass?.passNumber ||
+        tokenOrPass?.qrData ||
+        tokenOrPass?.token ||
+        tokenOrPass?.id ||
+        '';
     if (!identifier) return null;
     const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(identifier)}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
@@ -125,22 +120,7 @@ const BulkFullPassDownloadModal = ({
   };
 
   const formatEventDateStr = () => {
-    if (event?.startsAt && event?.endsAt) {
-      const d1 = new Date(event.startsAt);
-      const d2 = new Date(event.endsAt);
-      if (!isNaN(d1) && !isNaN(d2)) {
-        const fmt = (d) =>
-          d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        return `${fmt(d1)} – ${fmt(d2)}`;
-      }
-    }
-    return event?.startsAt
-      ? new Date(event.startsAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : 'EVENT DATES';
+    return formatPassDisplayDate([], event);
   };
 
   const fetchPasses = async (targetCount) => {
@@ -244,16 +224,6 @@ const BulkFullPassDownloadModal = ({
             <!--
             <div class="pass-front">
               <img src="${frontPass}" alt="Pass Front" class="pass-img" />
-              <div class="front-details">
-                <div class="front-line"></div>
-                <div class="front-text front-dates">
-                  <span class="label">EVENT DATES: </span>${dateStr}
-                </div>
-                <div class="front-text front-venue">
-                  <span class="label">VENUE: </span>${vName.toUpperCase()}
-                </div>
-                ${vLoc ? `<div class="front-text front-loc">${vLoc.toUpperCase()}</div>` : ''}
-              </div>
             </div>
             -->
 
@@ -263,42 +233,46 @@ const BulkFullPassDownloadModal = ({
               
               <!-- QR Overlay -->
               <div class="qr-container">
-                ${
-                  qrUrl
-                    ? `<img src="${qrUrl}" alt="QR" class="qr-img" />`
-                    : `<div class="no-qr-box">
+                ${qrUrl
+            ? `<img src="${qrUrl}" alt="QR" class="qr-img" />`
+            : `<div class="no-qr-box">
                          <span>BADGE</span>
                          <span class="no-qr-sub">NO QR</span>
                        </div>`
-                }
+          }
               </div>
 
-              <!-- Serial Number Badge -->
-              ${
-                seqBadge
-                  ? `<div class="serial-badge">
-                       <span>${seqBadge}</span>
-                     </div>`
-                  : ''
-              }
-
               <!-- Category Badge -->
-              ${
-                cat
-                  ? `<div class="category-badge">
+              ${cat
+            ? `<div class="category-badge">
                        <span>${cat}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
 
-              <!-- Left Sequence Strip (Rotated) -->
-              ${
-                seqBadge
-                  ? `<div class="left-seq-strip">
+              <!-- Serial Number Badge -->
+              ${seqBadge
+            ? `<div class="serial-badge">
                        <span>${seqBadge}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
+
+              <!-- Date Badge -->
+              ${dateStr
+            ? `<div class="date-badge">
+                       <span>${dateStr}</span>
+                     </div>`
+            : ''
+          }
+
+              <!-- Left Sequence Strip (Rotated) -->
+              ${seqBadge
+            ? `<div class="left-seq-strip">
+                       <span>${seqBadge}</span>
+                     </div>`
+            : ''
+          }
             </div>
           </div>
         </div>
@@ -519,7 +493,7 @@ const BulkFullPassDownloadModal = ({
     .serial-badge span {
       font-size: 11px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
       font-family: Arial, Helvetica, sans-serif;
       letter-spacing: 1.5px;
       white-space: nowrap;
@@ -539,12 +513,30 @@ const BulkFullPassDownloadModal = ({
     .category-badge span {
       font-size: 11px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
       font-family: Arial, Helvetica, sans-serif;
       letter-spacing: 1.5px;
       white-space: nowrap;
       text-transform: uppercase;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    .date-badge {
+      position: absolute;
+      bottom: 8%;
+      right: 5.5%;
+      width: 22%;
+      height: 9%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .date-badge span {
+      font-size: 10px;
+      font-weight: 700;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
     .left-seq-strip {
@@ -640,8 +632,9 @@ const BulkFullPassDownloadModal = ({
         object-fit: contain !important;
         display: block !important;
       }
-      .serial-badge span, .category-badge span {
+      .serial-badge span, .category-badge span, .date-badge span {
         font-size: 13px !important;
+        color: #000000 !important;
       }
       .left-seq-strip span {
         font-size: 11px !important;
@@ -684,11 +677,11 @@ const BulkFullPassDownloadModal = ({
       if (mode === 'a4') {
         badge.textContent = 'A4 LANDSCAPE';
         btn.textContent = 'Switch to Pass Only (No Background)';
-        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span, .date-badge span { font-size: 13px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
       } else {
         badge.textContent = 'PASS ONLY (NO BACKGROUND)';
         btn.textContent = 'Switch to A4 Landscape';
-        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0mm; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-before: auto !important; break-before: auto !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0mm; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-before: auto !important; break-before: auto !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span, .date-badge span { font-size: 13px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
       }
     }
     function togglePrintMode() {
@@ -715,6 +708,7 @@ const BulkFullPassDownloadModal = ({
         var qrImg = card.querySelector('.qr-img');
         var catSpan = card.querySelector('.category-badge span');
         var seqSpan = card.querySelector('.serial-badge span');
+        var dateSpan = card.querySelector('.date-badge span');
         var leftSpan = card.querySelector('.left-seq-strip span');
 
         var canvas = document.createElement('canvas');
@@ -745,7 +739,7 @@ const BulkFullPassDownloadModal = ({
           ctx.font = 'bold 32px Arial, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = '#000000';
           ctx.fillText(catSpan.textContent.trim(), catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
           ctx.restore();
         }
@@ -759,8 +753,22 @@ const BulkFullPassDownloadModal = ({
           ctx.font = 'bold 32px Arial, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = '#000000';
           ctx.fillText(seqSpan.textContent.trim(), serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+          ctx.restore();
+        }
+
+        var dateBoxWidth = catBoxWidth;
+        var dateBoxHeight = catBoxHeight;
+        var dateBoxX = catBoxX;
+        var dateBoxY = Math.round(686 * (1.0 - 0.08 - 0.09));
+        if (dateSpan && dateSpan.textContent) {
+          ctx.save();
+          ctx.font = 'bold 26px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#000000';
+          ctx.fillText(dateSpan.textContent.trim(), dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
           ctx.restore();
         }
 
@@ -950,11 +958,10 @@ const BulkFullPassDownloadModal = ({
           <button
             type="button"
             onClick={() => setActiveTab('download')}
-            className={`pb-2.5 px-1 text-xs font-bold border-b-2 transition ${
-              activeTab === 'download'
+            className={`pb-2.5 px-1 text-xs font-bold border-b-2 transition ${activeTab === 'download'
                 ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+              }`}
           >
             Download Settings
           </button>
@@ -967,11 +974,10 @@ const BulkFullPassDownloadModal = ({
                 setActiveTab('preview');
               }
             }}
-            className={`pb-2.5 px-1 text-xs font-bold border-b-2 flex items-center gap-1.5 transition ${
-              activeTab === 'preview'
+            className={`pb-2.5 px-1 text-xs font-bold border-b-2 flex items-center gap-1.5 transition ${activeTab === 'preview'
                 ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+              }`}
           >
             <Eye className="w-3.5 h-3.5" />
             Pass Preview ({previewPasses.length > 0 ? previewPasses.length : count})
@@ -1019,11 +1025,10 @@ const BulkFullPassDownloadModal = ({
                       key={val}
                       type="button"
                       onClick={() => setCount(val)}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                        Number(count) === val
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${Number(count) === val
                           ? 'bg-purple-600 text-white shadow-xs'
                           : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {val}
                     </button>
@@ -1032,11 +1037,10 @@ const BulkFullPassDownloadModal = ({
                     <button
                       type="button"
                       onClick={() => setCount(totalAvailable)}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                        Number(count) === totalAvailable
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${Number(count) === totalAvailable
                           ? 'bg-purple-600 text-white'
                           : 'bg-white border border-purple-200 text-purple-700 hover:bg-purple-50'
-                      }`}
+                        }`}
                     >
                       All ({totalAvailable})
                     </button>

@@ -32,43 +32,76 @@ export const ordinal = (n) => {
     };
 };
 
-export const buildDateLabelText = (days, fallbackDate = '') => {
-    if (!days || days.length === 0) return fallbackDate || '';
+export const formatPassDisplayDate = (days, eventOrFallback = null) => {
+    let parsed = [];
+    if (Array.isArray(days) && days.length > 0) {
+        parsed = days
+            .map((d) => {
+                const raw = d.eventDate || d.date || d.label;
+                if (!raw) return null;
+                const dt = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
+                return isNaN(dt.getTime()) ? null : dt;
+            })
+            .filter(Boolean);
+    }
 
-    const parsed = days
-        .filter((d) => d.eventDate || d.label)
-        .map((d) => {
-            const raw = d.eventDate || d.label;
-            const dt = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-            if (isNaN(dt.getTime())) return null;
-            return {
-                day: dt.getDate(),
-                month: dt.toLocaleString('en-US', { month: 'long' }).toUpperCase(),
-                year: dt.getFullYear(),
-            };
-        })
-        .filter(Boolean);
+    if (parsed.length === 0 && eventOrFallback) {
+        if (typeof eventOrFallback === 'string') {
+            if (eventOrFallback.trim()) {
+                const dt = new Date(eventOrFallback.includes('T') ? eventOrFallback : eventOrFallback + 'T00:00:00');
+                if (!isNaN(dt.getTime())) {
+                    parsed.push(dt);
+                } else {
+                    return eventOrFallback;
+                }
+            }
+        } else if (typeof eventOrFallback === 'object') {
+            if (eventOrFallback.startsAt) {
+                const d1 = new Date(eventOrFallback.startsAt);
+                if (!isNaN(d1.getTime())) parsed.push(d1);
+            }
+            if (eventOrFallback.endsAt) {
+                const d2 = new Date(eventOrFallback.endsAt);
+                if (!isNaN(d2.getTime()) && (!parsed[0] || d2.toDateString() !== parsed[0].toDateString())) {
+                    parsed.push(d2);
+                }
+            }
+        }
+    }
 
-    if (parsed.length === 0) return fallbackDate || '';
+    if (parsed.length === 0) {
+        return 'Dec 11th , 12th 2026';
+    }
 
-    const formatOrd = (day) => {
-        const { suffix } = ordinal(day);
-        return `${day}${suffix.toUpperCase()}`;
-    };
+    // Sort chronologically
+    parsed.sort((a, b) => a.getTime() - b.getTime());
+
+    const d1 = parsed[0];
+    const month = d1.toLocaleDateString('en-US', { month: 'short' });
+    const year = d1.getFullYear();
+    const day1 = d1.getDate();
+    const ord1 = ordinal(day1).suffix;
 
     if (parsed.length === 1) {
-        return `${formatOrd(parsed[0].day)} ${parsed[0].month}, ${parsed[0].year}`;
+        return `${month} ${day1}${ord1} ${year}`;
     }
 
-    const allSameMonth = parsed.every(
-        (p) => p.month === parsed[0].month && p.year === parsed[0].year
+    const allSameMonthYear = parsed.every(
+        (d) => d.toLocaleDateString('en-US', { month: 'short' }) === month && d.getFullYear() === year
     );
 
-    if (allSameMonth) {
-        return `${parsed.map((p) => formatOrd(p.day)).join(', ')} ${parsed[0].month}, ${parsed[0].year}`;
+    if (allSameMonthYear) {
+        const daysFormatted = parsed
+            .map((d) => `${d.getDate()}${ordinal(d.getDate()).suffix}`)
+            .join(' , ');
+        return `${month} ${daysFormatted} ${year}`;
     }
 
-    return `${parsed.map((p) => `${formatOrd(p.day)} ${p.month}`).join(', ')}, ${parsed[parsed.length - 1].year}`;
+    return `${month} ${day1}${ord1} – ${parsed[parsed.length - 1].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+};
+
+export const buildDateLabelText = (days, fallbackDate = '') => {
+    return formatPassDisplayDate(days, fallbackDate || 'Dec 11th , 12th 2026');
 };
 
 const BulkDownloadPass = ({
@@ -163,6 +196,7 @@ const BulkDownloadPass = ({
     const formattedSeq = seatOrSeq
         ? (String(seatOrSeq).startsWith('#') ? String(seatOrSeq) : `#${seatOrSeq}`)
         : '';
+    const formattedDate = formatPassDisplayDate(validDays, eventDate || 'Dec 11th , 12th 2026');
 
     const cardContent = (
         <div
@@ -192,52 +226,6 @@ const BulkDownloadPass = ({
                         objectFit: 'cover',
                     }}
                 />
-
-                {(() => {
-                    const dateStr = buildDateLabel(validDays) || eventDate || '14TH – 16TH NOVEMBER, 2026';
-                    const rawV = (eventVenue || 'RENAISSANCE UNIVERSITY').trim();
-                    let vName = rawV;
-                    let vLoc = null;
-                    if (rawV.includes(',')) {
-                        const parts = rawV.split(',');
-                        vName = parts[0].trim();
-                        vLoc = parts.slice(1).join(',').trim();
-                    } else if (rawV.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
-                        vLoc = 'CAMPUS, INDORE';
-                    }
-
-                    return (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: '58%',
-                                left: '39.5%',
-                                width: '42%',
-                                backgroundColor: '#fef3e7',
-                                padding: 'clamp(2px, 0.4vw, 5px) 0',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 'clamp(1px, 0.3vw, 4px)',
-                                lineHeight: 1.25,
-                            }}
-                        >
-                            <div style={{ height: '1px', backgroundColor: '#d8c8b8', marginBottom: 'clamp(1px, 0.2vw, 3px)', width: '100%' }} />
-                            <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                <span style={{ color: '#6f3b25' }}>EVENT DATES: </span>
-                                {dateStr}
-                            </div>
-                            <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212' }}>
-                                <span style={{ color: '#6f3b25' }}>VENUE: </span>
-                                {vName.toUpperCase()}
-                            </div>
-                            {vLoc && (
-                                <div style={{ fontSize: 'clamp(5.5px, 1.1vw, 10px)', fontWeight: '700', color: '#4a3525' }}>
-                                    {vLoc.toUpperCase()}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })()}
             </div>
             */}
 
@@ -304,38 +292,7 @@ const BulkDownloadPass = ({
                     )}
                 </div>
 
-                {/* Serial Number badge — first brown strip below the QR box */}
-                {formattedSeq && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '17%',
-                            right: '5.5%',
-                            width: '22%',
-                            height: '9%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontSize: 'clamp(6px, 1.6vw, 13px)',
-                                fontWeight: '700',
-                                color: '#ffffff',
-                                fontFamily: 'Arial, Helvetica, sans-serif',
-                                letterSpacing: '1.5px',
-                                whiteSpace: 'nowrap',
-                                textAlign: 'center',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {formattedSeq}
-                        </span>
-                    </div>
-                )}
-
-                {/* Category badge — second brown strip below serial number */}
+                {/* Category badge — upper brown strip below QR box */}
                 {category && (
                     <div
                         style={{
@@ -353,16 +310,76 @@ const BulkDownloadPass = ({
                             style={{
                                 fontSize: 'clamp(6px, 1.6vw, 13px)',
                                 fontWeight: '700',
-                                color: '#ffffff',
+                                color: '#000000',
                                 fontFamily: 'Arial, Helvetica, sans-serif',
                                 letterSpacing: '1.5px',
                                 whiteSpace: 'nowrap',
                                 textAlign: 'center',
                                 textTransform: 'uppercase',
-                                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
                             }}
                         >
                             {category}
+                        </span>
+                    </div>
+                )}
+
+                {/* Serial Number badge — middle brown strip below the QR box */}
+                {formattedSeq && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            bottom: '17%',
+                            right: '5.5%',
+                            width: '22%',
+                            height: '9%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontSize: 'clamp(6px, 1.6vw, 13px)',
+                                fontWeight: '700',
+                                color: '#000000',
+                                fontFamily: 'Arial, Helvetica, sans-serif',
+                                letterSpacing: '1.5px',
+                                whiteSpace: 'nowrap',
+                                textAlign: 'center',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            {formattedSeq}
+                        </span>
+                    </div>
+                )}
+
+                {/* Date badge — lower strip below QR box */}
+                {formattedDate && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            bottom: '8%',
+                            right: '5.5%',
+                            width: '22%',
+                            height: '9%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontSize: 'clamp(5.5px, 1.35vw, 11px)',
+                                fontWeight: '700',
+                                color: '#000000',
+                                fontFamily: 'Arial, Helvetica, sans-serif',
+                                letterSpacing: '0.5px',
+                                whiteSpace: 'nowrap',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {formattedDate}
                         </span>
                     </div>
                 )}

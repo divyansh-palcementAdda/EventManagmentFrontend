@@ -1,7 +1,9 @@
 import React from 'react';
+import { formatPassDisplayDate } from './bulkDownloadpass';
 
 import frontPass from '../../assets/14.png'
 import backpass from '../../assets/final.png'
+// import backpass from "../../assets/dsfinal.png"
 
 /**
  * PassEmailTemplate
@@ -150,53 +152,6 @@ const PassEmailTemplate = ({
               objectFit: 'cover',
             }}
           />
-
-          {/* Top section details overlay on front pass */}
-          {(() => {
-            const dateStr = buildDateLabel(validDays) || eventDate || '14TH – 16TH NOVEMBER, 2026';
-            const rawV = (eventVenue || 'RENAISSANCE UNIVERSITY').trim();
-            let vName = rawV;
-            let vLoc = null;
-            if (rawV.includes(',')) {
-              const parts = rawV.split(',');
-              vName = parts[0].trim();
-              vLoc = parts.slice(1).join(',').trim();
-            } else if (rawV.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
-              vLoc = 'CAMPUS, INDORE';
-            }
-
-            return (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '58%',
-                  left: '39.5%',
-                  width: '42%',
-                  backgroundColor: '#fef3e7',
-                  padding: 'clamp(2px, 0.4vw, 5px) 0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'clamp(1px, 0.3vw, 4px)',
-                  lineHeight: 1.25,
-                }}
-              >
-                <div style={{ height: '1px', backgroundColor: '#d8c8b8', marginBottom: 'clamp(1px, 0.2vw, 3px)', width: '100%' }} />
-                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  <span style={{ color: '#6f3b25' }}>EVENT DATES: </span>
-                  {dateStr}
-                </div>
-                <div style={{ fontSize: 'clamp(6.5px, 1.25vw, 11.5px)', fontWeight: '700', color: '#121212' }}>
-                  <span style={{ color: '#6f3b25' }}>VENUE: </span>
-                  {vName.toUpperCase()}
-                </div>
-                {vLoc && (
-                  <div style={{ fontSize: 'clamp(5.5px, 1.1vw, 10px)', fontWeight: '700', color: '#4a3525' }}>
-                    {vLoc.toUpperCase()}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
 
         {/* ── BACK PASS + QR overlay + badge text ──────────────────── */}
@@ -262,38 +217,7 @@ const PassEmailTemplate = ({
             )}
           </div>
 
-          {/* Serial Number badge — first brown strip below the QR box */}
-          {seatOrSeq && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '17%',
-                right: '5.5%',
-                width: '22%',
-                height: '9%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 'clamp(6px, 1.6vw, 13px)',
-                  fontWeight: '700',
-                  color: '#ffffff',
-                  fontFamily: 'Arial, Helvetica, sans-serif',
-                  letterSpacing: '1.5px',
-                  whiteSpace: 'nowrap',
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
-                }}
-              >
-                #{seatOrSeq}
-              </span>
-            </div>
-          )}
-
-          {/* Category badge — second brown strip below serial number */}
+          {/* Category badge — upper brown strip below QR box */}
           {category && (
             <div
               style={{
@@ -311,19 +235,82 @@ const PassEmailTemplate = ({
                 style={{
                   fontSize: 'clamp(6px, 1.6vw, 13px)',
                   fontWeight: '700',
-                  color: '#ffffff',
+                  color: '#000000',
                   fontFamily: 'Arial, Helvetica, sans-serif',
                   letterSpacing: '1.5px',
                   whiteSpace: 'nowrap',
                   textAlign: 'center',
                   textTransform: 'uppercase',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.8)',
                 }}
               >
                 {category}
               </span>
             </div>
           )}
+
+          {/* Serial Number badge — middle brown strip below the QR box */}
+          {seatOrSeq && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '17%',
+                right: '5.5%',
+                width: '22%',
+                height: '9%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(6px, 1.6vw, 13px)',
+                  fontWeight: '700',
+                  color: '#000000',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
+                  letterSpacing: '1.5px',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                }}
+              >
+                #{seatOrSeq}
+              </span>
+            </div>
+          )}
+
+          {/* Date badge — lower strip below QR box */}
+          {(() => {
+            const dateBadgeStr = formatPassDisplayDate(validDays, eventDate || 'Dec 11th , 12th 2026');
+            return dateBadgeStr ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '8%',
+                  right: '5.5%',
+                  width: '22%',
+                  height: '9%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 'clamp(5.5px, 1.35vw, 11px)',
+                    fontWeight: '700',
+                    color: '#000000',
+                    fontFamily: 'Arial, Helvetica, sans-serif',
+                    letterSpacing: '0.5px',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                  }}
+                >
+                  {dateBadgeStr}
+                </span>
+              </div>
+            ) : null;
+          })()}
 
           {/* Sequence Number — in the left brown strip, rotated (kept from original) */}
           {seatOrSeq && (
