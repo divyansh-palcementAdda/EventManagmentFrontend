@@ -678,7 +678,7 @@ const EventDetail = () => {
       </div>
 
       {/* Dynamic Pass Categories & Policies Card */}
-      <EventCategoriesCard eventId={eventId} eventCode={event?.eventCode} />
+      <EventCategoriesCard eventId={eventId} eventCode={event?.eventCode} onCategoriesUpdated={fetchConfiguredCategories} />
 
       {/* Enhanced Passes for This Event Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">

@@ -121,11 +121,15 @@ const PassCategories = () => {
     setEditingCategory(null);
   };
 
+  const refreshAll = async () => {
+    await Promise.all([fetchCategories(), fetchEvents()]);
+  };
+
   const handleToggleActive = async (cat) => {
     try {
       await categoryService.toggleCategoryActive(cat.id);
       toast.success(`Category "${cat.name}" status updated`);
-      fetchCategories();
+      refreshAll();
     } catch (err) {
       console.error('Failed to toggle category status:', err);
       toast.error(err.message || 'Failed to toggle category status');
@@ -138,7 +142,7 @@ const PassCategories = () => {
       toast.error('Category Name is required');
       return;
     }
-    if (!editingCategory && !formData.code.trim()) {
+    if (!formData.code.trim()) {
       toast.error('Category Code is required');
       return;
     }
@@ -152,6 +156,9 @@ const PassCategories = () => {
       if (editingCategory) {
         await categoryService.updateCategory(editingCategory.id, {
           name: formData.name.trim(),
+          code: formData.code.trim().toUpperCase(),
+          scope: formData.scope,
+          eventId: formData.scope === 'EVENT_SPECIFIC' ? formData.eventId : null,
           description: formData.description?.trim(),
           displayOrder: parseInt(formData.displayOrder, 10) || 0,
           active: formData.active
@@ -169,7 +176,7 @@ const PassCategories = () => {
         toast.success('Category created successfully');
       }
       handleCloseModal();
-      fetchCategories();
+      refreshAll();
     } catch (err) {
       console.error('Failed to save category:', err);
       toast.error(err.message || 'Failed to save category');
@@ -229,7 +236,7 @@ const PassCategories = () => {
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
-            onClick={fetchCategories}
+            onClick={refreshAll}
             disabled={loading}
             className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
             title="Refresh"
@@ -446,82 +453,78 @@ const PassCategories = () => {
                 />
               </div>
 
-              {!editingCategory && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Category Code *
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Category Code *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '')
+                    })
+                  }
+                  placeholder="e.g. VIP, DELEGATE, STUDENT"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono uppercase"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Unique uppercase identifier used in pass numbering and APIs.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Scope *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label
+                    className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                      formData.scope === 'GLOBAL'
+                        ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="scope"
+                      value="GLOBAL"
+                      checked={formData.scope === 'GLOBAL'}
+                      onChange={(e) => setFormData({ ...formData, scope: e.target.value, eventId: '' })}
+                      className="text-purple-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <div className="font-semibold text-sm">Global</div>
+                      <div className="text-xs text-gray-500">Reusable across all events</div>
+                    </div>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '')
-                      })
-                    }
-                    placeholder="e.g. VIP, DELEGATE, STUDENT"
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono uppercase"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Unique uppercase identifier used in pass numbering and APIs.
-                  </p>
-                </div>
-              )}
 
-              {!editingCategory && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Scope *
+                  <label
+                    className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                      formData.scope === 'EVENT_SPECIFIC'
+                        ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="scope"
+                      value="EVENT_SPECIFIC"
+                      checked={formData.scope === 'EVENT_SPECIFIC'}
+                      onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
+                      className="text-purple-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <div className="font-semibold text-sm">Event-Specific</div>
+                      <div className="text-xs text-gray-500">Only for a single event</div>
+                    </div>
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-                        formData.scope === 'GLOBAL'
-                          ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="scope"
-                        value="GLOBAL"
-                        checked={formData.scope === 'GLOBAL'}
-                        onChange={(e) => setFormData({ ...formData, scope: e.target.value, eventId: '' })}
-                        className="text-purple-600 focus:ring-indigo-500"
-                      />
-                      <div>
-                        <div className="font-semibold text-sm">Global</div>
-                        <div className="text-xs text-gray-500">Reusable across all events</div>
-                      </div>
-                    </label>
-
-                    <label
-                      className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-                        formData.scope === 'EVENT_SPECIFIC'
-                          ? 'border-purple-600 bg-purple-50/50 text-purple-900 shadow-sm'
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="scope"
-                        value="EVENT_SPECIFIC"
-                        checked={formData.scope === 'EVENT_SPECIFIC'}
-                        onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                        className="text-purple-600 focus:ring-indigo-500"
-                      />
-                      <div>
-                        <div className="font-semibold text-sm">Event-Specific</div>
-                        <div className="text-xs text-gray-500">Only for a single event</div>
-                      </div>
-                    </label>
-                  </div>
                 </div>
-              )}
+              </div>
 
-              {!editingCategory && formData.scope === 'EVENT_SPECIFIC' && (
+              {formData.scope === 'EVENT_SPECIFIC' && (
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                     Select Event *

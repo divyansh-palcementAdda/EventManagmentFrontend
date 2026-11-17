@@ -32,7 +32,7 @@ const IDENTITY_POLICIES = [
   { value: 'NO_IDENTITY', label: 'No Identity (Anonymous / Badge Only)' }
 ];
 
-const EventCategoriesCard = ({ eventId, eventCode }) => {
+const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
   const [eventCategories, setEventCategories] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -129,6 +129,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       await categoryService.toggleEventCategoryActive(eventId, cat.id);
       toast.success(`Category "${cat.categoryName}" status updated`);
       fetchEventCategories();
+      if (onCategoriesUpdated) onCategoriesUpdated();
     } catch (err) {
       console.error('Failed to toggle category active status:', err);
       toast.error(err.message || 'Failed to update category status');
@@ -153,6 +154,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       toast.success('Category enabled for event');
       setAddModalOpen(false);
       fetchEventCategories();
+      if (onCategoriesUpdated) onCategoriesUpdated();
     } catch (err) {
       console.error('Failed to enable category:', err);
       toast.error(err.message || 'Failed to enable category');
@@ -171,6 +173,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
       toast.success('Category policy updated');
       setEditModalOpen(false);
       fetchEventCategories();
+      if (onCategoriesUpdated) onCategoriesUpdated();
     } catch (err) {
       console.error('Failed to update policy:', err);
       toast.error(err.message || 'Failed to update policy');
@@ -671,6 +674,7 @@ const EventCategoriesCard = ({ eventId, eventCode }) => {
           categoryName={selectedForBuilder.categoryName}
           onPublished={() => {
             fetchEventCategories();
+            if (onCategoriesUpdated) onCategoriesUpdated();
           }}
         />
       )}

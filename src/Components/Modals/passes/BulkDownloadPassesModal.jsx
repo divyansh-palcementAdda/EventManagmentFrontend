@@ -455,13 +455,6 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                   <div className="w-full border-b pb-2">
                     <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold tracking-wider">
                       <span className="text-purple-700 uppercase font-extrabold">{p.eventCode}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                        noQr
-                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                          : 'bg-purple-100 text-purple-800 border border-purple-200'
-                      }`}>
-                        {p.category || 'PASS'} {noQr ? '• NO QR' : ''}
-                      </span>
                       <span>PASS #{p.sequenceNumber || idx + 1}</span>
                     </div>
                     <h4 className="font-extrabold text-sm text-gray-900 mt-1 truncate">{p.eventName}</h4>
@@ -469,30 +462,95 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                   </div>
 
                   {noQr ? (
-                    <div className="my-3 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-dashed border-amber-300 flex flex-col items-center justify-center space-y-1 w-36 h-36 mx-auto">
-                      <ShieldCheck className="w-10 h-10 text-amber-600 mb-1" />
-                      <span className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide">
-                        Badge Pass
-                      </span>
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-                        No QR Code
-                      </span>
+                    <div className="my-3">
+                      <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-dashed border-amber-300 flex flex-col items-center justify-center space-y-1 w-36 h-36 mx-auto">
+                        <ShieldCheck className="w-10 h-10 text-amber-600 mb-1" />
+                        <span className="font-extrabold text-[11px] text-amber-900 uppercase tracking-wide">
+                          Badge Pass
+                        </span>
+                        <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                          No QR Code
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-col flex-nowrap gap-1 items-center">
+                        <div className="flex items-center justify-center font-bold text-xs text-purple-700 uppercase tracking-wider bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                          {p.category || 'PASS'}
+                        </div>
+                        <div className="flex items-center justify-center font-mono font-black text-xs text-purple-700 bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                          {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
+                        </div>
+                        {p.validDays && p.validDays.length > 0 && (
+                          <div className="flex items-center justify-center text-[10px] font-medium text-purple-700 bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                            {(() => {
+                              const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
+                              if (dates.length === 0) return '-';
+                              const parsedDates = dates.map(d => new Date(d)).filter(d => !isNaN(d));
+                              if (parsedDates.length === 0) return dates[0] || '-';
+                              if (parsedDates.length === 1) {
+                                return parsedDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                              }
+                              const sortedDates = parsedDates.sort((a, b) => a - b);
+                              const firstDate = sortedDates[0];
+                              const lastDate = sortedDates[sortedDates.length - 1];
+                              const isSameDay = firstDate.toDateString() === lastDate.toDateString();
+                              if (isSameDay) {
+                                return firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                              }
+                              const startMonth = firstDate.toLocaleDateString('en-US', { month: 'short' });
+                              const startDay = firstDate.getDate();
+                              const endDay = lastDate.getDate();
+                              const year = firstDate.getFullYear();
+                              return `${startMonth} ${startDay}–${endDay}, ${year}`;
+                            })()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <div className="my-3 p-2 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
-                      <img
-                        src={getQrUrl(p)}
-                        alt={`QR for ${p.passNumber}`}
-                        className="w-36 h-36 object-contain mx-auto"
-                        loading="lazy"
-                      />
+                    <div className="my-3">
+                      <div className="p-2 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
+                        <img
+                          src={getQrUrl(p)}
+                          alt={`QR for ${p.passNumber}`}
+                          className="w-36 h-36 object-contain mx-auto"
+                          loading="lazy"
+                        />
+                      </div>
                     </div>
                   )}
 
-                  <div className="w-full">
-                    <div className="font-mono font-black text-sm tracking-wider text-purple-900 bg-purple-50 py-1 px-2 rounded border border-purple-200">
-                      {p.passNumber}
+                  <div className="w-full flex flex-col flex-nowrap gap-1 items-center">
+                    <div className="flex items-center justify-center font-bold text-xs text-purple-700 uppercase tracking-wider bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                      {p.category || 'PASS'}
                     </div>
+                    <div className="flex items-center justify-center font-mono font-black text-xs text-purple-700 bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                      {p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop()}
+                    </div>
+                    {p.validDays && p.validDays.length > 0 && (
+                      <div className="flex items-center justify-center text-[10px] font-medium text-purple-700 bg-gray-100 h-8 w-32 rounded-full border border-gray-300">
+                        {(() => {
+                          const dates = p.validDays.map(d => d.eventDate || d.label).filter(Boolean);
+                          if (dates.length === 0) return '-';
+                          const parsedDates = dates.map(d => new Date(d)).filter(d => !isNaN(d));
+                          if (parsedDates.length === 0) return dates[0] || '-';
+                          if (parsedDates.length === 1) {
+                            return parsedDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                          }
+                          const sortedDates = parsedDates.sort((a, b) => a - b);
+                          const firstDate = sortedDates[0];
+                          const lastDate = sortedDates[sortedDates.length - 1];
+                          const isSameDay = firstDate.toDateString() === lastDate.toDateString();
+                          if (isSameDay) {
+                            return firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                          }
+                          const startMonth = firstDate.toLocaleDateString('en-US', { month: 'short' });
+                          const startDay = firstDate.getDate();
+                          const endDay = lastDate.getDate();
+                          const year = firstDate.getFullYear();
+                          return `${startMonth} ${startDay}–${endDay}, ${year}`;
+                        })()}
+                      </div>
+                    )}
 
                     {p.attendeeName ? (
                       <div className="mt-2 text-xs font-semibold text-gray-800">
@@ -505,12 +563,6 @@ const BulkDownloadPassesModal = ({ isOpen, onClose, event, eventDays = [], categ
                     ) : (
                       <div className="mt-2 text-[10px] font-medium text-amber-700 bg-amber-50 rounded px-1.5 py-0.5">
                         Unactivated · Scan QR to register attendee
-                      </div>
-                    )}
-
-                    {p.validDays && p.validDays.length > 0 && (
-                      <div className="mt-1 text-[10px] text-gray-500">
-                        Valid: {p.validDays.map((d) => `Day ${d.dayNumber}`).join(', ')}
                       </div>
                     )}
                   </div>
