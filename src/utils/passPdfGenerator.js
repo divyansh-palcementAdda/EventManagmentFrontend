@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import backpass from '../assets/final.png';
+import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
 /**
  * Preload an image from a URL or Base64 into an HTMLImageElement
@@ -34,11 +35,11 @@ export const getPassQrUrl = (tokenOrPass) => {
     typeof tokenOrPass === 'string'
       ? tokenOrPass
       : tokenOrPass?.rawToken ||
-        tokenOrPass?.passNumber ||
-        tokenOrPass?.qrData ||
-        tokenOrPass?.token ||
-        tokenOrPass?.id ||
-        '';
+      tokenOrPass?.passNumber ||
+      tokenOrPass?.qrData ||
+      tokenOrPass?.token ||
+      tokenOrPass?.id ||
+      '';
   if (!identifier) return null;
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const activationUrl = `${origin}/activate/${encodeURIComponent(identifier)}`;
@@ -66,7 +67,7 @@ export const isNoQrPass = (pass) => {
 /**
  * Render a single pass onto a 1826x686 HTML5 canvas
  */
-export const renderPassToCanvas = async (pass, bgImg) => {
+export const renderPassToCanvas = async (pass, bgImg, event = {}) => {
   const canvas = document.createElement('canvas');
   canvas.width = 1826;
   canvas.height = 686;
@@ -138,20 +139,18 @@ export const renderPassToCanvas = async (pass, bgImg) => {
   const catBoxX = Math.round(1826 - 1826 * 0.055 - catBoxWidth); // ~1324px
   const catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09)); // ~446px
 
-  // 3. Category Badge (Upper brown box)
+  // 3. Category Badge (Upper box)
   if (cat) {
     ctx.save();
     ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillText(cat, catBoxX + catBoxWidth / 2 + 2, catBoxY + catBoxHeight / 2 + 2);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.fillText(cat, catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
     ctx.restore();
   }
 
-  // 4. Serial Number Badge (Lower brown box)
+  // 4. Serial Number Badge (Middle box)
   const serialBoxWidth = catBoxWidth;
   const serialBoxHeight = catBoxHeight;
   const serialBoxX = catBoxX;
@@ -162,12 +161,29 @@ export const renderPassToCanvas = async (pass, bgImg) => {
     ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.fillText(seqBadge, serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
     ctx.restore();
   }
 
-  // 5. Left Sequence Strip (Rotated -90 degrees on left strip)
+  // 5. Date Badge (Lower box)
+  const dateBoxWidth = catBoxWidth;
+  const dateBoxHeight = catBoxHeight;
+  const dateBoxX = catBoxX;
+  const dateBoxY = Math.round(686 * (1.0 - 0.08 - 0.09)); // ~570px
+
+  const formattedDate = formatPassDisplayDate(pass.validDays, event);
+  if (formattedDate) {
+    ctx.save();
+    ctx.font = 'bold 26px Arial, Helvetica, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000';
+    ctx.fillText(formattedDate, dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
+    ctx.restore();
+  }
+
+  // 6. Left Sequence Strip (Rotated -90 degrees on left strip)
   if (seqBadge) {
     ctx.save();
     ctx.translate(34, 620);
@@ -217,7 +233,7 @@ export const generatePassesPdf = async (passList, event = {}, onProgress = null)
     if (onProgress) onProgress(i + 1, total);
 
     const pass = passList[i];
-    const canvas = await renderPassToCanvas(pass, bgImg);
+    const canvas = await renderPassToCanvas(pass, bgImg, event);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
     if (i > 0) {

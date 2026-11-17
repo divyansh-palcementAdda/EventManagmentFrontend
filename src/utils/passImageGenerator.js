@@ -1,6 +1,7 @@
 import { BrowserQRCodeSvgWriter } from '@zxing/browser';
 import frontPassImg from '../assets/14.png';
 import backPassImg from '../assets/final.png';
+import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
 const ordinal = (n) => {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -122,100 +123,6 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
   // 1. Draw Front Pass
   ctx.drawImage(frontImg, 0, 0, width, frontHeight);
 
-  // 2. Clear baked-in text area below brown pill to prevent overlapping
-  ctx.fillStyle = '#fef3e7';
-  ctx.fillRect(690, 390, 780, 255);
-
-  // 3. Subtle aesthetic separator line
-  ctx.strokeStyle = '#d8c8b8';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(720, 405);
-  ctx.lineTo(1420, 405);
-  ctx.stroke();
-
-  // 4. Dynamic Top-Section Text Layout Engine
-  const contentStartX = 720;
-  const maxContentWidth = 700;
-  let currentY = 435;
-
-  // --- SECTION A: EVENT DATES ---
-  const dateText = buildDateLabel(passData.validDays) || passData.eventDate || '14TH – 16TH NOVEMBER, 2026';
-  if (dateText) {
-    const datePrefix = 'EVENT DATES: ';
-    let dateFontSize = 22;
-    ctx.font = `bold ${dateFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
-
-    while (dateFontSize > 16 && (ctx.measureText(datePrefix).width + ctx.measureText(dateText).width) > maxContentWidth) {
-      dateFontSize -= 1;
-      ctx.font = `bold ${dateFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
-    }
-
-    ctx.fillStyle = '#6f3b25';
-    ctx.fillText(datePrefix, contentStartX, currentY);
-
-    const prefixW = ctx.measureText(datePrefix).width;
-    ctx.fillStyle = '#121212';
-    ctx.fillText(dateText, contentStartX + prefixW, currentY);
-
-    currentY += 40;
-  }
-
-  // --- SECTION B: VENUE & LOCATION ---
-  let rawVenue = passData.eventVenue || passData.venue || 'RENAISSANCE UNIVERSITY';
-  let effectiveVenue = rawVenue.trim();
-  let effectiveLocation = null;
-
-  if (effectiveVenue.includes(',')) {
-    const parts = effectiveVenue.split(',');
-    effectiveVenue = parts[0].trim();
-    effectiveLocation = parts.slice(1).join(',').trim();
-  } else if (effectiveVenue.toUpperCase() === 'RENAISSANCE UNIVERSITY') {
-    effectiveLocation = 'CAMPUS, INDORE';
-  }
-
-  const venuePrefix = 'VENUE: ';
-  let venueFontSize = 23;
-  ctx.font = `bold ${venueFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
-  let vPrefixW = ctx.measureText(venuePrefix).width;
-  let remainingW = maxContentWidth - vPrefixW;
-
-  let venueLines = wrapCanvasText(ctx, effectiveVenue.toUpperCase(), remainingW);
-  while (venueLines.length > 2 && venueFontSize > 18) {
-    venueFontSize -= 1;
-    ctx.font = `bold ${venueFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
-    vPrefixW = ctx.measureText(venuePrefix).width;
-    remainingW = maxContentWidth - vPrefixW;
-    venueLines = wrapCanvasText(ctx, effectiveVenue.toUpperCase(), remainingW);
-  }
-
-  ctx.fillStyle = '#6f3b25';
-  ctx.fillText(venuePrefix, contentStartX, currentY);
-
-  ctx.fillStyle = '#121212';
-  if (venueLines.length > 0) {
-    ctx.fillText(venueLines[0], contentStartX + vPrefixW, currentY);
-  }
-  for (let i = 1; i < venueLines.length; i++) {
-    currentY += 30;
-    ctx.fillText(venueLines[i], contentStartX + vPrefixW, currentY);
-  }
-
-  currentY += 32;
-
-  // --- SECTION C: CAMPUS / LOCATION DETAILS ---
-  if (effectiveLocation) {
-    const locFontSize = 20;
-    ctx.font = `bold ${locFontSize}px 'Poppins', 'Segoe UI', sans-serif`;
-    const locLines = wrapCanvasText(ctx, effectiveLocation.toUpperCase(), remainingW);
-
-    ctx.fillStyle = '#4a3525';
-    for (const lLine of locLines) {
-      ctx.fillText(lLine, contentStartX + vPrefixW, currentY);
-      currentY += 26;
-    }
-  }
-
   // 2. Draw Back Pass
   const backOffsetY = frontHeight;
   ctx.drawImage(backImg, 0, backOffsetY, width, backHeight);
@@ -271,17 +178,15 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
     'STUDENT'
   ).toUpperCase();
 
+  ctx.save();
   ctx.font = "900 32px 'Poppins', 'Segoe UI', sans-serif";
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-
-  // Text shadow
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.fillText(categoryName, catBoxX + catBoxWidth / 2 + 2, catBoxY + catBoxHeight / 2 + 2);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#000000';
   ctx.fillText(categoryName, catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
+  ctx.restore();
 
-  // 5. Serial Number Badge (lower brown strip)
+  // 5. Serial Number Badge (middle brown strip)
   const seq = passData.sequenceNumber || attendeeData?.sequenceNumber || 1;
   const seqFormatted = String(seq).padStart(4, '0');
   const serialText = `#${seqFormatted}`;
@@ -291,13 +196,32 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
   const serialBoxX = catBoxX;
   const serialBoxY = Math.round(backOffsetY + backHeight * (1 - 0.17 - 0.09));
 
+  ctx.save();
   ctx.font = "800 30px 'Poppins', 'Segoe UI', sans-serif";
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.fillText(serialText, serialBoxX + serialBoxWidth / 2 + 2, serialBoxY + serialBoxHeight / 2 + 2);
-  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000000';
   ctx.fillText(serialText, serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+  ctx.restore();
 
-  // 6. Rotated Sequence Number on Left Strip
+  // 6. Date Badge (lower strip)
+  const dateBoxWidth = catBoxWidth;
+  const dateBoxHeight = catBoxHeight;
+  const dateBoxX = catBoxX;
+  const dateBoxY = Math.round(backOffsetY + backHeight * (1 - 0.08 - 0.09));
+
+  const passDateText = formatPassDisplayDate(passData.validDays, passData.eventDate || attendeeData?.eventDate || 'Dec 11th , 12th 2026');
+  if (passDateText) {
+    ctx.save();
+    ctx.font = "bold 26px 'Poppins', 'Segoe UI', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000';
+    ctx.fillText(passDateText, dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
+    ctx.restore();
+  }
+
+  // 7. Rotated Sequence Number on Left Strip
   ctx.save();
   ctx.translate(Math.round(width * 0.03), Math.round(backOffsetY + backHeight * 0.70));
   ctx.rotate(-Math.PI / 2);
