@@ -7,6 +7,8 @@ import categoryService from '../../Api-Services/categoryService';
 import passAllotmentService from '../../Api-Services/passAllotmentService';
 import EventCategoriesCard from '../../Components/eventCategories/EventCategoriesCard';
 import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownloadPassesModal';
+import BulkFullPassDownloadModal from '../../Components/Modals/passes/BulkFullPassDownloadModal';
+import BulkDownloadPass from '../../Components/emailPass/bulkDownloadpass';
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
 import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/GatekeeperManagementModal';
@@ -47,8 +49,70 @@ import {
   Eye,
   ArrowUpDown,
   SlidersHorizontal,
+  Tags,
+  Smartphone,
+  ShieldAlert,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const getCategoryCardStyle = (code, index, isSelected) => {
+  const upper = (code || '').toUpperCase();
+  if (isSelected) {
+    return {
+      container: 'border-purple-600 bg-purple-50/90 shadow-md ring-2 ring-purple-500/25 -translate-y-0.5',
+      badge: 'bg-purple-600 text-white',
+      iconBox: 'bg-purple-600 text-white',
+    };
+  }
+
+  if (upper.includes('VIP')) {
+    return {
+      container: 'border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50/20 hover:shadow-sm',
+      badge: 'bg-amber-100 text-amber-800 border border-amber-200',
+      iconBox: 'bg-amber-100 text-amber-700',
+    };
+  }
+  if (upper.includes('STUDENT')) {
+    return {
+      container: 'border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-sm',
+      badge: 'bg-blue-100 text-blue-800 border border-blue-200',
+      iconBox: 'bg-blue-100 text-blue-700',
+    };
+  }
+  if (upper.includes('STAFF') || upper.includes('CREW')) {
+    return {
+      container: 'border-gray-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-sm',
+      badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+      iconBox: 'bg-emerald-100 text-emerald-700',
+    };
+  }
+  if (upper.includes('PRESS') || upper.includes('MEDIA')) {
+    return {
+      container: 'border-gray-200 bg-white hover:border-rose-400 hover:bg-rose-50/20 hover:shadow-sm',
+      badge: 'bg-rose-100 text-rose-800 border border-rose-200',
+      iconBox: 'bg-rose-100 text-rose-700',
+    };
+  }
+
+  const palettes = [
+    {
+      container: 'border-gray-200 bg-white hover:border-purple-400 hover:bg-purple-50/20 hover:shadow-sm',
+      badge: 'bg-purple-100 text-purple-800 border border-purple-200',
+      iconBox: 'bg-purple-100 text-purple-700',
+    },
+    {
+      container: 'border-gray-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/20 hover:shadow-sm',
+      badge: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+      iconBox: 'bg-indigo-100 text-indigo-700',
+    },
+    {
+      container: 'border-gray-200 bg-white hover:border-teal-400 hover:bg-teal-50/20 hover:shadow-sm',
+      badge: 'bg-teal-100 text-teal-800 border border-teal-200',
+      iconBox: 'bg-teal-100 text-teal-700',
+    },
+  ];
+  return palettes[index % palettes.length];
+};
 
 const EventDetail = () => {
   const { eventId } = useParams();
@@ -99,6 +163,7 @@ const EventDetail = () => {
 
   // Modals State
   const [isBulkDownloadOpen, setIsBulkDownloadOpen] = useState(false);
+  const [isBulkFullPassModalOpen, setIsBulkFullPassModalOpen] = useState(false);
   const [isBulkActivateOpen, setIsBulkActivateOpen] = useState(false);
   const [isValidityModalOpen, setIsValidityModalOpen] = useState(false);
   const [singlePassForValidity, setSinglePassForValidity] = useState(null);
@@ -149,6 +214,43 @@ const EventDetail = () => {
   const isNoQrActiveFullPass = useMemo(() => {
     return checkIsNoQr(activeFullPass);
   }, [activeFullPass, availableCategories]);
+
+  // Dynamic category cards list for interactive filter cards
+  const categoryCardsList = useMemo(() => {
+    if (availableCategories && availableCategories.length > 0) {
+      return availableCategories.map((c) => ({
+        id: c.id || c.categoryCode || c.code,
+        code: c.categoryCode || c.passCategoryCode || c.code,
+        name: c.categoryName || c.passCategoryName || c.name || c.categoryCode || c.code,
+        description: c.description || '',
+        activationMode: c.activationMode || 'SELF_SERVICE',
+        identityPolicy: c.identityPolicy || 'COLLECT_IDENTITY',
+        qrRequired: c.qrRequired ?? true,
+        passLimit: c.passLimit ?? null,
+        enabled: c.enabled ?? c.isActive ?? true,
+      }));
+    }
+    return [
+      {
+        id: 'STUDENT',
+        code: 'STUDENT',
+        name: 'Student Pass',
+        activationMode: 'SELF_SERVICE',
+        identityPolicy: 'COLLECT_IDENTITY',
+        qrRequired: true,
+        enabled: true,
+      },
+      {
+        id: 'OTHER',
+        code: 'OTHER',
+        name: 'General / Other',
+        activationMode: 'SELF_SERVICE',
+        identityPolicy: 'NO_IDENTITY',
+        qrRequired: true,
+        enabled: true,
+      },
+    ];
+  }, [availableCategories]);
 
   // Pass action modal (per-row)
   const [passActionModalId, setPassActionModalId] = useState(null);
@@ -548,6 +650,7 @@ const EventDetail = () => {
   useScrollLock(revokeModalOpen);
   useScrollLock(!!activeFullPass);
   useScrollLock(!!passActionModalId);
+  useScrollLock(isBulkFullPassModalOpen);
 
   if (loading) {
     return (
@@ -1056,6 +1159,14 @@ const EventDetail = () => {
 
               <button
                 type="button"
+                onClick={() => setIsBulkFullPassModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition"
+              >
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Bulk Full Pass (PDF)
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsBulkDownloadOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold shadow-sm transition"
               >
@@ -1123,6 +1234,225 @@ const EventDetail = () => {
             </div>
           </div>
 
+          {/* Dynamic Pass Categories Cards with Click-to-Filter */}
+          <div className="space-y-2.5 pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-purple-100 text-purple-700">
+                  <Tags className="w-3.5 h-3.5" />
+                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-gray-900">Pass Categories</h3>
+                <span className="text-[11px] text-gray-400 font-normal hidden sm:inline">
+                  — Select a card to filter passes in the table below
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {categoryFilter !== 'ALL' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('ALL');
+                      setPage(0);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg border border-purple-200 transition shadow-2xs"
+                  >
+                    <X className="w-3 h-3 text-purple-600" />
+                    <span>Clear Category Filter ({categoryFilter})</span>
+                  </button>
+                )}
+                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {categoryCardsList.length} Categories
+                </span>
+              </div>
+            </div>
+
+            {/* Category Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+              {/* All Passes Master Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryFilter('ALL');
+                  setPage(0);
+                }}
+                className={`p-3 rounded-xl text-left transition-all duration-200 relative flex flex-col justify-between gap-2.5 group cursor-pointer border ${
+                  categoryFilter === 'ALL'
+                    ? 'border-purple-600 bg-purple-50/90 shadow-md ring-2 ring-purple-500/25 -translate-y-0.5'
+                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20 hover:shadow-xs'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 w-full">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        categoryFilter === 'ALL'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'bg-gray-100 text-gray-600 group-hover:bg-purple-100 group-hover:text-purple-700'
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs sm:text-sm text-gray-900 truncate leading-snug group-hover:text-purple-700 transition-colors">
+                        All Passes
+                      </h4>
+                      <span
+                        className={`inline-block font-mono text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
+                          categoryFilter === 'ALL'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        ALL
+                      </span>
+                    </div>
+                  </div>
+                  {categoryFilter === 'ALL' ? (
+                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-600 text-white shadow-2xs">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" /> Active
+                    </span>
+                  ) : (
+                    <span className="shrink-0 text-[10px] text-gray-400 group-hover:text-purple-600 transition-colors opacity-0 group-hover:opacity-100 font-medium">
+                      Filter
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-semibold">
+                    Complete Event
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">
+                    {categoryCardsList.length} Categories
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-gray-100 text-[11px]">
+                  <span className="text-[10px] text-gray-500 font-medium">
+                    Total: <strong className="text-gray-900">{statsLoading ? '...' : (passStats?.totalPasses ?? totalElements)}</strong>
+                  </span>
+                  <span
+                    className={`text-[10px] font-semibold transition-colors ${
+                      categoryFilter === 'ALL'
+                        ? 'text-purple-700 font-bold'
+                        : 'text-gray-400 group-hover:text-purple-600'
+                    }`}
+                  >
+                    {categoryFilter === 'ALL' ? 'Showing all ↓' : 'Show all'}
+                  </span>
+                </div>
+              </button>
+
+              {/* Dynamic Categories Cards */}
+              {categoryCardsList.map((cat, idx) => {
+                const isSelected = categoryFilter === cat.code;
+                const style = getCategoryCardStyle(cat.code, idx, isSelected);
+
+                return (
+                  <button
+                    key={cat.id || cat.code}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setCategoryFilter('ALL');
+                      } else {
+                        setCategoryFilter(cat.code);
+                      }
+                      setPage(0);
+                    }}
+                    className={`p-3 rounded-xl text-left transition-all duration-200 relative flex flex-col justify-between gap-2.5 group cursor-pointer border ${style.container}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${style.iconBox}`}
+                        >
+                          <Ticket className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4
+                            className="font-bold text-xs sm:text-sm text-gray-900 truncate leading-snug group-hover:text-purple-700 transition-colors"
+                            title={cat.name}
+                          >
+                            {cat.name}
+                          </h4>
+                          <span className={`inline-block font-mono text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${style.badge}`}>
+                            {cat.code}
+                          </span>
+                        </div>
+                      </div>
+                      {isSelected ? (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-600 text-white shadow-2xs">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" /> Active
+                        </span>
+                      ) : (
+                        <span className="shrink-0 text-[10px] text-gray-400 group-hover:text-purple-600 transition-colors opacity-0 group-hover:opacity-100 font-medium">
+                          Filter
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Mode & Policy Badges */}
+                    <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                      {cat.activationMode === 'SELF_SERVICE' && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium">
+                          <Smartphone className="w-2.5 h-2.5" /> Self-Service
+                        </span>
+                      )}
+                      {cat.activationMode === 'SCAN_AUTO_ACTIVATE' && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60 font-medium">
+                          <CheckCircle className="w-2.5 h-2.5" /> Auto-Activate
+                        </span>
+                      )}
+                      {cat.activationMode === 'NO_QR_WALK_IN' && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/60 font-medium">
+                          <ShieldAlert className="w-2.5 h-2.5" /> Walk-In
+                        </span>
+                      )}
+
+                      {cat.qrRequired ? (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">
+                          <QrCode className="w-2.5 h-2.5" /> QR
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+                          No QR
+                        </span>
+                      )}
+
+                      {cat.passLimit ? (
+                        <span className="px-1.5 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-200 text-[10px]">
+                          Max: {cat.passLimit}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className="flex items-center justify-between pt-1.5 border-t border-gray-100 text-[11px]">
+                      <span className="text-[10px] text-gray-500 font-medium flex items-center gap-1">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            cat.enabled ? 'bg-emerald-500' : 'bg-rose-500'
+                          }`}
+                        />
+                        {cat.enabled ? 'Active' : 'Disabled'}
+                      </span>
+                      <span
+                        className={`text-[10px] font-semibold transition-colors ${
+                          isSelected
+                            ? 'text-purple-700 font-bold'
+                            : 'text-gray-400 group-hover:text-purple-600'
+                        }`}
+                      >
+                        {isSelected ? 'Filtering table ↓' : 'Click to filter'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Search, Filter Toolbar & Advanced Filters */}
           <div className="space-y-2 sm:space-y-3 pt-2 border-t border-gray-100">
             <div className="flex flex-col gap-3">
@@ -1180,6 +1510,23 @@ const EventDetail = () => {
                 >
                   Revoked
                 </button>
+
+                {categoryFilter !== 'ALL' && (
+                  <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-[11px] font-bold shrink-0">
+                    <span>Category: {categoryFilter}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryFilter('ALL');
+                        setPage(0);
+                      }}
+                      className="p-0.5 hover:bg-purple-200 rounded text-purple-600 transition"
+                      title="Clear category filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Search Bar & Advanced Filter Toggle */}
@@ -2152,6 +2499,16 @@ const EventDetail = () => {
         event={event}
         eventDays={eventDays}
         categories={availableCategories}
+      />
+
+      {/* BULK FULL PASS DOWNLOAD MODAL */}
+      <BulkFullPassDownloadModal
+        isOpen={isBulkFullPassModalOpen}
+        onClose={() => setIsBulkFullPassModalOpen(false)}
+        event={event}
+        eventDays={eventDays}
+        categories={availableCategories}
+        totalAvailable={totalElements}
       />
 
       {/* BULK ACTIVATION FROM EXCEL MODAL */}

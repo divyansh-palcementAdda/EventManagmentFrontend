@@ -63,7 +63,7 @@ const parseRawInput = (input) => {
     try {
       const parsed = JSON.parse(trimmed);
       return parsed.passNumber || parsed.token || parsed.rawToken || parsed.passId || trimmed;
-    } catch {}
+    } catch { }
   }
 
   // 2. Full URL QR format
@@ -91,7 +91,7 @@ const parseRawInput = (input) => {
       if (passIdx !== -1 && parts[passIdx + 1]) {
         return decodeURIComponent(parts[passIdx + 1]);
       }
-    } catch {}
+    } catch { }
   }
 
   return trimmed;
@@ -511,11 +511,10 @@ const ActivatePass = () => {
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         {/* Header Banner */}
         <div
-          className={`p-6 sm:p-8 text-center relative text-white ${
-            isStudent
+          className={`p-6 sm:p-8 text-center relative text-white ${isStudent
               ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800'
               : 'bg-gradient-to-r from-purple-700 via-indigo-800 to-purple-900'
-          }`}
+            }`}
         >
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
             {isAutoActivated ? (
@@ -530,15 +529,15 @@ const ActivatePass = () => {
             {isAutoActivated
               ? 'Pass Validated'
               : isStudent
-              ? 'Student Pass Registration'
-              : `${passData?.categoryName || 'Event'} Pass Activation`}
+                ? 'Student Pass Registration'
+                : `${passData?.categoryName || 'Event'} Pass Activation`}
           </h1>
           <p className="text-purple-100/90 text-xs sm:text-sm mt-1 max-w-md mx-auto">
             {isAutoActivated
               ? 'Your event pass is active and ready for gate admission.'
               : isStudent
-              ? 'Complete your verified student registration to link your badge for official campus/event admission.'
-              : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
+                ? 'Complete your verified student registration to link your badge for official campus/event admission.'
+                : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
           </p>
         </div>
 
@@ -618,11 +617,10 @@ const ActivatePass = () => {
                 <div className="flex justify-between items-center border-b pb-1.5">
                   <span className="text-gray-500">Pass Category:</span>
                   <span
-                    className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
-                      isStudent
+                    className={`font-semibold px-2 py-0.5 rounded text-[11px] ${isStudent
                         ? 'bg-purple-50 text-purple-700 border border-purple-200'
                         : 'bg-purple-50 text-purple-700 border border-purple-200'
-                    }`}
+                      }`}
                   >
                     {passData?.categoryCode || passData?.category || 'PASS'}
                   </span>
@@ -832,11 +830,10 @@ const ActivatePass = () => {
               <div className="space-y-6 animate-fade-in">
                 {/* 1. Pass Status Notice Card */}
                 <div
-                  className={`border rounded-xl p-4 space-y-2 ${
-                    isStudent
+                  className={`border rounded-xl p-4 space-y-2 ${isStudent
                       ? 'bg-purple-50/70 border-purple-200/60'
                       : 'bg-purple-50/70 border-purple-200/60'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <div className="flex items-center gap-1.5">
@@ -919,11 +916,10 @@ const ActivatePass = () => {
                         onChange={handleChange}
                         disabled={pageState === PAGE_STATES.SUBMITTING}
                         placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
-                        className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                          formErrors.fullName
+                        className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.fullName
                             ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                             : 'border-gray-300 focus:ring-purple-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {formErrors.fullName && (
@@ -948,11 +944,10 @@ const ActivatePass = () => {
                           onChange={handleChange}
                           disabled={pageState === PAGE_STATES.SUBMITTING}
                           placeholder="you@example.com"
-                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                            formErrors.email
+                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.email
                               ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                               : 'border-gray-300 focus:ring-purple-500'
-                          }`}
+                            }`}
                         />
                       </div>
                       {formErrors.email && (
@@ -975,11 +970,10 @@ const ActivatePass = () => {
                           onChange={handleChange}
                           disabled={pageState === PAGE_STATES.SUBMITTING}
                           placeholder="e.g. +919876543210"
-                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                            formErrors.mobileNumber
+                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.mobileNumber
                               ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                               : 'border-gray-300 focus:ring-purple-500'
-                          }`}
+                            }`}
                         />
                       </div>
                       {formErrors.mobileNumber && (
@@ -1082,8 +1076,8 @@ const ActivatePass = () => {
                                   field.fieldType === 'NUMBER'
                                     ? 'number'
                                     : field.fieldType === 'EMAIL'
-                                    ? 'email'
-                                    : 'text'
+                                      ? 'email'
+                                      : 'text'
                                 }
                                 placeholder={field.placeholder || ''}
                                 value={dynamicAnswers[field.fieldKey] || ''}
@@ -1097,11 +1091,10 @@ const ActivatePass = () => {
                                   }
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                                  formErrors[field.fieldKey]
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
                                     ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                                     : 'border-gray-300 focus:ring-purple-500'
-                                }`}
+                                  }`}
                               />
                             ) : field.fieldType === 'TEXTAREA' ? (
                               <textarea
@@ -1118,11 +1111,10 @@ const ActivatePass = () => {
                                   }
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                                  formErrors[field.fieldKey]
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
                                     ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                                     : 'border-gray-300 focus:ring-purple-500'
-                                }`}
+                                  }`}
                               />
                             ) : field.fieldType === 'SELECT' ? (
                               <select
@@ -1137,11 +1129,10 @@ const ActivatePass = () => {
                                   }
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                                  formErrors[field.fieldKey]
+                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
                                     ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                                     : 'border-gray-300 focus:ring-purple-500'
-                                }`}
+                                  }`}
                               >
                                 <option value="">{field.placeholder || '-- Select an option --'}</option>
                                 {field.options?.map((opt, oIdx) => (
@@ -1226,11 +1217,10 @@ const ActivatePass = () => {
                               onChange={handleChange}
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. Delhi University / MIT"
-                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                                formErrors.college
+                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.college
                                   ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                                   : 'border-gray-300 focus:ring-blue-500'
-                              }`}
+                                }`}
                             />
                           </div>
                           {formErrors.college && (
@@ -1253,11 +1243,10 @@ const ActivatePass = () => {
                               onChange={handleChange}
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. B.Tech Computer Science"
-                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
-                                formErrors.course
+                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.course
                                   ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                                   : 'border-gray-300 focus:ring-blue-500'
-                              }`}
+                                }`}
                             />
                           </div>
                           {formErrors.course && (
