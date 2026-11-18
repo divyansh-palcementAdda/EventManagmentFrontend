@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { BrowserQRCodeSvgWriter } from '@zxing/browser';
 import backpass from '../assets/final.png';
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
@@ -12,14 +13,38 @@ const loadImage = (src) => {
       return;
     }
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (typeof src === 'string' && !src.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = () => {
-      console.warn('Failed to load image for pass:', src);
+      console.warn('Failed to load image for pass:', typeof src === 'string' ? src.slice(0, 60) : src);
       resolve(null);
     };
     img.src = src;
   });
+};
+
+/**
+ * Generate a QR code image element locally using ZXing SVG writer with fallback to online API
+ */
+export const generateQrImage = async (text, size = 300) => {
+  if (!text) return null;
+  try {
+    const writer = new BrowserQRCodeSvgWriter();
+    const svgElement = writer.write(text, size, size);
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+    const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+    return await loadImage(svgDataUrl);
+  } catch (err) {
+    console.warn('Local ZXing QR generation failed, attempting fallback API:', err);
+    try {
+      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+      return await loadImage(fallbackUrl);
+    } catch {
+      return null;
+    }
+  }
 };
 
 /**
@@ -53,6 +78,7 @@ export const getPassQrUrl = (tokenOrPass) => {
  */
 export const isNoQrPass = (pass) => {
   if (!pass) return false;
+  if (pass.qrRequired === false || pass.activationMode === 'NO_QR_WALK_IN') return true;
   const cat = (
     pass.categoryName ||
     pass.category ||
@@ -61,17 +87,21 @@ export const isNoQrPass = (pass) => {
     pass.passCategoryCode ||
     ''
   ).toUpperCase();
-  return cat.includes('VIP') || cat.includes('NO_QR');
+  const num = (pass.passNumber || '').toUpperCase();
+  return cat.includes('VIP') || cat.includes('NO_QR') || num.includes('VIP');
 };
 
 /**
  * Render a single pass onto a 1826x686 HTML5 canvas
  */
-export const renderPassToCanvas = async (pass, bgImg, event = {}) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1826;
-  canvas.height = 686;
+export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas = null) => {
+  const canvas = existingCanvas || document.createElement('canvas');
+  if (canvas.width !== 1826 || canvas.height !== 686) {
+    canvas.width = 1826;
+    canvas.height = 686;
+  }
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 1826, 686);
 
   // 1. Draw base pass background
   if (bgImg) {
@@ -82,8 +112,29 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}) => {
   }
 
   const noQr = isNoQrPass(pass);
-  const qrUrl = !noQr ? getPassQrUrl(pass) : null;
-  const qrImg = qrUrl ? await loadImage(qrUrl) : null;
+  let qrImg = null;
+
+  if (!noQr) {
+    if (pass.qrImageUrl || pass.qrCodeUrl) {
+      qrImg = await loadImage(pass.qrImageUrl || pass.qrCodeUrl);
+    }
+    if (!qrImg) {
+      const identifier =
+        typeof pass === 'string'
+          ? pass
+          : pass?.rawToken ||
+          pass?.passNumber ||
+          pass?.qrData ||
+          pass?.token ||
+          pass?.id ||
+          '';
+      if (identifier) {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+        const activationUrl = `${origin}/activate/${encodeURIComponent(identifier)}`;
+        qrImg = await generateQrImage(activationUrl, 300);
+      }
+    }
+  }
 
   // Coordinate calculations matching PassImageService (1826 x 686)
   const qrBoxWidth = Math.round(1826 * 0.15); // ~274px
@@ -94,7 +145,6 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}) => {
   // 2. Draw QR code or No-QR Amber Badge
   if (noQr || !qrImg) {
     if (noQr) {
-      // Draw amber badge box
       ctx.fillStyle = '#fef3c7';
       ctx.beginPath();
       ctx.roundRect(qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight, 16);
@@ -121,15 +171,20 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}) => {
     pass.category ||
     pass.categoryCode ||
     pass.passCategoryName ||
-    ''
+    pass.passCategoryCode ||
+    'GENERAL'
   ).toUpperCase();
+
+  const seq = pass.sequenceNumber
+    ? String(pass.sequenceNumber).padStart(4, '0')
+    : pass.passNumber?.split('-')?.pop() || '';
+  const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
 
   const catBoxWidth = Math.round(1826 * 0.22); // ~402px
   const catBoxHeight = Math.round(686 * 0.09); // ~62px
   const catBoxX = Math.round(1826 - 1826 * 0.055 - catBoxWidth); // ~1324px
   const catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09)); // ~446px
 
-  // 3. Category Badge (Upper box)
   if (cat) {
     ctx.save();
     ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
@@ -211,27 +266,36 @@ export const createPassesPdfDoc = async (passList, event = {}, onProgress = null
     compress: true,
   });
 
+  const canvas = document.createElement('canvas');
+  canvas.width = 1826;
+  canvas.height = 686;
+
   const total = passList.length;
 
   for (let i = 0; i < total; i++) {
     if (onProgress) onProgress(i + 1, total);
 
     const pass = passList[i];
-    const canvas = await renderPassToCanvas(pass, bgImg, event);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    await renderPassToCanvas(pass, bgImg, event, canvas);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
 
     if (i > 0) {
       doc.addPage([PASS_HEIGHT_MM, PASS_WIDTH_MM], 'landscape');
     }
 
     doc.addImage(dataUrl, 'JPEG', 0, 0, PASS_WIDTH_MM, PASS_HEIGHT_MM, undefined, 'FAST');
+
+    // Yield to the UI loop every 5 passes to avoid freezing the browser on large downloads (e.g. 600 passes)
+    if (i % 5 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
 
   return doc;
 };
 
 /**
- * Generate a standalone PDF containing ONLY the passes and trigger file download
+ * Generate a standalone PDF containing ONLY the passes and trigger direct file download
  */
 export const generatePassesPdf = async (passList, event = {}, onProgress = null) => {
   const doc = await createPassesPdfDoc(passList, event, onProgress);
@@ -289,6 +353,10 @@ export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = nul
   const gapY = 8; // gap between passes
   const passesPerPage = 3;
 
+  const canvas = document.createElement('canvas');
+  canvas.width = 1826;
+  canvas.height = 686;
+
   const total = passList.length;
 
   for (let i = 0; i < total; i++) {
@@ -300,8 +368,8 @@ export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = nul
     }
 
     const pass = passList[i];
-    const canvas = await renderPassToCanvas(pass, bgImg);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    await renderPassToCanvas(pass, bgImg, event, canvas);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
 
     const y = startY + slotIndex * (passH + gapY);
 
@@ -315,6 +383,10 @@ export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = nul
     doc.setLineDashPattern([2, 2], 0);
     doc.rect(marginX, y, passW, passH);
     doc.restoreGraphicsState();
+
+    if (i % 5 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
 
   return doc;

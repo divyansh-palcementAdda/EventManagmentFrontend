@@ -20,7 +20,12 @@ import { categoryService } from '../../../Api-Services/categoryService';
 import toast from 'react-hot-toast';
 import useScrollLock from '../../../hooks/useScrollLock';
 import BulkDownloadPass, { frontPass, backpass, buildDateLabelText, formatPassDisplayDate } from '../../emailPass/bulkDownloadpass';
-import { generatePassesPdf } from '../../../utils/passPdfGenerator';
+import {
+  generatePassesPdf,
+  openPassesPdfPreview,
+  downloadA4SheetPdf,
+  openA4SheetPdfPreview,
+} from '../../../utils/passPdfGenerator';
 
 const BulkFullPassDownloadModal = ({
   isOpen,
@@ -128,13 +133,6 @@ const BulkFullPassDownloadModal = ({
     setLoading(true);
     setLoadingMsg(`Fetching ${numericCount} passes...`);
     try {
-      const params = {
-        page: 0,
-        size: numericCount,
-        sortBy: 'sequenceNumber',
-        sortDir: 'asc',
-      };
-
       const validPassStatuses = ['NOT_ACTIVATED', 'ACTIVATED', 'REVOKED'];
       let mappedStatus = null;
       if (statusFilter && statusFilter !== 'ALL') {
@@ -143,38 +141,89 @@ const BulkFullPassDownloadModal = ({
         else if (validPassStatuses.includes(statusFilter)) mappedStatus = statusFilter;
       }
 
-      if (mappedStatus) params.status = mappedStatus;
-      if (categoryFilter && categoryFilter !== 'ALL') params.category = categoryFilter;
-      if (dayId) params.eventDayId = dayId;
+      const baseParams = {
+        sortBy: 'sequenceNumber',
+        sortDir: 'asc',
+      };
+
+      if (mappedStatus) baseParams.status = mappedStatus;
+      if (categoryFilter && categoryFilter !== 'ALL') baseParams.category = categoryFilter;
+      if (dayId) baseParams.eventDayId = dayId;
       if (useRange) {
-        if (fromSeq) params.fromSequence = parseInt(fromSeq, 10);
-        if (toSeq) params.toSequence = parseInt(toSeq, 10);
+        if (fromSeq) baseParams.fromSequence = parseInt(fromSeq, 10);
+        if (toSeq) baseParams.toSequence = parseInt(toSeq, 10);
       }
 
       let data = [];
-      const res = await passService.getPassesByEvent(event.id, params);
-      if (res?.data?.content && Array.isArray(res.data.content)) {
-        data = res.data.content;
-      } else if (Array.isArray(res?.data)) {
-        data = res.data;
+      const pageSize = 100; // Spring Data default maximum page size is 100
+      let page = 0;
+      let totalPages = 1;
+      let hasMore = true;
+
+      while (data.length < numericCount && hasMore) {
+        const fetchSize = Math.min(pageSize, numericCount - data.length);
+        if (numericCount > pageSize) {
+          setLoadingMsg(`Fetching passes (${data.length}/${numericCount})...`);
+        }
+
+        const res = await passService.getPassesByEvent(event.id, {
+          ...baseParams,
+          page,
+          size: fetchSize,
+        });
+
+        const content = res?.data?.content || (Array.isArray(res?.data) ? res.data : []);
+        if (Array.isArray(content) && content.length > 0) {
+          data = [...data, ...content];
+
+          const serverTotalPages = res?.data?.page?.totalPages ?? res?.data?.totalPages;
+          if (serverTotalPages !== undefined) {
+            totalPages = serverTotalPages;
+          }
+
+          const serverIsLast = res?.data?.page?.last ?? res?.data?.last;
+          if (serverIsLast === true || (serverTotalPages && page + 1 >= serverTotalPages)) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
+
+        if (!content || content.length === 0) {
+          break;
+        }
       }
 
-      if (data.length === 0) {
-        // Fallback to exportPasses if getPassesByEvent returned empty or unpaged
-        const exportRes = await passService.exportPasses(event.id, {
-          ...(mappedStatus && { status: mappedStatus }),
-          ...(categoryFilter !== 'ALL' && { category: categoryFilter }),
-          ...(useRange && fromSeq && { fromSequence: parseInt(fromSeq, 10) }),
-          ...(useRange && toSeq && { toSequence: parseInt(toSeq, 10) }),
-          ...(dayId && { dayId }),
-        });
-        const allExport = exportRes?.data || [];
-        data = allExport.slice(0, numericCount);
+      // If paginated fetching returned fewer passes than requested, fallback/augment with exportPasses
+      if (data.length < numericCount) {
+        try {
+          setLoadingMsg(`Retrieving passes...`);
+          const exportRes = await passService.exportPasses(event.id, {
+            ...(mappedStatus && { status: mappedStatus }),
+            ...(categoryFilter !== 'ALL' && { category: categoryFilter }),
+            ...(useRange && fromSeq && { fromSequence: parseInt(fromSeq, 10) }),
+            ...(useRange && toSeq && { toSequence: parseInt(toSeq, 10) }),
+            ...(dayId && { dayId }),
+          });
+          const allExport = exportRes?.data || [];
+          if (Array.isArray(allExport) && allExport.length > data.length) {
+            allExport.sort((a, b) => (Number(a.sequenceNumber) || 0) - (Number(b.sequenceNumber) || 0));
+            data = allExport.slice(0, numericCount);
+          }
+        } catch (exportErr) {
+          console.warn('Fallback to exportPasses encountered an error:', exportErr);
+        }
       }
 
       if (data.length === 0) {
         toast.error('No passes found for the specified count and filters.');
         return null;
+      }
+
+      if (data.length > numericCount) {
+        data = data.slice(0, numericCount);
       }
 
       return data;
@@ -835,10 +884,8 @@ const BulkFullPassDownloadModal = ({
         toast.success(`Successfully downloaded ${data.length} passes as PDF!`);
         onClose();
       } catch (err) {
-        console.error('Direct PDF export error, opening print fallback:', err);
-        triggerPdfPrintWindow(data);
-        toast.success(`Prepared ${data.length} full passes for printing.`);
-        onClose();
+        console.error('Direct PDF export error:', err);
+        toast.error(`PDF generation failed: ${err.message || 'Unknown error'}`);
       } finally {
         setLoading(false);
         setLoadingMsg('');
@@ -918,7 +965,7 @@ const BulkFullPassDownloadModal = ({
     }
   };
 
-  const presetCounts = [5, 10, 25, 50, 100];
+  const presetCounts = [5, 10, 25, 50, 100, 250, 500];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -1006,7 +1053,7 @@ const BulkFullPassDownloadModal = ({
                   <input
                     type="number"
                     min="1"
-                    max={totalAvailable > 0 ? totalAvailable : 1000}
+                    max={totalAvailable > 0 ? totalAvailable : 5000}
                     value={count}
                     onChange={(e) => setCount(e.target.value)}
                     placeholder="e.g. 10"
