@@ -145,11 +145,12 @@ export const passService = {
     }
   },
 
-  // Get live pass statistics for an event
-  getPassStats: async (eventId) => {
+  // Get live pass statistics for an event (supports optional filter parameters)
+  getPassStats: async (eventId, params = {}) => {
     try {
       const response = await axiosInstance.get(
-        API_ROUTES.PASSES.STATS.replace(':eventId', eventId)
+        API_ROUTES.PASSES.STATS.replace(':eventId', eventId),
+        { params }
       );
       return response.data;
     } catch (error) {

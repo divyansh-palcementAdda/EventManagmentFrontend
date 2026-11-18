@@ -150,6 +150,27 @@ const EventDetail = () => {
   const [sortDir, setSortDir] = useState('asc');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  const isPassTableFiltered =
+    categoryFilter !== 'ALL' ||
+    statusFilter !== 'ALL' ||
+    Boolean(debouncedSearch?.trim()) ||
+    checkInFilter !== 'ALL' ||
+    dayFilter !== 'ALL' ||
+    Boolean(fromSeqFilter) ||
+    Boolean(toSeqFilter);
+
+  const resetAllPassFilters = () => {
+    setCategoryFilter('ALL');
+    setStatusFilter('ALL');
+    setSearchQuery('');
+    setDebouncedSearch('');
+    setCheckInFilter('ALL');
+    setDayFilter('ALL');
+    setFromSeqFilter('');
+    setToSeqFilter('');
+    setPage(0);
+  };
+
   // Selection for bulk actions
   const [selectedPassMap, setSelectedPassMap] = useState({});
 
@@ -740,6 +761,20 @@ const EventDetail = () => {
     sortDir,
   ]);
 
+  // Update Live Statistics counters whenever table filters change
+  useEffect(() => {
+    fetchPassStats();
+  }, [
+    eventId,
+    debouncedSearch,
+    statusFilter,
+    checkInFilter,
+    dayFilter,
+    fromSeqFilter,
+    toSeqFilter,
+    categoryFilter,
+  ]);
+
   const fetchEventDetails = async () => {
     setLoading(true);
     try {
@@ -765,7 +800,20 @@ const EventDetail = () => {
   const fetchPassStats = async () => {
     setStatsLoading(true);
     try {
-      const response = await passService.getPassStats(eventId);
+      const params = {};
+      if (debouncedSearch && debouncedSearch.trim()) params.search = debouncedSearch.trim();
+      if (statusFilter && statusFilter !== 'ALL') params.status = statusFilter;
+      if (categoryFilter && categoryFilter !== 'ALL') params.category = categoryFilter;
+      if (checkInFilter && checkInFilter !== 'ALL') params.checkInStatus = checkInFilter;
+      if (dayFilter && dayFilter !== 'ALL') params.eventDayId = dayFilter;
+      if (fromSeqFilter && !isNaN(parseInt(fromSeqFilter, 10))) {
+        params.fromSequence = parseInt(fromSeqFilter, 10);
+      }
+      if (toSeqFilter && !isNaN(parseInt(toSeqFilter, 10))) {
+        params.toSequence = parseInt(toSeqFilter, 10);
+      }
+
+      const response = await passService.getPassStats(eventId, params);
       setPassStats(response.data);
     } catch (error) {
       console.error('Error fetching pass stats:', error);
@@ -1642,35 +1690,54 @@ const EventDetail = () => {
           </div>
 
           {/* Live Statistics Counter Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5 pt-1">
-            <div className="p-2 sm:p-2.5 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
-              <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Total Passes</span>
-              <div className="text-sm sm:text-base font-black text-gray-900">
-                {statsLoading ? '...' : passStats?.totalPasses ?? totalElements}
+          <div className="space-y-1.5 pt-1">
+            {isPassTableFiltered && (
+              <div className="flex items-center justify-between text-xs px-0.5">
+                <span className="text-[11px] font-semibold text-purple-700 flex items-center gap-1">
+                  <Filter className="w-3 h-3 text-purple-600" />
+                  Showing counts for active table filters
+                </span>
+                <button
+                  type="button"
+                  onClick={resetAllPassFilters}
+                  className="text-[11px] font-bold text-purple-700 hover:text-purple-900 underline cursor-pointer"
+                >
+                  Reset All Filters
+                </button>
               </div>
-            </div>
-            <div className="p-2 sm:p-2.5 bg-green-50/70 rounded-xl border border-green-200 text-center shadow-xs">
-              <span className="text-[10px] sm:text-[11px] text-green-700 font-medium">Available</span>
-              <div className="text-sm sm:text-base font-black text-green-800">
-                {statsLoading ? '...' : passStats?.availablePasses ?? 0}
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+              <div className="p-2 sm:p-2.5 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
+                <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">
+                  Total Passes {isPassTableFiltered && <span className="text-purple-600 font-bold">(Filtered)</span>}
+                </span>
+                <div className="text-sm sm:text-base font-black text-gray-900">
+                  {statsLoading ? '...' : passStats?.totalPasses ?? totalElements}
+                </div>
               </div>
-            </div>
-            <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs">
-              <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Activated</span>
-              <div className="text-sm sm:text-base font-black text-purple-800">
-                {statsLoading ? '...' : passStats?.activatedPasses ?? 0}
+              <div className="p-2 sm:p-2.5 bg-green-50/70 rounded-xl border border-green-200 text-center shadow-xs">
+                <span className="text-[10px] sm:text-[11px] text-green-700 font-medium">Available</span>
+                <div className="text-sm sm:text-base font-black text-green-800">
+                  {statsLoading ? '...' : passStats?.availablePasses ?? 0}
+                </div>
               </div>
-            </div>
-            <div className="p-2 sm:p-2.5 bg-red-50/70 rounded-xl border border-red-200 text-center shadow-xs">
-              <span className="text-[10px] sm:text-[11px] text-red-700 font-medium">Revoked</span>
-              <div className="text-sm sm:text-base font-black text-red-800">
-                {statsLoading ? '...' : passStats?.revokedPasses ?? 0}
+              <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs">
+                <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Activated</span>
+                <div className="text-sm sm:text-base font-black text-purple-800">
+                  {statsLoading ? '...' : passStats?.activatedPasses ?? 0}
+                </div>
               </div>
-            </div>
-            <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs col-span-2 sm:col-span-3 lg:col-span-1">
-              <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Checked-In</span>
-              <div className="text-sm sm:text-base font-black text-purple-800">
-                {statsLoading ? '...' : passStats?.checkedInCount ?? 0}
+              <div className="p-2 sm:p-2.5 bg-red-50/70 rounded-xl border border-red-200 text-center shadow-xs">
+                <span className="text-[10px] sm:text-[11px] text-red-700 font-medium">Revoked</span>
+                <div className="text-sm sm:text-base font-black text-red-800">
+                  {statsLoading ? '...' : passStats?.revokedPasses ?? 0}
+                </div>
+              </div>
+              <div className="p-2 sm:p-2.5 bg-purple-50/70 rounded-xl border border-purple-200 text-center shadow-xs col-span-2 sm:col-span-3 lg:col-span-1">
+                <span className="text-[10px] sm:text-[11px] text-purple-700 font-medium">Checked-In</span>
+                <div className="text-sm sm:text-base font-black text-purple-800">
+                  {statsLoading ? '...' : passStats?.checkedInCount ?? 0}
+                </div>
               </div>
             </div>
           </div>
