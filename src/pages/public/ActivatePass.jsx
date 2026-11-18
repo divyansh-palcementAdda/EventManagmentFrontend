@@ -824,7 +824,7 @@ const ActivatePass = () => {
                   <div className="bg-white/50 backdrop-blur-xs rounded-xl p-4 border border-white/20 text-left text-xs space-y-2 max-w-sm mx-auto">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Name:</span>
-                      <span className="font-mono font-bold text-gray-900">{passData.attendeeName}</span>
+                      <span className="font-mono font-bold text-gray-900">{passData.attendeeName || passData.attendee?.fullName || '—'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Pass Number:</span>
