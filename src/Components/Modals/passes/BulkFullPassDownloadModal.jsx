@@ -106,11 +106,11 @@ const BulkFullPassDownloadModal = ({
       typeof tokenOrPass === 'string'
         ? tokenOrPass
         : tokenOrPass?.rawToken ||
-          tokenOrPass?.passNumber ||
-          tokenOrPass?.qrData ||
-          tokenOrPass?.token ||
-          tokenOrPass?.id ||
-          '';
+        tokenOrPass?.passNumber ||
+        tokenOrPass?.qrData ||
+        tokenOrPass?.token ||
+        tokenOrPass?.id ||
+        '';
     if (!identifier) return null;
     const activationUrl = `${window.location.origin}/activate/${encodeURIComponent(identifier)}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
@@ -232,51 +232,46 @@ const BulkFullPassDownloadModal = ({
               
               <!-- QR Overlay -->
               <div class="qr-container">
-                ${
-                  qrUrl
-                    ? `<img src="${qrUrl}" alt="QR" class="qr-img" />`
-                    : `<div class="no-qr-box">
+                ${qrUrl
+            ? `<img src="${qrUrl}" alt="QR" class="qr-img" />`
+            : `<div class="no-qr-box">
                          <span>BADGE</span>
                          <span class="no-qr-sub">NO QR</span>
                        </div>`
-                }
+          }
               </div>
 
               <!-- Category Badge -->
-              ${
-                cat
-                  ? `<div class="category-badge">
+              ${cat
+            ? `<div class="category-badge">
                        <span>${cat}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
 
               <!-- Serial Number Badge -->
-              ${
-                seqBadge
-                  ? `<div class="serial-badge">
+              ${seqBadge
+            ? `<div class="serial-badge">
                        <span>${seqBadge}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
 
               <!-- Date Badge -->
-              ${
-                dateStr
-                  ? `<div class="date-badge">
+              ${dateStr
+            ? `<div class="date-badge">
                        <span>${dateStr}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
 
               <!-- Left Sequence Strip (Rotated) -->
-              ${
-                seqBadge
-                  ? `<div class="left-seq-strip">
+              ${seqBadge
+            ? `<div class="left-seq-strip">
                        <span>${seqBadge}</span>
                      </div>`
-                  : ''
-              }
+            : ''
+          }
             </div>
           </div>
         </div>
@@ -932,11 +927,10 @@ const BulkFullPassDownloadModal = ({
           <button
             type="button"
             onClick={() => setActiveTab('download')}
-            className={`pb-2.5 px-1 text-xs font-bold border-b-2 transition ${
-              activeTab === 'download'
+            className={`pb-2.5 px-1 text-xs font-bold border-b-2 transition ${activeTab === 'download'
                 ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+              }`}
           >
             Download Settings
           </button>
@@ -949,11 +943,10 @@ const BulkFullPassDownloadModal = ({
                 setActiveTab('preview');
               }
             }}
-            className={`pb-2.5 px-1 text-xs font-bold border-b-2 flex items-center gap-1.5 transition ${
-              activeTab === 'preview'
+            className={`pb-2.5 px-1 text-xs font-bold border-b-2 flex items-center gap-1.5 transition ${activeTab === 'preview'
                 ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+              }`}
           >
             <Eye className="w-3.5 h-3.5" />
             Pass Preview ({previewPasses.length > 0 ? previewPasses.length : count})
@@ -1001,11 +994,10 @@ const BulkFullPassDownloadModal = ({
                       key={val}
                       type="button"
                       onClick={() => setCount(val)}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                        Number(count) === val
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${Number(count) === val
                           ? 'bg-purple-600 text-white shadow-xs'
                           : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {val}
                     </button>
@@ -1014,11 +1006,10 @@ const BulkFullPassDownloadModal = ({
                     <button
                       type="button"
                       onClick={() => setCount(totalAvailable)}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
-                        Number(count) === totalAvailable
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${Number(count) === totalAvailable
                           ? 'bg-purple-600 text-white'
                           : 'bg-white border border-purple-200 text-purple-700 hover:bg-purple-50'
-                      }`}
+                        }`}
                     >
                       All ({totalAvailable})
                     </button>

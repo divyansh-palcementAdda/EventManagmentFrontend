@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import formBackground from "../../assets/formBackground.png"
 import toast from 'react-hot-toast';
 import {
   Ticket,
@@ -446,8 +447,8 @@ const ActivatePass = () => {
         if (field.required && field.visible !== false) {
           const val =
             dynamicAnswers[field.fieldKey] !== undefined &&
-            dynamicAnswers[field.fieldKey] !== null &&
-            dynamicAnswers[field.fieldKey] !== ''
+              dynamicAnswers[field.fieldKey] !== null &&
+              dynamicAnswers[field.fieldKey] !== ''
               ? dynamicAnswers[field.fieldKey]
               : formData[field.fieldKey];
           if (val === undefined || val === null || val === '') {
@@ -603,8 +604,8 @@ const ActivatePass = () => {
         {/* Header Banner */}
         <div
           className={`p-6 sm:p-8 text-center relative text-white ${isStudent
-              ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800'
-              : 'bg-gradient-to-r from-purple-700 via-indigo-800 to-purple-900'
+            ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800'
+            : 'bg-gradient-to-r from-purple-700 via-indigo-800 to-purple-900'
             }`}
         >
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
@@ -709,8 +710,8 @@ const ActivatePass = () => {
                   <span className="text-gray-500">Pass Category:</span>
                   <span
                     className={`font-semibold px-2 py-0.5 rounded text-[11px] ${isStudent
-                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                        : 'bg-purple-50 text-purple-700 border border-purple-200'
+                      ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                      : 'bg-purple-50 text-purple-700 border border-purple-200'
                       }`}
                   >
                     {passData?.categoryCode || passData?.category || 'PASS'}
@@ -804,6 +805,10 @@ const ActivatePass = () => {
               {passData && (
                 <div className="bg-white rounded-xl p-4 border border-purple-100 text-left text-xs space-y-2 max-w-sm mx-auto">
                   <div className="flex justify-between">
+                    <span className="text-gray-500">Name:</span>
+                    <span className="font-mono font-bold text-purple-900">{passData.attendeeName}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Pass Number:</span>
                     <span className="font-mono font-bold text-purple-900">{passData.passNumber}</span>
                   </div>
@@ -821,28 +826,6 @@ const ActivatePass = () => {
               <p className="text-xs text-purple-800/80 max-w-sm mx-auto">
                 If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
               </p>
-
-              {/* Download Pass PDF */}
-              <div className="pt-2 flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
-                <button
-                  type="button"
-                  onClick={handleDownloadPassPdf}
-                  disabled={isDownloadingPdf || !passData}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition"
-                >
-                  {isDownloadingPdf ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Generating Pass PDF...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      <span>Download Pass PDF</span>
-                    </>
-                  )}
-                </button>
-              </div>
 
               <div>
                 <button
@@ -942,14 +925,22 @@ const ActivatePass = () => {
           {(pageState === PAGE_STATES.READY_FOR_ACTIVATION ||
             pageState === PAGE_STATES.SUBMITTING) &&
             passData && (
-              <div className="space-y-6 animate-fade-in">
-                {/* 1. Pass Status Notice Card */}
-                <div
-                  className={`border rounded-xl p-4 space-y-2 ${isStudent
-                      ? 'bg-purple-50/70 border-purple-200/60'
-                      : 'bg-purple-50/70 border-purple-200/60'
-                    }`}
-                >
+              <div className="relative -m-6 sm:-m-8 p-6 sm:p-8 overflow-hidden rounded-b-2xl">
+                {/* Background Image */}
+                <img
+                  src={formBackground}
+                  alt="Form Background"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                />
+
+                <div className="relative z-10 space-y-6 animate-fade-in">
+                  {/* 1. Pass Status Notice Card */}
+                  <div
+                    className={`border rounded-xl p-4 space-y-2 bg-white/95 backdrop-blur-xs shadow-sm ${isStudent
+                      ? 'border-purple-200/60'
+                      : 'border-purple-200/60'
+                      }`}
+                  >
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
@@ -1016,7 +1007,7 @@ const ActivatePass = () => {
                 )}
 
                 {/* 3. Category Registration Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white/95 backdrop-blur-xs p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
                   {/* Full Name */}
                   <div>
                     <label className="text-xs font-semibold text-gray-700 block mb-1">
@@ -1032,8 +1023,8 @@ const ActivatePass = () => {
                         disabled={pageState === PAGE_STATES.SUBMITTING}
                         placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
                         className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.fullName
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                            : 'border-gray-300 focus:ring-purple-500'
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                          : 'border-gray-300 focus:ring-purple-500'
                           }`}
                       />
                     </div>
@@ -1060,8 +1051,8 @@ const ActivatePass = () => {
                           disabled={pageState === PAGE_STATES.SUBMITTING}
                           placeholder="you@example.com"
                           className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.email
-                              ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                              : 'border-gray-300 focus:ring-purple-500'
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                            : 'border-gray-300 focus:ring-purple-500'
                             }`}
                         />
                       </div>
@@ -1077,11 +1068,10 @@ const ActivatePass = () => {
                         Mobile Number <span className="text-rose-500">*</span>
                       </label>
                       <div
-                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${
-                          formErrors.mobileNumber
-                            ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
-                            : 'border-gray-300 focus-within:ring-purple-500 bg-white'
-                        }`}
+                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${formErrors.mobileNumber
+                          ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
+                          : 'border-gray-300 focus-within:ring-purple-500 bg-white'
+                          }`}
                       >
                         <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-r border-gray-200 text-gray-700 select-none text-xs sm:text-sm font-semibold shrink-0">
                           <Phone className="w-3.5 h-3.5 text-gray-400" />
@@ -1218,8 +1208,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-purple-500'
                                   }`}
                               />
                             ) : field.fieldType === 'TEXTAREA' ? (
@@ -1238,8 +1228,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-purple-500'
                                   }`}
                               />
                             ) : field.fieldType === 'SELECT' ? (
@@ -1256,8 +1246,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-purple-500'
                                   }`}
                               >
                                 <option value="">{field.placeholder || '-- Select an option --'}</option>
@@ -1344,8 +1334,8 @@ const ActivatePass = () => {
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. Delhi University / MIT"
                               className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.college
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-blue-500'
+                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                           </div>
@@ -1370,8 +1360,8 @@ const ActivatePass = () => {
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. B.Tech Computer Science"
                               className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.course
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-blue-500'
+                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                           </div>
@@ -1492,7 +1482,8 @@ const ActivatePass = () => {
                   </p>
                 </form>
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>

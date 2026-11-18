@@ -572,7 +572,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 md:p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-[#080b12] text-white p-4 md:p-6 flex flex-col items-center">
       {/* Top Navbar */}
       <div className="w-full max-w-lg flex items-center justify-between mb-4">
         <button
@@ -580,7 +580,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
             stopScanner();
             navigate('/admin');
           }}
-          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-white/10 px-3 py-1.5 rounded-lg transition"
+          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-[#131620] hover:bg-[#1a2030] border border-[#202738] px-3 py-1.5 rounded-lg transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Dashboard</span>
@@ -596,7 +596,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
       <div className="w-full max-w-lg space-y-4">
         {/* Controls: Event & Day Selection */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3">
+        <div className="bg-[#0c101d] rounded-2xl p-4 border border-[#181f32] space-y-3">
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs text-gray-300 font-semibold block">Select Event</label>
@@ -615,7 +615,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   placeholder="Filter events by name or code..."
                   value={eventSearch}
                   onChange={(e) => setEventSearch(e.target.value)}
-                  className="w-full bg-slate-900/80 text-white placeholder-gray-500 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full bg-[#080b15] text-white placeholder-gray-500 border border-[#1c2438] rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500"
                 />
               </div>
             )}
@@ -629,7 +629,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 }
               }}
               disabled={scanState === SCAN_STATES.PROCESSING || scanState === SCAN_STATES.CHECKING_IN}
-              className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-[#080b15] text-white border border-[#1c2438] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               {filteredEvents.map((ev) => (
                 <option key={ev.id} value={ev.id}>
@@ -656,7 +656,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 value={selectedDayId}
                 onChange={(e) => setSelectedDayId(e.target.value)}
                 disabled={scanState === SCAN_STATES.PROCESSING || scanState === SCAN_STATES.CHECKING_IN}
-                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-[#080b15] text-white border border-[#1c2438] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 {eventDays.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -668,17 +668,19 @@ const CheckinScan = ({ eventId: propEventId }) => {
           )}
 
           {/* Quick Check-in Toggle */}
-          <div className="flex items-center justify-between pt-1 border-t border-white/10 text-xs">
+          <div className="flex items-center justify-between pt-1 border-t border-[#181f32] text-xs">
             <span className="text-gray-300">Fast Mode (Auto-Confirm Valid Passes)</span>
             <button
               type="button"
               onClick={() => setAutoCheckIn(!autoCheckIn)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${autoCheckIn ? 'bg-purple-600' : 'bg-slate-700'
-                }`}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                autoCheckIn ? 'bg-purple-600' : 'bg-[#1c2438]'
+              }`}
             >
               <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${autoCheckIn ? 'translate-x-4' : 'translate-x-1'
-                  }`}
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  autoCheckIn ? 'translate-x-4' : 'translate-x-1'
+                }`}
               />
             </button>
           </div>
@@ -686,8 +688,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* CAMERA SCANNER VIEWPORT (When IDLE or starting scanner) */}
         {scanState === SCAN_STATES.IDLE && (
-          <div className="bg-slate-800/90 rounded-2xl p-4 border border-slate-700 space-y-4">
-            <div className="relative aspect-square max-w-sm mx-auto bg-black rounded-xl overflow-hidden border-2 border-purple-500/50 flex items-center justify-center shadow-xl">
+          <div className="bg-[#0c101d] rounded-2xl p-4 border border-[#181f32] space-y-4">
+            <div className="relative aspect-square max-w-sm mx-auto bg-[#04060a] rounded-xl overflow-hidden border-2 border-purple-500/50 flex items-center justify-center shadow-xl">
               <video
                 ref={videoRef}
                 className={`w-full h-full object-cover ${isScanning ? 'block' : 'hidden'}`}
@@ -734,7 +736,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 <button
                   type="button"
                   onClick={stopScanner}
-                  className="px-4 py-1.5 text-xs text-gray-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition inline-flex items-center gap-1.5"
+                  className="px-4 py-1.5 text-xs text-gray-300 hover:text-white bg-[#1c2638] hover:bg-[#25334a] border border-[#232f46] rounded-lg transition inline-flex items-center gap-1.5"
                 >
                   <CameraOff className="w-3.5 h-3.5" /> Pause Scanner
                 </button>
@@ -742,7 +744,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
             )}
 
             {/* Manual Entry Fallback */}
-            <div className="pt-2 border-t border-slate-700">
+            <div className="pt-2 border-t border-[#181f32]">
               <p className="text-[11px] text-gray-400 mb-1.5">Or enter pass identifier manually:</p>
               <form onSubmit={handleManualSubmit} className="flex gap-2">
                 <input
@@ -750,11 +752,11 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   placeholder="e.g. TEST123-SZ83KSCE-0001"
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
-                  className="flex-1 bg-slate-900 text-white text-xs px-3 py-2 border border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="flex-1 bg-[#080b15] text-white text-xs px-3 py-2 border border-[#1c2438] rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1"
+                  className="px-4 py-2 bg-[#1c2638] hover:bg-[#25334a] text-white text-xs font-semibold rounded-lg border border-[#232f46] transition flex items-center gap-1"
                 >
                   <Search className="w-3.5 h-3.5" /> Verify
                 </button>
@@ -765,7 +767,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* PROCESSING SPINNER */}
         {scanState === SCAN_STATES.PROCESSING && (
-          <div className="bg-slate-800/90 rounded-2xl p-8 border border-slate-700 text-center space-y-4">
+          <div className="bg-[#0c101d] rounded-2xl p-8 border border-[#181f32] text-center space-y-4">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
             <h3 className="text-base font-bold text-white">Verifying Pass...</h3>
             <p className="text-xs text-gray-400 max-w-xs mx-auto">
@@ -776,7 +778,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* CHECKING-IN SPINNER */}
         {scanState === SCAN_STATES.CHECKING_IN && (
-          <div className="bg-slate-800/90 rounded-2xl p-8 border border-slate-700 text-center space-y-4">
+          <div className="bg-[#0c101d] rounded-2xl p-8 border border-[#181f32] text-center space-y-4">
             <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
             <h3 className="text-base font-bold text-white">Recording Check-In...</h3>
             <p className="text-xs text-gray-400">Persisting admission entry in the database.</p>
@@ -785,17 +787,18 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* RESULT DISPLAYED: Pass Details Card */}
         {scanState === SCAN_STATES.RESULT_DISPLAYED && verificationResult && (
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl animate-fade-in">
+          <div className="bg-[#0c101d] rounded-2xl border border-[#181f32] overflow-hidden shadow-2xl animate-fade-in">
             {/* Header Status Banner */}
             <div
-              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${verificationResult.eligibleForCheckIn
+              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${
+                verificationResult.eligibleForCheckIn
                   ? 'bg-emerald-600 text-white'
                   : verificationResult.status === 'NOT_ACTIVATED'
-                    ? 'bg-amber-600 text-white'
-                    : verificationResult.status === 'ALREADY_CHECKED_IN'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-rose-600 text-white'
-                }`}
+                  ? 'bg-amber-600 text-white'
+                  : verificationResult.status === 'ALREADY_CHECKED_IN'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-rose-600 text-white'
+              }`}
             >
               {verificationResult.eligibleForCheckIn ? (
                 <>
@@ -818,7 +821,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
             {/* Pass Metadata Body */}
             <div className="p-5 space-y-4">
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/60 space-y-2">
+              <div className="bg-[#080b15] rounded-xl p-3 border border-[#1c2438] space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-400">Pass Number:</span>
                   <span className="font-mono font-bold text-purple-300 text-sm">
@@ -839,7 +842,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
               {/* Attendee Info Card */}
               {verificationResult.attendeeName ? (
-                <div className="bg-slate-900/40 rounded-xl p-3.5 border border-slate-700/60 space-y-1.5">
+                <div className="bg-[#080b15] rounded-xl p-3.5 border border-[#1c2438] space-y-1.5">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-purple-400" />
                     <span className="font-bold text-base text-white">
@@ -891,7 +894,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 <button
                   type="button"
                   onClick={handleResetScanner}
-                  className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-200 rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 bg-[#1c2638] hover:bg-[#25334a] text-gray-200 rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5 border border-[#232f46]"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Scan Next Pass
                 </button>
@@ -902,7 +905,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* SUCCESS STATE */}
         {scanState === SCAN_STATES.SUCCESS && checkInResult && (
-          <div className="bg-slate-800 rounded-2xl border border-emerald-500/50 p-6 text-center space-y-4 shadow-2xl animate-fade-in">
+          <div className="bg-[#0c101d] rounded-2xl border border-emerald-500/50 p-6 text-center space-y-4 shadow-2xl animate-fade-in">
             <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
               <CheckCircle className="w-10 h-10" />
             </div>
@@ -912,7 +915,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
               <p className="text-xs text-emerald-300 mt-1">Admission Entry Recorded</p>
             </div>
 
-            <div className="bg-slate-900/70 rounded-xl p-4 text-left text-xs space-y-2 border border-slate-700">
+            <div className="bg-[#080b15] rounded-xl p-4 text-left text-xs space-y-2 border border-[#1c2438]">
               <div className="flex justify-between">
                 <span className="text-gray-400">Attendee:</span>
                 <strong className="text-white text-sm">{checkInResult.attendeeName}</strong>
@@ -945,15 +948,16 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
         {/* ERROR STATE */}
         {scanState === SCAN_STATES.ERROR && errorDisplay && (
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 text-center space-y-4 shadow-2xl animate-fade-in">
+          <div className="bg-[#0c101d] rounded-2xl border border-[#181f32] p-6 text-center space-y-4 shadow-2xl animate-fade-in">
             {/* Status Icon */}
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${errorDisplay.severity === 'danger'
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${
+                errorDisplay.severity === 'danger'
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : errorDisplay.severity === 'warning'
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                }`}
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+              }`}
             >
               {errorDisplay.severity === 'danger' ? (
                 <XCircle className="w-9 h-9" />
@@ -967,19 +971,20 @@ const CheckinScan = ({ eventId: propEventId }) => {
             {/* Title & Code Badge */}
             <div>
               <h2 className="text-lg font-bold text-white">{errorDisplay.title}</h2>
-              <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-900 border border-slate-700 text-purple-300">
+              <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-[#080b15] border border-[#1c2438] text-purple-300">
                 [{errorDisplay.code}]
               </span>
             </div>
 
             {/* Explanation Card */}
             <div
-              className={`rounded-xl p-3.5 text-xs text-left ${errorDisplay.severity === 'danger'
+              className={`rounded-xl p-3.5 text-xs text-left ${
+                errorDisplay.severity === 'danger'
                   ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
                   : errorDisplay.severity === 'warning'
-                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                    : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
-                }`}
+                  ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                  : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
+              }`}
             >
               <p className="leading-relaxed">{errorDisplay.explanation}</p>
             </div>
@@ -1022,7 +1027,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   handleResetScanner();
                   // Scroll to manual input
                 }}
-                className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-gray-300 rounded-xl text-xs transition"
+                className="w-full py-2 bg-[#1c2638] hover:bg-[#25334a] text-gray-300 rounded-xl text-xs transition border border-[#232f46]"
               >
                 Manual Entry
               </button>
