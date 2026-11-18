@@ -649,7 +649,7 @@ const ActivatePass = () => {
               <div className="relative z-10">
                 <div className="text-center space-y-1">
                   <h3 className="text-base font-semibold text-white">Scan or Enter Badge Code</h3>
-                  <p className="text-xs text-purple-100/90">
+                  <p className="text-xs text-purple-100/90 mb-2">
                     Scan the QR code on your printed physical badge, or enter the pass identifier below.
                   </p>
                 </div>
