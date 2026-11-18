@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import formBackground from "../../assets/formBackground.png"
 import toast from 'react-hot-toast';
 import {
   Ticket,
@@ -446,8 +447,8 @@ const ActivatePass = () => {
         if (field.required && field.visible !== false) {
           const val =
             dynamicAnswers[field.fieldKey] !== undefined &&
-            dynamicAnswers[field.fieldKey] !== null &&
-            dynamicAnswers[field.fieldKey] !== ''
+              dynamicAnswers[field.fieldKey] !== null &&
+              dynamicAnswers[field.fieldKey] !== ''
               ? dynamicAnswers[field.fieldKey]
               : formData[field.fieldKey];
           if (val === undefined || val === null || val === '') {
@@ -601,12 +602,14 @@ const ActivatePass = () => {
     <div className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 flex flex-col justify-center items-center">
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         {/* Header Banner */}
-        <div
-          className={`p-6 sm:p-8 text-center relative text-white ${isStudent
-              ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800'
-              : 'bg-gradient-to-r from-purple-700 via-indigo-800 to-purple-900'
-            }`}
-        >
+        <div className="p-6 sm:p-8 text-center relative text-white">
+          <img
+            src={formBackground}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10">
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
             {isAutoActivated ? (
               <Sparkles className="w-8 h-8 text-white" />
@@ -630,6 +633,7 @@ const ActivatePass = () => {
                 ? 'Complete your verified student registration to link your badge for official campus/event admission.'
                 : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
           </p>
+          </div>
         </div>
 
         <div className="p-6 sm:p-8 space-y-6">
@@ -653,7 +657,7 @@ const ActivatePass = () => {
                     value={inputToken}
                     onChange={(e) => setInputToken(e.target.value)}
                     placeholder="e.g. TEST123-EPXHJ38Y-0001"
-                    className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+                    className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                   />
                   <button
                     type="submit"
@@ -709,8 +713,8 @@ const ActivatePass = () => {
                   <span className="text-gray-500">Pass Category:</span>
                   <span
                     className={`font-semibold px-2 py-0.5 rounded text-[11px] ${isStudent
-                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                        : 'bg-purple-50 text-purple-700 border border-purple-200'
+                      ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                      : 'bg-purple-50 text-purple-700 border border-purple-200'
                       }`}
                   >
                     {passData?.categoryCode || passData?.category || 'PASS'}
@@ -804,6 +808,10 @@ const ActivatePass = () => {
               {passData && (
                 <div className="bg-white rounded-xl p-4 border border-purple-100 text-left text-xs space-y-2 max-w-sm mx-auto">
                   <div className="flex justify-between">
+                    <span className="text-gray-500">Name:</span>
+                    <span className="font-mono font-bold text-purple-900">{passData.attendeeName}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Pass Number:</span>
                     <span className="font-mono font-bold text-purple-900">{passData.passNumber}</span>
                   </div>
@@ -821,28 +829,6 @@ const ActivatePass = () => {
               <p className="text-xs text-purple-800/80 max-w-sm mx-auto">
                 If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
               </p>
-
-              {/* Download Pass PDF */}
-              <div className="pt-2 flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
-                <button
-                  type="button"
-                  onClick={handleDownloadPassPdf}
-                  disabled={isDownloadingPdf || !passData}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition"
-                >
-                  {isDownloadingPdf ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Generating Pass PDF...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      <span>Download Pass PDF</span>
-                    </>
-                  )}
-                </button>
-              </div>
 
               <div>
                 <button
@@ -942,28 +928,36 @@ const ActivatePass = () => {
           {(pageState === PAGE_STATES.READY_FOR_ACTIVATION ||
             pageState === PAGE_STATES.SUBMITTING) &&
             passData && (
-              <div className="space-y-6 animate-fade-in">
-                {/* 1. Pass Status Notice Card */}
-                <div
-                  className={`border rounded-xl p-4 space-y-2 ${isStudent
-                      ? 'bg-purple-50/70 border-purple-200/60'
-                      : 'bg-purple-50/70 border-purple-200/60'
-                    }`}
-                >
+              <div className="relative -m-6 sm:-m-8 p-6 sm:p-8 overflow-hidden rounded-b-2xl">
+                {/* Background Image */}
+                <img
+                  src={formBackground}
+                  alt="Form Background"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                />
+
+                <div className="relative z-10 space-y-6 animate-fade-in">
+                  {/* 1. Pass Status Notice Card */}
+                  <div
+                    className={`border rounded-xl p-4 space-y-2 bg-white/85 backdrop-blur-xs shadow-sm ${isStudent
+                      ? 'border-purple-200/60'
+                      : 'border-purple-200/60'
+                      }`}
+                  >
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider bg-purple-600"
+                        className="px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider bg-amber-900"
                       >
                         Eligible for Activation
                       </span>
                       <span
-                        className="px-2 py-0.5 text-[10px] font-bold rounded border bg-purple-100 text-purple-800 border-purple-300"
+                        className="px-2 py-0.5 text-[10px] font-bold rounded border bg-amber-100 text-amber-900 border-amber-300"
                       >
                         {passData.categoryName || passData.categoryCode || passData.category || 'GENERAL'} CATEGORY
                       </span>
                     </div>
-                    <span className="font-mono text-xs font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">
+                    <span className="font-mono text-xs font-bold text-amber-900 bg-white px-2 py-0.5 rounded border border-amber-200">
                       {passData.passNumber}
                     </span>
                   </div>
@@ -977,13 +971,13 @@ const ActivatePass = () => {
                   <div className="flex flex-wrap gap-3 text-xs text-gray-600 pt-1">
                     {passData.venue && (
                       <div className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-purple-600" />
+                        <MapPin className="w-3.5 h-3.5 text-amber-900" />
                         <span>{passData.venue}</span>
                       </div>
                     )}
                     {passData.startsAt && (
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-purple-600" />
+                        <Calendar className="w-3.5 h-3.5 text-amber-900" />
                         <span>{formatDate(passData.startsAt)}</span>
                       </div>
                     )}
@@ -1016,7 +1010,7 @@ const ActivatePass = () => {
                 )}
 
                 {/* 3. Category Registration Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white/85 backdrop-blur-xs p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
                   {/* Full Name */}
                   <div>
                     <label className="text-xs font-semibold text-gray-700 block mb-1">
@@ -1032,8 +1026,8 @@ const ActivatePass = () => {
                         disabled={pageState === PAGE_STATES.SUBMITTING}
                         placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
                         className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.fullName
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                            : 'border-gray-300 focus:ring-purple-500'
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                          : 'border-gray-300 focus:ring-amber-500'
                           }`}
                       />
                     </div>
@@ -1060,8 +1054,8 @@ const ActivatePass = () => {
                           disabled={pageState === PAGE_STATES.SUBMITTING}
                           placeholder="you@example.com"
                           className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.email
-                              ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                              : 'border-gray-300 focus:ring-purple-500'
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                            : 'border-gray-300 focus:ring-amber-500'
                             }`}
                         />
                       </div>
@@ -1077,11 +1071,10 @@ const ActivatePass = () => {
                         Mobile Number <span className="text-rose-500">*</span>
                       </label>
                       <div
-                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${
-                          formErrors.mobileNumber
-                            ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
-                            : 'border-gray-300 focus-within:ring-purple-500 bg-white'
-                        }`}
+                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${formErrors.mobileNumber
+                          ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
+                          : 'border-gray-300 focus-within:ring-purple-500 bg-white'
+                          }`}
                       >
                         <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-r border-gray-200 text-gray-700 select-none text-xs sm:text-sm font-semibold shrink-0">
                           <Phone className="w-3.5 h-3.5 text-gray-400" />
@@ -1218,8 +1211,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-amber-500'
                                   }`}
                               />
                             ) : field.fieldType === 'TEXTAREA' ? (
@@ -1238,8 +1231,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-amber-500'
                                   }`}
                               />
                             ) : field.fieldType === 'SELECT' ? (
@@ -1256,8 +1249,8 @@ const ActivatePass = () => {
                                 }}
                                 disabled={pageState === PAGE_STATES.SUBMITTING}
                                 className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                    : 'border-gray-300 focus:ring-purple-500'
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-amber-500'
                                   }`}
                               >
                                 <option value="">{field.placeholder || '-- Select an option --'}</option>
@@ -1288,7 +1281,7 @@ const ActivatePass = () => {
                                           setFormErrors({ ...formErrors, [field.fieldKey]: null });
                                         }
                                       }}
-                                      className="text-purple-600 focus:ring-purple-500"
+                                      className="text-amber-700 focus:ring-amber-500"
                                     />
                                     <span>{opt}</span>
                                   </label>
@@ -1308,7 +1301,7 @@ const ActivatePass = () => {
                                       setFormErrors({ ...formErrors, [field.fieldKey]: null });
                                     }
                                   }}
-                                  className="rounded text-purple-600 focus:ring-purple-500"
+                                  className="rounded text-amber-700 focus:ring-amber-500"
                                 />
                                 <span>{field.placeholder || field.label}</span>
                               </label>
@@ -1344,8 +1337,8 @@ const ActivatePass = () => {
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. Delhi University / MIT"
                               className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.college
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-blue-500'
+                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                           </div>
@@ -1370,8 +1363,8 @@ const ActivatePass = () => {
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. B.Tech Computer Science"
                               className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.course
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-blue-500'
+                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                           </div>
@@ -1436,7 +1429,7 @@ const ActivatePass = () => {
                               onChange={handleChange}
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. Acme Innovations"
-                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                             />
                           </div>
                         </div>
@@ -1454,7 +1447,7 @@ const ActivatePass = () => {
                               onChange={handleChange}
                               disabled={pageState === PAGE_STATES.SUBMITTING}
                               placeholder="e.g. Senior Architect"
-                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                             />
                           </div>
                         </div>
@@ -1467,7 +1460,7 @@ const ActivatePass = () => {
                     <button
                       type="submit"
                       disabled={pageState === PAGE_STATES.SUBMITTING}
-                      className="w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500"
+                      className="w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 bg-amber-900 hover:bg-amber-950 focus:ring-2 focus:ring-amber-500"
                     >
                       {pageState === PAGE_STATES.SUBMITTING ? (
                         <>
@@ -1492,7 +1485,8 @@ const ActivatePass = () => {
                   </p>
                 </form>
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import passAllotmentService from '../../Api-Services/passAllotmentService';
 import EventCategoriesCard from '../../Components/eventCategories/EventCategoriesCard';
 import BulkDownloadPassesModal from '../../Components/Modals/passes/BulkDownloadPassesModal';
 import BulkFullPassDownloadModal from '../../Components/Modals/passes/BulkFullPassDownloadModal';
-import BulkDownloadPass, { backpass } from '../../Components/emailPass/bulkDownloadpass';
+import BulkDownloadPass, { backpass, formatPassDisplayDate } from '../../Components/emailPass/bulkDownloadpass';
 import BulkActivationModal from '../../Components/Modals/passes/BulkActivationModal';
 import ManagePassValidityModal from '../../Components/Modals/passes/ManagePassValidityModal';
 import GatekeeperManagementModal from '../../Components/Modals/gatekeepers/GatekeeperManagementModal';
@@ -133,7 +133,7 @@ const EventDetail = () => {
   const [passes, setPasses] = useState([]);
   const [passesLoading, setPassesLoading] = useState(false);
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(100);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -341,6 +341,10 @@ const EventDetail = () => {
     const seq = p.sequenceNumber ? String(p.sequenceNumber).padStart(4, '0') : p.passNumber?.split('-')?.pop() || '';
     const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
     const cat = (p.categoryName || p.category || p.categoryCode || 'GENERAL').toUpperCase();
+    const rawEventDate = (event?.startsAt && event?.endsAt)
+      ? `${formatDate(event?.startsAt)} – ${formatDate(event?.endsAt)}`
+      : (event?.startsAt ? formatDate(event.startsAt) : '');
+    const dateStr = formatPassDisplayDate(p.validDays || [], rawEventDate || 'Dec 11th , 12th 2026') || rawEventDate || 'Dec 11th , 12th 2026';
     const win = window.open('', '_blank');
     if (!win) {
       toast.error('Pop-up blocked! Please allow pop-ups for this site.');
@@ -451,7 +455,7 @@ const EventDetail = () => {
     .serial-badge span {
       font-size: 11px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
       font-family: Arial, Helvetica, sans-serif;
       letter-spacing: 1.5px;
       white-space: nowrap;
@@ -470,7 +474,7 @@ const EventDetail = () => {
     .category-badge span {
       font-size: 11px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
       font-family: Arial, Helvetica, sans-serif;
       letter-spacing: 1.5px;
       white-space: nowrap;
@@ -498,6 +502,25 @@ const EventDetail = () => {
       white-space: nowrap;
       margin-top: 9px;
     }
+    .date-badge {
+      position: absolute;
+      bottom: 8%;
+      right: 5.5%;
+      width: 22%;
+      height: 9%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .date-badge span {
+      font-size: 9px;
+      font-weight: 700;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      text-align: center;
+    }
   </style>
   <style id="dynamicPrintStyle">
     @media print {
@@ -509,7 +532,8 @@ const EventDetail = () => {
       .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; }
       .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; }
       .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; }
-      .serial-badge span, .category-badge span { font-size: 13px !important; }
+      .serial-badge span, .category-badge span, .date-badge span { font-size: 11px !important; color: #000000 !important; visibility: visible !important; display: inline-block !important; }
+      .date-badge { display: flex !important; visibility: visible !important; }
       .left-seq-strip span { font-size: 11px !important; }
     }
   </style>
@@ -532,11 +556,14 @@ const EventDetail = () => {
       <div class="pass-back">
         <img src="${backpass}" alt="Pass Back" class="pass-img" />
         <div class="qr-container">
-          ${qrUrl ? `<img src="${qrUrl}" alt="QR" class="qr-img" />` : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#92400e;background-color:#fef3c7;border:1.5px dashed #f59e0b;border-radius:4px;"><span>BADGE</span><span style="font-size:6px;font-weight:600;color:#b45309;">NO QR</span></div>`}
+          ${qrUrl ? `<img src="${qrUrl}" alt="QR" class="qr-img" crossorigin="anonymous" />` : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#92400e;background-color:#fef3c7;border:1.5px dashed #f59e0b;border-radius:4px;"><span>BADGE</span><span style="font-size:6px;font-weight:600;color:#b45309;">NO QR</span></div>`}
         </div>
-        ${seqBadge ? `<div class="serial-badge"><span>${seqBadge}</span></div>` : ''}
-        ${cat ? `<div class="category-badge"><span>${cat}</span></div>` : ''}
-        ${seqBadge ? `<div class="left-seq-strip"><span>${seqBadge}</span></div>` : ''}
+        ${cat ? `<div class="category-badge" style="position: absolute; bottom: 26%; right: 5.5%; width: 22%; height: 9%; display: flex; align-items: center; justify-content: center; z-index: 10;"><span style="font-size: 11px; font-weight: 700; color: #000000 !important; font-family: Arial, Helvetica, sans-serif; letter-spacing: 1.5px; white-space: nowrap; text-transform: uppercase;">${cat}</span></div>` : ''}
+        ${seqBadge ? `<div class="serial-badge" style="position: absolute; bottom: 17%; right: 5.5%; width: 22%; height: 9%; display: flex; align-items: center; justify-content: center; z-index: 10;"><span style="font-size: 11px; font-weight: 700; color: #000000 !important; font-family: Arial, Helvetica, sans-serif; letter-spacing: 1.5px; white-space: nowrap; text-transform: uppercase;">${seqBadge}</span></div>` : ''}
+        <div class="date-badge" style="position: absolute; bottom: 8%; right: 5.5%; width: 22%; height: 9%; display: flex; align-items: center; justify-content: center; z-index: 10;">
+          <span style="font-size: 11px; font-weight: 700; color: #000000 !important; font-family: Arial, Helvetica, sans-serif; letter-spacing: 0.5px; white-space: nowrap; text-align: center;">${dateStr || 'Dec 11th , 12th 2026'}</span>
+        </div>
+        ${seqBadge ? `<div class="left-seq-strip" style="position: absolute; bottom: 5%; left: -2%; width: 5.5%; display: flex; align-items: center; justify-content: center; transform: rotate(-90deg); transform-origin: center center; z-index: 10;"><span style="font-size: 10px; font-weight: 700; color: #121212 !important; font-family: Arial, Helvetica, sans-serif; letter-spacing: 3.5px; line-height: 2; white-space: nowrap; margin-top: 9px;">${seqBadge}</span></div>` : ''}
       </div>
     </div>
   </div>
@@ -551,11 +578,11 @@ const EventDetail = () => {
       if (mode === 'a4') {
         badge.textContent = 'A4 LANDSCAPE';
         btn.textContent = 'Switch to Pass Only (No Background)';
-        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+        styleEl.innerHTML = '@media print { @page { size: landscape; margin: 0; } html, body { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 100% !important; height: 100vh !important; max-height: 100vh !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; } .bulk-pass-card { width: 100% !important; max-width: 98% !important; height: auto !important; margin: 0 auto !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; } .pass-back { width: 100% !important; height: auto !important; position: relative !important; } .pass-img { width: 100% !important; height: auto !important; max-height: 98vh !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; } .serial-badge span, .category-badge span { font-size: 13px !important; color: #000000 !important; } .date-badge span { font-size: 10px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
       } else {
         badge.textContent = 'PASS ONLY (NO BACKGROUND)';
         btn.textContent = 'Switch to A4 Landscape';
-        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span { font-size: 13px !important; } .left-seq-strip span { font-size: 11px !important; } }';
+        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span { font-size: 13px !important; color: #000000 !important; } .date-badge span { font-size: 10px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
       }
     }
     function togglePrintMode() {
@@ -602,7 +629,7 @@ const EventDetail = () => {
         ctx.font = 'bold 32px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#000000';
         ctx.fillText(catSpan.textContent.trim(), catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
         ctx.restore();
       }
@@ -616,8 +643,23 @@ const EventDetail = () => {
         ctx.font = 'bold 32px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#000000';
         ctx.fillText(seqSpan.textContent.trim(), serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+        ctx.restore();
+      }
+
+      var dateSpan = card.querySelector('.date-badge span');
+      var dateBoxWidth = catBoxWidth;
+      var dateBoxHeight = catBoxHeight;
+      var dateBoxX = catBoxX;
+      var dateBoxY = Math.round(686 * (1.0 - 0.08 - 0.09));
+      if (dateSpan && dateSpan.textContent) {
+        ctx.save();
+        ctx.font = 'bold 26px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(dateSpan.textContent.trim(), dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
         ctx.restore();
       }
 
@@ -1387,9 +1429,8 @@ const EventDetail = () => {
                     <React.Fragment key={recipient.allottedTo}>
                       {/* Recipient Primary Row */}
                       <tr
-                        className={`hover:bg-purple-50/30 transition-colors cursor-pointer ${
-                          isExpanded ? 'bg-purple-50/20' : ''
-                        }`}
+                        className={`hover:bg-purple-50/30 transition-colors cursor-pointer ${isExpanded ? 'bg-purple-50/20' : ''
+                          }`}
                         onClick={() => toggleRecipientExpand(recipient.allottedTo)}
                       >
                         {/* Allotted To */}
@@ -1716,20 +1757,18 @@ const EventDetail = () => {
                   setCategoryFilter('ALL');
                   setPage(0);
                 }}
-                className={`p-3 rounded-xl text-left transition-all duration-200 relative flex flex-col justify-between gap-2.5 group cursor-pointer border ${
-                  categoryFilter === 'ALL'
+                className={`p-3 rounded-xl text-left transition-all duration-200 relative flex flex-col justify-between gap-2.5 group cursor-pointer border ${categoryFilter === 'ALL'
                     ? 'border-purple-600 bg-purple-50/90 shadow-md ring-2 ring-purple-500/25 -translate-y-0.5'
                     : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20 hover:shadow-xs'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2 w-full">
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        categoryFilter === 'ALL'
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${categoryFilter === 'ALL'
                           ? 'bg-purple-600 text-white shadow-xs'
                           : 'bg-gray-100 text-gray-600 group-hover:bg-purple-100 group-hover:text-purple-700'
-                      }`}
+                        }`}
                     >
                       <Layers className="w-4 h-4" />
                     </div>
@@ -1738,11 +1777,10 @@ const EventDetail = () => {
                         All Passes
                       </h4>
                       <span
-                        className={`inline-block font-mono text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
-                          categoryFilter === 'ALL'
+                        className={`inline-block font-mono text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${categoryFilter === 'ALL'
                             ? 'bg-purple-600 text-white'
                             : 'bg-gray-100 text-gray-600'
-                        }`}
+                          }`}
                       >
                         ALL
                       </span>
@@ -1773,11 +1811,10 @@ const EventDetail = () => {
                     Total: <strong className="text-gray-900">{statsLoading ? '...' : (passStats?.totalPasses ?? totalElements)}</strong>
                   </span>
                   <span
-                    className={`text-[10px] font-semibold transition-colors ${
-                      categoryFilter === 'ALL'
+                    className={`text-[10px] font-semibold transition-colors ${categoryFilter === 'ALL'
                         ? 'text-purple-700 font-bold'
                         : 'text-gray-400 group-hover:text-purple-600'
-                    }`}
+                      }`}
                   >
                     {categoryFilter === 'ALL' ? 'Showing all ↓' : 'Show all'}
                   </span>
@@ -1872,18 +1909,16 @@ const EventDetail = () => {
                     <div className="flex items-center justify-between pt-1.5 border-t border-gray-100 text-[11px]">
                       <span className="text-[10px] text-gray-500 font-medium flex items-center gap-1">
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            cat.enabled ? 'bg-emerald-500' : 'bg-rose-500'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${cat.enabled ? 'bg-emerald-500' : 'bg-rose-500'
+                            }`}
                         />
                         {cat.enabled ? 'Active' : 'Disabled'}
                       </span>
                       <span
-                        className={`text-[10px] font-semibold transition-colors ${
-                          isSelected
+                        className={`text-[10px] font-semibold transition-colors ${isSelected
                             ? 'text-purple-700 font-bold'
                             : 'text-gray-400 group-hover:text-purple-600'
-                        }`}
+                          }`}
                       >
                         {isSelected ? 'Filtering table ↓' : 'Click to filter'}
                       </span>
@@ -2428,11 +2463,10 @@ const EventDetail = () => {
                     type="button"
                     onClick={() => setPage(pageIndex)}
                     disabled={passesLoading}
-                    className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${
-                      page === pageIndex
+                    className={`w-9 h-9 rounded-lg transition-all duration-200 text-xs font-bold shadow-sm ${page === pageIndex
                         ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white border-purple-600 shadow-md hover:from-purple-700 hover:to-purple-800 transform hover:scale-105'
                         : 'bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700'
-                    }`}
+                      }`}
                   >
                     {pageIndex + 1}
                   </button>
