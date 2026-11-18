@@ -291,27 +291,13 @@ const BulkFullPassDownloadModal = ({
           }
               </div>
 
-              <!-- Category Badge -->
-              ${cat
-            ? `<div class="category-badge">
-                       <span>${cat}</span>
-                     </div>`
-            : ''
-          }
-
-              <!-- Serial Number Badge -->
-              ${seqBadge
-            ? `<div class="serial-badge">
-                       <span>${seqBadge}</span>
-                     </div>`
-            : ''
-          }
-
-              <!-- Date Badge -->
-              ${dateStr
-            ? `<div class="date-badge">
-                       <span>${dateStr}</span>
-                     </div>`
+              <!-- Unified Badge Details Cluster below QR -->
+              ${(cat || seqBadge || dateStr)
+            ? `<div class="pass-badge-cluster">
+                        ${cat ? `<span class="badge-cat">${cat}</span>` : ''}
+                        ${seqBadge ? `<span class="badge-seq">${seqBadge}</span>` : ''}
+                        ${dateStr ? `<span class="badge-date">${dateStr}</span>` : ''}
+                      </div>`
             : ''
           }
 
@@ -529,63 +515,48 @@ const BulkFullPassDownloadModal = ({
       color: #b45309;
     }
 
-    .serial-badge {
+    .pass-badge-cluster {
       position: absolute;
-      bottom: 17%;
-      right: 5.5%;
-      width: 22%;
-      height: 9%;
+      top: 60.5%;
+      bottom: 8.5%;
+      right: 6.5%;
+      width: 21%;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: space-evenly;
+      text-align: center;
+      line-height: 1.15;
+      pointer-events: none;
     }
-    .serial-badge span {
+    .badge-cat {
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       color: #000000;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
       letter-spacing: 1.5px;
       white-space: nowrap;
       text-transform: uppercase;
+      display: block;
     }
-
-    .category-badge {
-      position: absolute;
-      bottom: 26%;
-      right: 5.5%;
-      width: 22%;
-      height: 9%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .category-badge span {
-      font-size: 11px;
-      font-weight: 700;
+    .badge-seq {
+      font-size: 12px;
+      font-weight: 800;
       color: #000000;
-      font-family: Arial, Helvetica, sans-serif;
-      letter-spacing: 1.5px;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      letter-spacing: 0.8px;
       white-space: nowrap;
       text-transform: uppercase;
+      display: block;
     }
-
-    .date-badge {
-      position: absolute;
-      bottom: 8%;
-      right: 5.5%;
-      width: 22%;
-      height: 9%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .date-badge span {
-      font-size: 10px;
+    .badge-date {
+      font-size: 9.5px;
       font-weight: 700;
       color: #000000;
-      font-family: Arial, Helvetica, sans-serif;
-      letter-spacing: 0.5px;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      letter-spacing: 0.3px;
       white-space: nowrap;
+      display: block;
     }
 
     .left-seq-strip {

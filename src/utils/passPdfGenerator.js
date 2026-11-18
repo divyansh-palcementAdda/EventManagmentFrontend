@@ -4,6 +4,28 @@ import backpass from '../assets/final.png';
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
 /**
+ * Helper to draw centered text with custom letter-spacing on an HTML5 canvas context.
+ * Uses native ctx.letterSpacing when available, with a per-character fallback.
+ */
+export const drawTextWithLetterSpacing = (ctx, text, centerX, centerY, spacingPx = 0) => {
+  if (!text) return;
+  if ('letterSpacing' in ctx) {
+    ctx.letterSpacing = `${spacingPx}px`;
+    ctx.fillText(text, centerX, centerY);
+    ctx.letterSpacing = '0px';
+  } else {
+    const chars = Array.from(text);
+    const charWidths = chars.map((c) => ctx.measureText(c).width);
+    const totalW = charWidths.reduce((a, b) => a + b, 0) + (chars.length - 1) * spacingPx;
+    let curX = centerX - totalW / 2;
+    for (let i = 0; i < chars.length; i++) {
+      ctx.fillText(chars[i], curX + charWidths[i] / 2, centerY);
+      curX += charWidths[i] + spacingPx;
+    }
+  }
+};
+
+/**
  * Preload an image from a URL or Base64 into an HTMLImageElement
  */
 const loadImage = (src) => {
@@ -141,6 +163,7 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
   const qrBoxHeight = qrBoxWidth;
   const qrBoxX = Math.round(1826 - 1826 * 0.095 - qrBoxWidth); // ~1378px
   const qrBoxY = Math.round(686 * 0.2); // ~137px
+  const clusterCenterX = qrBoxX + qrBoxWidth / 2; // ~1515px (centered with QR code)
 
   // 2. Draw QR code or No-QR Amber Badge
   if (noQr || !qrImg) {
@@ -154,18 +177,18 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
       ctx.stroke();
 
       ctx.fillStyle = '#92400e';
-      ctx.font = 'bold 24px Arial, Helvetica, sans-serif';
+      ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('WALK-IN', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 - 14);
-      ctx.font = 'bold 16px Arial, Helvetica, sans-serif';
-      ctx.fillText('NO QR REQUIRED', qrBoxX + qrBoxWidth / 2, qrBoxY + qrBoxHeight / 2 + 16);
+      ctx.fillText('WALK-IN', clusterCenterX, qrBoxY + qrBoxHeight / 2 - 14);
+      ctx.font = "bold 16px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText('NO QR REQUIRED', clusterCenterX, qrBoxY + qrBoxHeight / 2 + 16);
     }
   } else if (qrImg) {
     ctx.drawImage(qrImg, qrBoxX, qrBoxY, qrBoxWidth, qrBoxHeight);
   }
 
-  // 3. Category Badge Text
+  // 3. Category Badge Text (tight gap directly below QR)
   const cat = (
     pass.categoryName ||
     pass.category ||
@@ -180,51 +203,52 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
     : pass.passNumber?.split('-')?.pop() || '';
   const seqBadge = seq ? (seq.startsWith('#') ? seq : `#${seq}`) : '';
 
-  const catBoxWidth = Math.round(1826 * 0.22); // ~402px
-  const catBoxHeight = Math.round(686 * 0.09); // ~62px
-  const catBoxX = Math.round(1826 - 1826 * 0.055 - catBoxWidth); // ~1324px
-  const catBoxY = Math.round(686 * (1.0 - 0.26 - 0.09)); // ~446px
-
   if (cat) {
     ctx.save();
-    ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
+    let fontSize = 28;
+    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    ctx.fillText(cat, catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
+    const spacing = 3.5;
+    const measuredW = ctx.measureText(cat).width + (cat.length - 1) * spacing;
+    if (measuredW > 330) {
+      fontSize = Math.max(16, Math.floor(fontSize * (330 / measuredW)));
+      ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    }
+    drawTextWithLetterSpacing(ctx, cat, clusterCenterX, 456, spacing);
     ctx.restore();
   }
 
-  // 4. Serial Number Badge (Middle box)
-  const serialBoxWidth = catBoxWidth;
-  const serialBoxHeight = catBoxHeight;
-  const serialBoxX = catBoxX;
-  const serialBoxY = Math.round(686 * (1.0 - 0.17 - 0.09)); // ~508px
-
+  // 4. Serial Number Badge (tight gap directly below Category)
   if (seqBadge) {
     ctx.save();
-    ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
+    let fontSize = 30;
+    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    ctx.fillText(seqBadge, serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+    const spacing = 1.0;
+    drawTextWithLetterSpacing(ctx, seqBadge, clusterCenterX, 504, spacing);
     ctx.restore();
   }
 
-  // 5. Date Badge (Lower box)
-  const dateBoxWidth = catBoxWidth;
-  const dateBoxHeight = catBoxHeight;
-  const dateBoxX = catBoxX;
-  const dateBoxY = Math.round(686 * (1.0 - 0.08 - 0.09)); // ~570px
-
+  // 5. Date Badge (tight gap directly below Serial)
   const formattedDate = formatPassDisplayDate(pass.validDays, event);
   if (formattedDate) {
     ctx.save();
-    ctx.font = 'bold 26px Arial, Helvetica, sans-serif';
+    let fontSize = 22;
+    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    ctx.fillText(formattedDate, dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
+    const spacing = 0.5;
+    const measuredW = ctx.measureText(formattedDate).width + (formattedDate.length - 1) * spacing;
+    if (measuredW > 340) {
+      fontSize = Math.max(15, Math.floor(fontSize * (340 / measuredW)));
+      ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    }
+    drawTextWithLetterSpacing(ctx, formattedDate, clusterCenterX, 550, spacing);
     ctx.restore();
   }
 
@@ -233,11 +257,11 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
     ctx.save();
     ctx.translate(34, 620);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = 'bold 22px Arial, Helvetica, sans-serif';
+    ctx.font = "bold 22px 'Segoe UI', Roboto, Arial, sans-serif";
     ctx.fillStyle = '#121212';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(seqBadge, 0, 0);
+    drawTextWithLetterSpacing(ctx, seqBadge, 0, 0, 1.0);
     ctx.restore();
   }
 
@@ -277,7 +301,7 @@ export const createPassesPdfDoc = async (passList, event = {}, onProgress = null
 
     const pass = passList[i];
     await renderPassToCanvas(pass, bgImg, event, canvas);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
     if (i > 0) {
       doc.addPage([PASS_HEIGHT_MM, PASS_WIDTH_MM], 'landscape');
@@ -369,7 +393,7 @@ export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = nul
 
     const pass = passList[i];
     await renderPassToCanvas(pass, bgImg, event, canvas);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
     const y = startY + slotIndex * (passH + gapY);
 
