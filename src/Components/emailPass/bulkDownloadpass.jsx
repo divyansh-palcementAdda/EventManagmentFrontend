@@ -70,7 +70,7 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
     }
 
     if (parsed.length === 0) {
-        return 'Dec 11th , 12th 2026';
+        return 'Dec 11th, 12th 2026';
     }
 
     // Sort chronologically
@@ -93,7 +93,7 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
     if (allSameMonthYear) {
         const daysFormatted = parsed
             .map((d) => `${d.getDate()}${ordinal(d.getDate()).suffix}`)
-            .join(' , ');
+            .join(', ');
         return `${month} ${daysFormatted} ${year}`;
     }
 
@@ -101,7 +101,7 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
 };
 
 export const buildDateLabelText = (days, fallbackDate = '') => {
-    return formatPassDisplayDate(days, fallbackDate || 'Dec 11th , 12th 2026');
+    return formatPassDisplayDate(days, fallbackDate || 'Dec 11th, 12th 2026');
 };
 
 const BulkDownloadPass = ({
@@ -196,7 +196,7 @@ const BulkDownloadPass = ({
     const formattedSeq = seatOrSeq
         ? (String(seatOrSeq).startsWith('#') ? String(seatOrSeq) : `#${seatOrSeq}`)
         : '';
-    const formattedDate = formatPassDisplayDate(validDays, eventDate || 'Dec 11th , 12th 2026');
+    const formattedDate = formatPassDisplayDate(validDays, eventDate || 'Dec 11th, 12th 2026');
 
     const cardContent = (
         <div
@@ -292,95 +292,77 @@ const BulkDownloadPass = ({
                     )}
                 </div>
 
-                {/* Category badge — upper brown strip below QR box */}
-                {category && (
+                {/* Unified text cluster directly below QR box (Category, Sequence, Date) */}
+                {(category || formattedSeq || formattedDate) && (
                     <div
                         style={{
                             position: 'absolute',
-                            bottom: '26%',
-                            right: '5.5%',
-                            width: '22%',
-                            height: '9%',
+                            top: '60.5%',
+                            bottom: '8.5%',
+                            right: '6.5%',
+                            width: '21%',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
-                            justifyContent: 'center',
+                            justifyContent: 'space-evenly',
+                            textAlign: 'center',
+                            lineHeight: 1.15,
+                            pointerEvents: 'none',
+                            boxSizing: 'border-box',
                         }}
                     >
-                        <span
-                            style={{
-                                fontSize: 'clamp(6px, 1.6vw, 13px)',
-                                fontWeight: '700',
-                                color: '#000000',
-                                fontFamily: 'Arial, Helvetica, sans-serif',
-                                letterSpacing: '1.5px',
-                                whiteSpace: 'nowrap',
-                                textAlign: 'center',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {category}
-                        </span>
-                    </div>
-                )}
+                        {category && (
+                            <span
+                                style={{
+                                    fontSize: 'clamp(6.5px, 1.7vw, 13px)',
+                                    fontWeight: '800',
+                                    color: '#000000',
+                                    fontFamily: "'Segoe UI', Roboto, Arial, sans-serif",
+                                    letterSpacing: '1.5px',
+                                    whiteSpace: 'nowrap',
+                                    textAlign: 'center',
+                                    textTransform: 'uppercase',
+                                    display: 'block',
+                                }}
+                            >
+                                {category}
+                            </span>
+                        )}
 
-                {/* Serial Number badge — middle brown strip below the QR box */}
-                {formattedSeq && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '17%',
-                            right: '5.5%',
-                            width: '22%',
-                            height: '9%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontSize: 'clamp(6px, 1.6vw, 13px)',
-                                fontWeight: '700',
-                                color: '#000000',
-                                fontFamily: 'Arial, Helvetica, sans-serif',
-                                letterSpacing: '1.5px',
-                                whiteSpace: 'nowrap',
-                                textAlign: 'center',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {formattedSeq}
-                        </span>
-                    </div>
-                )}
+                        {formattedSeq && (
+                            <span
+                                style={{
+                                    fontSize: 'clamp(7px, 1.8vw, 13.5px)',
+                                    fontWeight: '800',
+                                    color: '#000000',
+                                    fontFamily: "'Segoe UI', Roboto, Arial, sans-serif",
+                                    letterSpacing: '0.8px',
+                                    whiteSpace: 'nowrap',
+                                    textAlign: 'center',
+                                    textTransform: 'uppercase',
+                                    display: 'block',
+                                }}
+                            >
+                                {formattedSeq}
+                            </span>
+                        )}
 
-                {/* Date badge — lower strip below QR box */}
-                {formattedDate && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '8%',
-                            right: '5.5%',
-                            width: '22%',
-                            height: '9%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontSize: 'clamp(5.5px, 1.35vw, 11px)',
-                                fontWeight: '700',
-                                color: '#000000',
-                                fontFamily: 'Arial, Helvetica, sans-serif',
-                                letterSpacing: '0.5px',
-                                whiteSpace: 'nowrap',
-                                textAlign: 'center',
-                            }}
-                        >
-                            {formattedDate}
-                        </span>
+                        {formattedDate && (
+                            <span
+                                style={{
+                                    fontSize: 'clamp(5.5px, 1.35vw, 10.5px)',
+                                    fontWeight: '700',
+                                    color: '#000000',
+                                    fontFamily: "'Segoe UI', Roboto, Arial, sans-serif",
+                                    letterSpacing: '0.3px',
+                                    whiteSpace: 'nowrap',
+                                    textAlign: 'center',
+                                    display: 'block',
+                                }}
+                            >
+                                {formattedDate}
+                            </span>
+                        )}
                     </div>
                 )}
 

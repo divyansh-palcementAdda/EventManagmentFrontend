@@ -2,6 +2,7 @@ import { BrowserQRCodeSvgWriter } from '@zxing/browser';
 import frontPassImg from '../assets/14.png';
 import backPassImg from '../assets/final.png';
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
+import { drawTextWithLetterSpacing } from './passPdfGenerator';
 
 const ordinal = (n) => {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -165,12 +166,9 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
     }
   }
 
-  // 4. Category Badge (upper brown strip)
-  const catBoxWidth = Math.round(width * 0.22);
-  const catBoxHeight = Math.round(backHeight * 0.09);
-  const catBoxX = Math.round(width - width * 0.055 - catBoxWidth);
-  const catBoxY = Math.round(backOffsetY + backHeight * (1 - 0.26 - 0.09));
+  const clusterCenterX = qrBoxX + qrBoxWidth / 2;
 
+  // 4. Category Badge (tight gap directly below QR)
   const categoryName = (
     passData.categoryName ||
     passData.categoryCode ||
@@ -179,45 +177,50 @@ export const generatePassCanvas = async (passData = {}, attendeeData = {}) => {
   ).toUpperCase();
 
   ctx.save();
-  ctx.font = "900 32px 'Poppins', 'Segoe UI', sans-serif";
+  let catFontSize = 28;
+  ctx.font = `bold ${catFontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#000000';
-  ctx.fillText(categoryName, catBoxX + catBoxWidth / 2, catBoxY + catBoxHeight / 2);
+  const catSpacing = 3.5;
+  const measuredCatW = ctx.measureText(categoryName).width + (categoryName.length - 1) * catSpacing;
+  if (measuredCatW > 330) {
+    catFontSize = Math.max(16, Math.floor(catFontSize * (330 / measuredCatW)));
+    ctx.font = `bold ${catFontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+  }
+  drawTextWithLetterSpacing(ctx, categoryName, clusterCenterX, backOffsetY + 456, catSpacing);
   ctx.restore();
 
-  // 5. Serial Number Badge (middle brown strip)
+  // 5. Serial Number Badge (tight gap directly below Category)
   const seq = passData.sequenceNumber || attendeeData?.sequenceNumber || 1;
   const seqFormatted = String(seq).padStart(4, '0');
   const serialText = `#${seqFormatted}`;
 
-  const serialBoxWidth = catBoxWidth;
-  const serialBoxHeight = catBoxHeight;
-  const serialBoxX = catBoxX;
-  const serialBoxY = Math.round(backOffsetY + backHeight * (1 - 0.17 - 0.09));
-
   ctx.save();
-  ctx.font = "800 30px 'Poppins', 'Segoe UI', sans-serif";
+  let seqFontSize = 30;
+  ctx.font = `bold ${seqFontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#000000';
-  ctx.fillText(serialText, serialBoxX + serialBoxWidth / 2, serialBoxY + serialBoxHeight / 2);
+  drawTextWithLetterSpacing(ctx, serialText, clusterCenterX, backOffsetY + 504, 1.0);
   ctx.restore();
 
-  // 6. Date Badge (lower strip)
-  const dateBoxWidth = catBoxWidth;
-  const dateBoxHeight = catBoxHeight;
-  const dateBoxX = catBoxX;
-  const dateBoxY = Math.round(backOffsetY + backHeight * (1 - 0.08 - 0.09));
-
-  const passDateText = formatPassDisplayDate(passData.validDays, passData.eventDate || attendeeData?.eventDate || 'Dec 11th , 12th 2026');
+  // 6. Date Badge (tight gap directly below Serial)
+  const passDateText = formatPassDisplayDate(passData.validDays, passData.eventDate || attendeeData?.eventDate || 'Dec 11th, 12th 2026');
   if (passDateText) {
     ctx.save();
-    ctx.font = "bold 26px 'Poppins', 'Segoe UI', sans-serif";
+    let dateFontSize = 22;
+    ctx.font = `bold ${dateFontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    ctx.fillText(passDateText, dateBoxX + dateBoxWidth / 2, dateBoxY + dateBoxHeight / 2);
+    const dateSpacing = 0.5;
+    const measuredDateW = ctx.measureText(passDateText).width + (passDateText.length - 1) * dateSpacing;
+    if (measuredDateW > 340) {
+      dateFontSize = Math.max(15, Math.floor(dateFontSize * (340 / measuredDateW)));
+      ctx.font = `bold ${dateFontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    }
+    drawTextWithLetterSpacing(ctx, passDateText, clusterCenterX, backOffsetY + 550, dateSpacing);
     ctx.restore();
   }
 
