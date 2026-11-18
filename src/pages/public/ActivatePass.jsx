@@ -636,37 +636,45 @@ const ActivatePass = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="">
           {/* INITIAL STATE: Manual Token Search */}
           {pageState === PAGE_STATES.INITIAL && (
-            <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <h3 className="text-base font-semibold text-gray-800">Scan or Enter Badge Code</h3>
-                <p className="text-xs text-gray-500">
-                  Scan the QR code on your printed physical badge, or enter the pass identifier below.
-                </p>
-              </div>
-
-              <form onSubmit={handleManualSearch} className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 block">
-                  Pass Identifier or Token
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={inputToken}
-                    onChange={(e) => setInputToken(e.target.value)}
-                    placeholder="e.g. TEST123-EPXHJ38Y-0001"
-                    className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
-                  />
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
-                  >
-                    <Search className="w-4 h-4" /> Verify
-                  </button>
+            <div className="relative space-y-4 p-6 overflow-hidden">
+              <img
+                src={formBackground}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-10">
+                <div className="text-center space-y-1">
+                  <h3 className="text-base font-semibold text-white">Scan or Enter Badge Code</h3>
+                  <p className="text-xs text-purple-100/90">
+                    Scan the QR code on your printed physical badge, or enter the pass identifier below.
+                  </p>
                 </div>
-              </form>
+
+                <form onSubmit={handleManualSearch} className="space-y-2">
+                  <label className="text-xs font-semibold text-white block">
+                    Pass Identifier or Token
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={inputToken}
+                      onChange={(e) => setInputToken(e.target.value)}
+                      placeholder="e.g. TEST123-EPXHJ38Y-0001"
+                      className="flex-1 px-3.5 py-2.5 border border-white/30 bg-white/10 text-white placeholder-white/50 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono backdrop-blur-xs"
+                    />
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
+                    >
+                      <Search className="w-4 h-4" /> Verify
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
@@ -794,55 +802,63 @@ const ActivatePass = () => {
 
           {/* ALREADY ACTIVATED TERMINAL STATE */}
           {pageState === PAGE_STATES.ALREADY_ACTIVATED && (
-            <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6 text-center space-y-4">
-              <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mx-auto text-purple-600">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-purple-950">Pass Already Claimed</h3>
-                <p className="text-xs text-purple-700 mt-1">
-                  {errorMessage || 'This badge has already been activated.'}
-                </p>
-              </div>
-
-              {passData && (
-                <div className="bg-white rounded-xl p-4 border border-purple-100 text-left text-xs space-y-2 max-w-sm mx-auto">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Name:</span>
-                    <span className="font-mono font-bold text-purple-900">{passData.attendeeName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Pass Number:</span>
-                    <span className="font-mono font-bold text-purple-900">{passData.passNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Category:</span>
-                    <span className="font-semibold text-gray-800">{passData.category}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Event:</span>
-                    <span className="font-medium text-gray-800">{passData.eventName}</span>
-                  </div>
+            <div className="relative  p-6 text-center space-y-4 overflow-hidden">
+              <img
+                src={formBackground}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto text-white">
+                  <CheckCircle2 className="w-8 h-8" />
                 </div>
-              )}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-2">Pass Already Claimed</h3>
+                  <p className="text-xs text-white/90 mt-1 mb-2">
+                    {errorMessage || 'This badge has already been activated.'}
+                  </p>
+                </div>
 
-              <p className="text-xs text-purple-800/80 max-w-sm mx-auto">
-                If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
-              </p>
+                {passData && (
+                  <div className="bg-white/50 backdrop-blur-xs rounded-xl p-4 border border-white/20 text-left text-xs space-y-2 max-w-sm mx-auto">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Name:</span>
+                      <span className="font-mono font-bold text-gray-900">{passData.attendeeName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Pass Number:</span>
+                      <span className="font-mono font-bold text-gray-900">{passData.passNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Category:</span>
+                      <span className="font-semibold text-gray-800">{passData.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Event:</span>
+                      <span className="font-medium text-gray-800">{passData.eventName}</span>
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPageState(PAGE_STATES.INITIAL);
-                    setPassData(null);
-                    setInputToken('');
-                    navigate('/activate');
-                  }}
-                  className="text-xs font-semibold text-purple-600 hover:text-purple-800 underline"
-                >
-                  Scan or enter another pass
-                </button>
+                <p className="text-xs text-white/90 max-w-sm mx-auto">
+                  If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
+                </p>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPageState(PAGE_STATES.INITIAL);
+                      setPassData(null);
+                      setInputToken('');
+                      navigate('/activate');
+                    }}
+                    className="text-xs font-semibold text-white hover:text-purple-200 underline"
+                  >
+                    Scan or enter another pass
+                  </button>
+                </div>
               </div>
             </div>
           )}
