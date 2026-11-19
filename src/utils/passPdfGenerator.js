@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { BrowserQRCodeSvgWriter } from '@zxing/browser';
-import backpass from '../assets/final.png';
+import backpass from '../assets/back.png';
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
 /**
@@ -153,17 +153,19 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
       if (identifier) {
         const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
         const activationUrl = `${origin}/activate/${encodeURIComponent(identifier)}`;
-        qrImg = await generateQrImage(activationUrl, 300);
+        qrImg = await generateQrImage(activationUrl, 450);
       }
     }
   }
 
   // Coordinate calculations matching PassImageService (1826 x 686)
-  const qrBoxWidth = Math.round(1826 * 0.15); // ~274px
+  const badgeAreaRight = Math.round(1826 * 0.945); // ~1725px (right edge of badge area)
+  const badgeAreaLeft = Math.round(1826 * 0.735); // ~1341px (left edge of badge area)
+  const clusterCenterX = (badgeAreaLeft + badgeAreaRight) / 2; // ~1533px (centered in badge area)
+  const qrBoxWidth = Math.round(1826 * 0.22); // ~402px (increased from 15% to 22%)
   const qrBoxHeight = qrBoxWidth;
-  const qrBoxX = Math.round(1826 - 1826 * 0.095 - qrBoxWidth); // ~1378px
-  const qrBoxY = Math.round(686 * 0.2); // ~137px
-  const clusterCenterX = qrBoxX + qrBoxWidth / 2; // ~1515px (centered with QR code)
+  const qrBoxX = clusterCenterX - qrBoxWidth / 2; // Center QR with text
+  const qrBoxY = Math.round(686 * 0.12); // ~82px (moved up to create more space below)
 
   // 2. Draw QR code or No-QR Amber Badge
   if (noQr || !qrImg) {
@@ -205,31 +207,31 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
 
   if (cat) {
     ctx.save();
-    let fontSize = 28;
-    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    let fontSize = 32;
+    ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    const spacing = 3.5;
+    const spacing = 4.0;
     const measuredW = ctx.measureText(cat).width + (cat.length - 1) * spacing;
-    if (measuredW > 330) {
-      fontSize = Math.max(16, Math.floor(fontSize * (330 / measuredW)));
-      ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    if (measuredW > 380) {
+      fontSize = Math.max(18, Math.floor(fontSize * (380 / measuredW)));
+      ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
     }
-    drawTextWithLetterSpacing(ctx, cat, clusterCenterX, 456, spacing);
+    drawTextWithLetterSpacing(ctx, cat, clusterCenterX, 495, spacing);
     ctx.restore();
   }
 
   // 4. Serial Number Badge (tight gap directly below Category)
   if (seqBadge) {
     ctx.save();
-    let fontSize = 30;
-    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    let fontSize = 34;
+    ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    const spacing = 1.0;
-    drawTextWithLetterSpacing(ctx, seqBadge, clusterCenterX, 504, spacing);
+    const spacing = 1.5;
+    drawTextWithLetterSpacing(ctx, seqBadge, clusterCenterX, 535, spacing);
     ctx.restore();
   }
 
@@ -237,18 +239,18 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
   const formattedDate = formatPassDisplayDate(pass.validDays, event);
   if (formattedDate) {
     ctx.save();
-    let fontSize = 22;
-    ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    let fontSize = 26;
+    ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#000000';
-    const spacing = 0.5;
+    const spacing = 0.8;
     const measuredW = ctx.measureText(formattedDate).width + (formattedDate.length - 1) * spacing;
-    if (measuredW > 340) {
-      fontSize = Math.max(15, Math.floor(fontSize * (340 / measuredW)));
-      ctx.font = `bold ${fontSize}px 'Segoe UI', Roboto, Arial, sans-serif`;
+    if (measuredW > 380) {
+      fontSize = Math.max(16, Math.floor(fontSize * (380 / measuredW)));
+      ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
     }
-    drawTextWithLetterSpacing(ctx, formattedDate, clusterCenterX, 550, spacing);
+    drawTextWithLetterSpacing(ctx, formattedDate, clusterCenterX, 578, spacing);
     ctx.restore();
   }
 

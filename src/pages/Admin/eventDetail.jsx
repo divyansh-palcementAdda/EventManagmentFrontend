@@ -136,6 +136,7 @@ const EventDetail = () => {
   const [pageSize, setPageSize] = useState(100);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [jumpToPage, setJumpToPage] = useState('');
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -2547,6 +2548,45 @@ const EventDetail = () => {
               >
                 Next
               </button>
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-300">
+                <span className="text-xs text-gray-500 whitespace-nowrap">Go to page:</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={totalPages}
+                  value={jumpToPage}
+                  onChange={(e) => setJumpToPage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const pageNum = parseInt(jumpToPage);
+                      if (pageNum >= 1 && pageNum <= totalPages) {
+                        setPage(pageNum - 1);
+                        setJumpToPage('');
+                      } else {
+                        toast.error(`Please enter a page number between 1 and ${totalPages}`);
+                      }
+                    }
+                  }}
+                  placeholder="Page"
+                  className="w-16 px-2 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 cursor-pointer hover:border-purple-400 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pageNum = parseInt(jumpToPage);
+                    if (pageNum >= 1 && pageNum <= totalPages) {
+                      setPage(pageNum - 1);
+                      setJumpToPage('');
+                    } else {
+                      toast.error(`Please enter a page number between 1 and ${totalPages}`);
+                    }
+                  }}
+                  disabled={!jumpToPage || passesLoading}
+                  className="px-2 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                  Go
+                </button>
+              </div>
             </div>
           )}
         </div>

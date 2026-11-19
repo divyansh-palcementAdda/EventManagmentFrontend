@@ -1,7 +1,7 @@
 import React from 'react';
 
-import frontPass from '../../assets/14.png';
-import backpass from '../../assets/final.png';
+import frontPass from '../../assets/front.png';
+import backpass from '../../assets/back.png';
 
 export { frontPass, backpass };
 
@@ -70,7 +70,7 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
     }
 
     if (parsed.length === 0) {
-        return 'Dec 11th, 12th 2026';
+        return 'Dec 11-12, 2026';
     }
 
     // Sort chronologically
@@ -80,10 +80,9 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
     const month = d1.toLocaleDateString('en-US', { month: 'short' });
     const year = d1.getFullYear();
     const day1 = d1.getDate();
-    const ord1 = ordinal(day1).suffix;
 
     if (parsed.length === 1) {
-        return `${month} ${day1}${ord1} ${year}`;
+        return `${month} ${day1}, ${year}`;
     }
 
     const allSameMonthYear = parsed.every(
@@ -92,12 +91,12 @@ export const formatPassDisplayDate = (days, eventOrFallback = null) => {
 
     if (allSameMonthYear) {
         const daysFormatted = parsed
-            .map((d) => `${d.getDate()}${ordinal(d.getDate()).suffix}`)
-            .join(', ');
-        return `${month} ${daysFormatted} ${year}`;
+            .map((d) => d.getDate())
+            .join('-');
+        return `${month} ${daysFormatted}, ${year}`;
     }
 
-    return `${month} ${day1}${ord1} – ${parsed[parsed.length - 1].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    return `${month} ${day1} – ${parsed[parsed.length - 1].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 };
 
 export const buildDateLabelText = (days, fallbackDate = '') => {
@@ -247,8 +246,8 @@ const BulkDownloadPass = ({
                     style={{
                         position: 'absolute',
                         top: '20%',
-                        right: '9.5%',
-                        width: '15%',
+                        right: '6.5%',
+                        width: '21%',
                         aspectRatio: '1 / 1',
                         display: 'flex',
                         alignItems: 'center',
