@@ -14,6 +14,7 @@ const Attendees = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedHasPass, setSelectedHasPass] = useState('');
   const [selectedCheckedIn, setSelectedCheckedIn] = useState('');
+  const [selectedGoodies, setSelectedGoodies] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -70,6 +71,7 @@ const Attendees = () => {
       if (selectedStatus) params.status = selectedStatus;
       if (selectedHasPass !== '') params.hasPass = selectedHasPass === 'true';
       if (selectedCheckedIn !== '') params.checkedIn = selectedCheckedIn === 'true';
+      if (selectedGoodies !== '') params.goodiesStatus = selectedGoodies;
 
       const res = await attendeeService.getAttendees(params);
       const data = res?.data || res;
@@ -86,7 +88,7 @@ const Attendees = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, selectedEventId, searchTerm, selectedStatus, selectedHasPass, selectedCheckedIn]);
+  }, [currentPage, selectedEventId, searchTerm, selectedStatus, selectedHasPass, selectedCheckedIn, selectedGoodies]);
 
   useEffect(() => {
     fetchAttendees();
@@ -315,11 +317,22 @@ const Attendees = () => {
         }
         const checkInTime = row.checkedInAt || row.lastCheckedInAt;
         return (
-          <div>
+          <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
               <Check className="w-3.5 h-3.5" />
               Checked In
             </span>
+            <div>
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                  row.goodiesProvided
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                }`}
+              >
+                {row.goodiesProvided ? '🎁 Goodies Given' : 'No Goodies'}
+              </span>
+            </div>
             {checkInTime && (
               <div className="text-[10px] text-gray-400 mt-0.5">
                 {new Date(checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -428,7 +441,7 @@ const Attendees = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div className="lg:col-span-2">
           <Searchbar
             value={searchTerm}
@@ -477,6 +490,20 @@ const Attendees = () => {
             <option value="">Check-In: All</option>
             <option value="true">Checked In Only</option>
             <option value="false">Not Checked In</option>
+          </select>
+        </div>
+        <div>
+          <select
+            value={selectedGoodies}
+            onChange={(e) => {
+              setSelectedGoodies(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 text-sm text-gray-700"
+          >
+            <option value="">Goodies: All</option>
+            <option value="PROVIDED">Goodies Provided</option>
+            <option value="NOT_PROVIDED">Not Provided</option>
           </select>
         </div>
       </div>

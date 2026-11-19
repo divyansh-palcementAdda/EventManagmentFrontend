@@ -1780,6 +1780,16 @@ const EventDetail = () => {
                 <div className="text-sm sm:text-base font-black text-purple-800">
                   {statsLoading ? '...' : passStats?.checkedInCount ?? 0}
                 </div>
+                {(passStats?.checkedInCount ?? 0) > 0 && (
+                  <div className="mt-1 flex items-center justify-center gap-1.5 text-[9px] font-semibold">
+                    <span className="text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded" title="Goodies Distributed">
+                      🎁 {passStats?.goodiesProvidedCount ?? 0}
+                    </span>
+                    <span className="text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded" title="Goodies Pending">
+                      ⏳ {passStats?.goodiesNotProvidedCount ?? Math.max(0, (passStats?.checkedInCount ?? 0) - (passStats?.goodiesProvidedCount ?? 0))}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2365,6 +2375,17 @@ const EventDetail = () => {
                                 <span className="sm:hidden">In</span>
                                 {p.checkInCount > 1 ? `(${p.checkInCount}x)` : ''}
                               </span>
+                              <div className="mt-0.5">
+                                <span
+                                  className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.2 rounded border ${
+                                    p.goodiesProvided
+                                      ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                                  }`}
+                                >
+                                  {p.goodiesProvided ? '🎁 Goodies' : 'No Goodies'}
+                                </span>
+                              </div>
                               {p.lastCheckedInAt && (
                                 <div className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 hidden sm:flex">
                                   <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />

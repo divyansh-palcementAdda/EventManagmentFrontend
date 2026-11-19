@@ -365,8 +365,24 @@ const AttendeeDetail = () => {
                     <p className="text-xs text-gray-500">
                       {history.checkedInAt ? new Date(history.checkedInAt).toLocaleString() : '-'}
                     </p>
+                    {history.goodiesProvided && history.goodiesProvidedByName && (
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Goodies Handled By: {history.goodiesProvidedByName}
+                      </p>
+                    )}
                   </div>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        history.goodiesProvided
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200'
+                      }`}
+                    >
+                      {history.goodiesProvided ? '🎁 Goodies Provided' : 'No Goodies'}
+                    </span>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
                 </div>
               </div>
             ))}

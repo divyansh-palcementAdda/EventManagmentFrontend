@@ -22,6 +22,7 @@ import {
   HelpCircle,
   Lightbulb,
   ExternalLink,
+  Gift,
 } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import toast from 'react-hot-toast';
@@ -219,6 +220,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
   const [cameraError, setCameraError] = useState(null);
   const [manualInput, setManualInput] = useState('');
   const [autoCheckIn, setAutoCheckIn] = useState(false);
+  const [goodiesProvided, setGoodiesProvided] = useState(false);
+  const [eventStats, setEventStats] = useState(null);
 
   // Synchronous Guards (Refs prevent frame-rate callback storms & duplicate requests)
   const isLockedRef = useRef(false);
@@ -324,6 +327,26 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
     fetchDays();
   }, [selectedEventId]);
+
+  // Load Check-In & Goodies distribution stats for selected event/day
+  const fetchEventStats = useCallback(async () => {
+    if (!selectedEventId) {
+      setEventStats(null);
+      return;
+    }
+    try {
+      const res = await checkinService.getCheckinStats(selectedEventId, selectedDayId || null);
+      if (res && res.data) {
+        setEventStats(res.data);
+      }
+    } catch (e) {
+      // Non-critical, ignore
+    }
+  }, [selectedEventId, selectedDayId]);
+
+  useEffect(() => {
+    fetchEventStats();
+  }, [fetchEventStats]);
 
   // Stop scanner safely
   const stopScanner = useCallback(() => {
@@ -433,12 +456,14 @@ const CheckinScan = ({ eventId: propEventId }) => {
         targetToken,
         selectedEventId,
         selectedDayId || null,
-        requestId
+        requestId,
+        goodiesProvided
       );
 
       const checkInData = response.data || response;
       setCheckInResult(checkInData);
       setMachineState(SCAN_STATES.SUCCESS);
+      fetchEventStats();
       toast.success(`Check-In Approved: ${checkInData.attendeeName || 'Attendee'}`);
     } catch (err) {
       setMachineState(SCAN_STATES.ERROR);
@@ -551,6 +576,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
     setErrorMessage(null);
     setErrorCode(null);
     setManualInput('');
+    setGoodiesProvided(false);
     setMachineState(SCAN_STATES.IDLE);
     startScanner();
   };
@@ -684,6 +710,24 @@ const CheckinScan = ({ eventId: propEventId }) => {
               />
             </button>
           </div>
+
+          {/* Event Check-In & Goodies Live Statistics */}
+          {eventStats && (
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#181f32] text-center">
+              <div className="bg-[#080b15] p-2 rounded-xl border border-[#1c2438]">
+                <span className="text-[10px] text-gray-400 block font-medium">Checked In</span>
+                <span className="text-sm font-bold text-white">{eventStats.totalCheckedIn}</span>
+              </div>
+              <div className="bg-[#080b15] p-2 rounded-xl border border-emerald-500/30">
+                <span className="text-[10px] text-emerald-400 block font-medium">Goodies Provided</span>
+                <span className="text-sm font-bold text-emerald-300">{eventStats.goodiesProvided}</span>
+              </div>
+              <div className="bg-[#080b15] p-2 rounded-xl border border-[#1c2438]">
+                <span className="text-[10px] text-gray-400 block font-medium">No Goodies</span>
+                <span className="text-sm font-bold text-gray-300">{eventStats.goodiesNotProvided}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* CAMERA SCANNER VIEWPORT (When IDLE or starting scanner) */}
@@ -874,10 +918,88 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 </div>
               )}
 
+              {/* Already Checked-In Status Details */}
+              {verificationResult.status === 'ALREADY_CHECKED_IN' && (
+                <div className="bg-[#080b15] rounded-xl p-3.5 border border-[#1c2438] space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-400">Check-In Status:</span>
+                    <span className="font-semibold text-emerald-400">Checked In</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-400">Goodies Status:</span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                        verificationResult.goodiesProvided
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-gray-800 text-gray-400 border border-gray-700'
+                      }`}
+                    >
+                      {verificationResult.goodiesProvided ? 'Provided' : 'Not Provided'}
+                    </span>
+                  </div>
+                  {verificationResult.goodiesProvided && verificationResult.goodiesProvidedByName && (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Goodies Handled By:</span>
+                      <span className="text-gray-300">{verificationResult.goodiesProvidedByName}</span>
+                    </div>
+                  )}
+                  {verificationResult.checkedInAt && (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Admission Time:</span>
+                      <span className="text-gray-300 font-mono">
+                        {new Date(verificationResult.checkedInAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Status Message */}
               <p className="text-xs text-center text-gray-300 px-2">
                 {verificationResult.message}
               </p>
+
+              {/* Goodies Provided Toggle (Only for eligible passes) */}
+              {verificationResult.eligibleForCheckIn && (
+                <div className="bg-[#080b15] rounded-xl p-3.5 border border-[#1c2438] flex items-center justify-between transition-all">
+                  <div className="space-y-0.5 pr-2">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-purple-400 shrink-0" />
+                      <span className="text-sm font-bold text-white">Goodies Provided</span>
+                      {goodiesProvided ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          Provided
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-800 text-gray-400 border border-gray-700">
+                          Not Provided
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      Record event kit / goodies distribution to this attendee
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={goodiesProvided}
+                    onClick={() => setGoodiesProvided(!goodiesProvided)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                      goodiesProvided ? 'bg-emerald-600' : 'bg-[#1c2438]'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                        goodiesProvided ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="space-y-2 pt-2">
@@ -915,22 +1037,48 @@ const CheckinScan = ({ eventId: propEventId }) => {
               <p className="text-xs text-emerald-300 mt-1">Admission Entry Recorded</p>
             </div>
 
-            <div className="bg-[#080b15] rounded-xl p-4 text-left text-xs space-y-2 border border-[#1c2438]">
-              <div className="flex justify-between">
+            <div className="bg-[#080b15] rounded-xl p-4 text-left text-xs space-y-2.5 border border-[#1c2438]">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-400">Attendee:</span>
                 <strong className="text-white text-sm">{checkInResult.attendeeName}</strong>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-400">Pass Number:</span>
                 <span className="font-mono text-purple-300 font-bold">{checkInResult.passNumber}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-400">Event Session:</span>
                 <span className="text-gray-200">
                   Day {checkInResult.dayNumber}: {checkInResult.eventDayLabel}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Check-In Status:</span>
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+                  <Check className="w-3.5 h-3.5" /> Checked In
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Goodies Status:</span>
+                <span
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
+                    checkInResult.goodiesProvided
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-gray-800 text-gray-400 border border-gray-700'
+                  }`}
+                >
+                  {checkInResult.goodiesProvided ? 'Provided' : 'Not Provided'}
+                </span>
+              </div>
+              {checkInResult.goodiesProvided && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Goodies Handled By:</span>
+                  <span className="text-gray-200">
+                    {checkInResult.goodiesProvidedByName || checkInResult.checkedInByName || 'Gatekeeper'}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
                 <span className="text-gray-400">Checked In By:</span>
                 <span className="text-gray-200">{checkInResult.checkedInByName || 'Gatekeeper'}</span>
               </div>
