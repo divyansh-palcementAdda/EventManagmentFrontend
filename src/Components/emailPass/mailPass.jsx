@@ -2,7 +2,7 @@ import React from 'react';
 import { formatPassDisplayDate } from './bulkDownloadpass';
 
 import frontPass from '../../assets/front.png'
-import backpass from '../../assets/32.png'
+import backpass from '../../assets/1232.png'
 // import backpass from "../../assets/dsfinal.png"
 
 /**
