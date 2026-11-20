@@ -694,7 +694,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
           )}
 
           {/* Quick Check-in Toggle */}
-          <div className="flex items-center justify-between pt-1 border-t border-[#181f32] text-xs">
+          {/* <div className="flex items-center justify-between pt-1 border-t border-[#181f32] text-xs">
             <span className="text-gray-300">Fast Mode (Auto-Confirm Valid Passes)</span>
             <button
               type="button"
@@ -709,7 +709,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 }`}
               />
             </button>
-          </div>
+          </div> */}
 
           {/* Event Check-In & Goodies Live Statistics */}
           {eventStats && (
@@ -834,15 +834,14 @@ const CheckinScan = ({ eventId: propEventId }) => {
           <div className="bg-[#0c101d] rounded-2xl border border-[#181f32] overflow-hidden shadow-2xl animate-fade-in">
             {/* Header Status Banner */}
             <div
-              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${
-                verificationResult.eligibleForCheckIn
+              className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${verificationResult.eligibleForCheckIn
                   ? 'bg-emerald-600 text-white'
                   : verificationResult.status === 'NOT_ACTIVATED'
-                  ? 'bg-amber-600 text-white'
-                  : verificationResult.status === 'ALREADY_CHECKED_IN'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-rose-600 text-white'
-              }`}
+                    ? 'bg-amber-600 text-white'
+                    : verificationResult.status === 'ALREADY_CHECKED_IN'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-rose-600 text-white'
+                }`}
             >
               {verificationResult.eligibleForCheckIn ? (
                 <>
@@ -928,11 +927,10 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-400">Goodies Status:</span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                        verificationResult.goodiesProvided
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${verificationResult.goodiesProvided
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                           : 'bg-gray-800 text-gray-400 border border-gray-700'
-                      }`}
+                        }`}
                     >
                       {verificationResult.goodiesProvided ? 'Provided' : 'Not Provided'}
                     </span>
@@ -988,14 +986,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
                     role="switch"
                     aria-checked={goodiesProvided}
                     onClick={() => setGoodiesProvided(!goodiesProvided)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-                      goodiesProvided ? 'bg-emerald-600' : 'bg-[#1c2438]'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${goodiesProvided ? 'bg-emerald-600' : 'bg-[#1c2438]'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
-                        goodiesProvided ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${goodiesProvided ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -1061,11 +1057,10 @@ const CheckinScan = ({ eventId: propEventId }) => {
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Goodies Status:</span>
                 <span
-                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
-                    checkInResult.goodiesProvided
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${checkInResult.goodiesProvided
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                       : 'bg-gray-800 text-gray-400 border border-gray-700'
-                  }`}
+                    }`}
                 >
                   {checkInResult.goodiesProvided ? 'Provided' : 'Not Provided'}
                 </span>
@@ -1099,13 +1094,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
           <div className="bg-[#0c101d] rounded-2xl border border-[#181f32] p-6 text-center space-y-4 shadow-2xl animate-fade-in">
             {/* Status Icon */}
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${
-                errorDisplay.severity === 'danger'
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${errorDisplay.severity === 'danger'
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : errorDisplay.severity === 'warning'
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-              }`}
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                }`}
             >
               {errorDisplay.severity === 'danger' ? (
                 <XCircle className="w-9 h-9" />
@@ -1126,13 +1120,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
             {/* Explanation Card */}
             <div
-              className={`rounded-xl p-3.5 text-xs text-left ${
-                errorDisplay.severity === 'danger'
+              className={`rounded-xl p-3.5 text-xs text-left ${errorDisplay.severity === 'danger'
                   ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
                   : errorDisplay.severity === 'warning'
-                  ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                  : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
-              }`}
+                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                    : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
+                }`}
             >
               <p className="leading-relaxed">{errorDisplay.explanation}</p>
             </div>

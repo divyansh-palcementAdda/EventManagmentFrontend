@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { BrowserQRCodeSvgWriter } from '@zxing/browser';
-import backpass from '../assets/back.png';
+import backpass from '../assets/32.png';
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 
 /**
