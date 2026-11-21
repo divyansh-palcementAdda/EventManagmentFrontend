@@ -701,7 +701,7 @@ const BulkFullPassDownloadModal = ({
       } else {
         badge.textContent = 'PASS ONLY (NO BACKGROUND)';
         btn.textContent = 'Switch to A4 Landscape';
-        styleEl.innerHTML = '@media print { @page { size: 154mm 58mm; margin: 0mm; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 154mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .screen-toolbar { display: none !important; } .pass-page { width: 154mm !important; height: 58mm !important; max-height: 58mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-before: auto !important; break-before: auto !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 154mm !important; height: 58mm !important; max-width: 154mm !important; max-height: 58mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 154mm !important; height: 58mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 154mm !important; height: 58mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span, .date-badge span { font-size: 13px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
+        styleEl.innerHTML = '@media print { @page { size: 182.6mm 68.6mm; margin: 0mm; } *, *::before, *::after { box-sizing: border-box !important; } html, body { width: 182.6mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .screen-toolbar { display: none !important; } .pass-page { width: 182.6mm !important; height: 68.6mm !important; max-height: 68.6mm !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; position: relative !important; overflow: hidden !important; page-break-before: auto !important; break-before: auto !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; } .pass-page:last-of-type, .pass-page:last-child { page-break-after: avoid !important; break-after: avoid !important; } .bulk-pass-card { width: 182.6mm !important; height: 68.6mm !important; max-width: 182.6mm !important; max-height: 68.6mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; border: none !important; background: transparent !important; overflow: hidden !important; position: relative !important; } .pass-back { width: 182.6mm !important; height: 68.6mm !important; margin: 0 !important; padding: 0 !important; position: relative !important; } .pass-img { width: 182.6mm !important; height: 68.6mm !important; object-fit: fill !important; display: block !important; } .serial-badge span, .category-badge span, .date-badge span { font-size: 13px !important; color: #000000 !important; } .left-seq-strip span { font-size: 11px !important; } }';
       }
     }
     function togglePrintMode() {
@@ -718,7 +718,7 @@ const BulkFullPassDownloadModal = ({
       var doc = new window.jspdf.jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: [58, 154],
+        format: [68.6, 182.6],
         compress: true
       });
       for (var i = 0; i < cards.length; i++) {
@@ -805,8 +805,8 @@ const BulkFullPassDownloadModal = ({
         }
 
         var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        if (i > 0) doc.addPage([58, 154], 'landscape');
-        doc.addImage(dataUrl, 'JPEG', 0, 0, 154, 58);
+        if (i > 0) doc.addPage([68.6, 182.6], 'landscape');
+        doc.addImage(dataUrl, 'JPEG', 0, 0, 182.6, 68.6);
       }
       doc.save('Passes_' + cards.length + '.pdf');
     }

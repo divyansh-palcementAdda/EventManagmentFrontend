@@ -271,10 +271,10 @@ export const renderPassToCanvas = async (pass, bgImg, event = {}, existingCanvas
 };
 
 /**
- * Exact pass dimensions in millimeters: 154mm width, 58mm height
+ * Exact pass dimensions in millimeters: 182.6mm width, 68.6mm height
  */
-export const PASS_WIDTH_MM = 154;
-export const PASS_HEIGHT_MM = 58;
+export const PASS_WIDTH_MM = 182.6;
+export const PASS_HEIGHT_MM = 68.6;
 
 /**
  * Build the jsPDF document containing ONLY the passes (exact pass dimensions, 0mm margin, zero blank background)
@@ -335,7 +335,7 @@ export const generatePassesPdf = async (passList, event = {}, onProgress = null)
 
 /**
  * Open the pass-only PDF directly in a new browser tab/window
- * ZERO white background, exact pass size (154mm x 58mm)
+ * ZERO white background, exact pass size (182.6mm x 68.6mm)
  * Optionally triggers print inside the PDF viewer
  */
 export const openPassesPdfPreview = async (
@@ -372,11 +372,11 @@ export const createA4SheetPdfDoc = async (passList, event = {}, onProgress = nul
 
   const a4Width = 210;
   const a4Height = 297;
-  const passW = PASS_WIDTH_MM; // 154 mm
-  const passH = PASS_HEIGHT_MM; // 58 mm
-  const marginX = (a4Width - passW) / 2; // 28 mm
-  const startY = 20; // top margin
-  const gapY = 12; // gap between passes
+  const passW = PASS_WIDTH_MM; // 182.6 mm
+  const passH = PASS_HEIGHT_MM; // 68.6 mm
+  const marginX = (a4Width - passW) / 2; // ~13.7 mm
+  const startY = 12; // top margin
+  const gapY = 8; // gap between passes
   const passesPerPage = 3;
 
   const canvas = document.createElement('canvas');
