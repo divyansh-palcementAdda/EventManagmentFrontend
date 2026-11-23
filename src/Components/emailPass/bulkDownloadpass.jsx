@@ -1,7 +1,7 @@
 import React from 'react';
 
-import frontPass from '../../assets/front.png';
-import backpass from '../../assets/1232.png';
+import frontPass from '../../assets/ffffffff-2.png'
+import backpass from '../../assets/ffffffff-1.png'
 
 export { frontPass, backpass };
 

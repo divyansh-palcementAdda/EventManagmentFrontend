@@ -1,6 +1,6 @@
 import { BrowserQRCodeSvgWriter } from '@zxing/browser';
-import frontPassImg from '../assets/14.png';
-import backPassImg from '../assets/final.png';
+import frontPass from '../../assets/ffffffff-2.png'
+import backpass from '../../assets/ffffffff-1.png'
 import { formatPassDisplayDate } from '../Components/emailPass/bulkDownloadpass';
 import { drawTextWithLetterSpacing } from './passPdfGenerator';
 
