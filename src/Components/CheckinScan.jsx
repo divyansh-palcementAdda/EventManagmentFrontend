@@ -71,8 +71,8 @@ const ERROR_CONFIGS = {
   },
   PASS_ALREADY_CHECKED_IN: {
     title: 'Pass Already Checked In',
-    explanation: 'This pass has already been admitted for this day or session. Duplicate entry is not permitted.',
-    action: 'Check the admission timestamp or verify attendee identity if re-entry assistance is needed.',
+    explanation: 'This pass has already been checked in for this day or session. Duplicate entry is not permitted.',
+    action: 'Check the check-in timestamp or verify attendee identity if re-entry assistance is needed.',
     severity: 'warning',
     color: 'orange',
   },
@@ -825,7 +825,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
           <div className="bg-[#0c101d] rounded-2xl p-8 border border-[#181f32] text-center space-y-4">
             <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
             <h3 className="text-base font-bold text-white">Recording Check-In...</h3>
-            <p className="text-xs text-gray-400">Persisting admission entry in the database.</p>
+            <p className="text-xs text-gray-400">Recording check-in entry in the database.</p>
           </div>
         )}
 
@@ -835,12 +835,12 @@ const CheckinScan = ({ eventId: propEventId }) => {
             {/* Header Status Banner */}
             <div
               className={`p-4 text-center font-bold text-sm flex items-center justify-center gap-2 ${verificationResult.eligibleForCheckIn
-                  ? 'bg-emerald-600 text-white'
-                  : verificationResult.status === 'NOT_ACTIVATED'
-                    ? 'bg-amber-600 text-white'
-                    : verificationResult.status === 'ALREADY_CHECKED_IN'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-rose-600 text-white'
+                ? 'bg-emerald-600 text-white'
+                : verificationResult.status === 'NOT_ACTIVATED'
+                  ? 'bg-amber-600 text-white'
+                  : verificationResult.status === 'ALREADY_CHECKED_IN'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-rose-600 text-white'
                 }`}
             >
               {verificationResult.eligibleForCheckIn ? (
@@ -928,8 +928,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
                     <span className="text-gray-400">Goodies Status:</span>
                     <span
                       className={`px-2 py-0.5 rounded text-[11px] font-bold ${verificationResult.goodiesProvided
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-gray-800 text-gray-400 border border-gray-700'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-gray-800 text-gray-400 border border-gray-700'
                         }`}
                     >
                       {verificationResult.goodiesProvided ? 'Provided' : 'Not Provided'}
@@ -943,7 +943,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
                   )}
                   {verificationResult.checkedInAt && (
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Admission Time:</span>
+                      <span className="text-gray-400">Check-In Time:</span>
                       <span className="text-gray-300 font-mono">
                         {new Date(verificationResult.checkedInAt).toLocaleTimeString([], {
                           hour: '2-digit',
@@ -1030,7 +1030,7 @@ const CheckinScan = ({ eventId: propEventId }) => {
 
             <div>
               <h2 className="text-xl font-bold text-white">Check-In Approved!</h2>
-              <p className="text-xs text-emerald-300 mt-1">Admission Entry Recorded</p>
+              <p className="text-xs text-emerald-300 mt-1">Check-In Entry Recorded</p>
             </div>
 
             <div className="bg-[#080b15] rounded-xl p-4 text-left text-xs space-y-2.5 border border-[#1c2438]">
@@ -1058,8 +1058,8 @@ const CheckinScan = ({ eventId: propEventId }) => {
                 <span className="text-gray-400">Goodies Status:</span>
                 <span
                   className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${checkInResult.goodiesProvided
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-gray-800 text-gray-400 border border-gray-700'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-gray-800 text-gray-400 border border-gray-700'
                     }`}
                 >
                   {checkInResult.goodiesProvided ? 'Provided' : 'Not Provided'}
@@ -1095,10 +1095,10 @@ const CheckinScan = ({ eventId: propEventId }) => {
             {/* Status Icon */}
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${errorDisplay.severity === 'danger'
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                  : errorDisplay.severity === 'warning'
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                : errorDisplay.severity === 'warning'
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                 }`}
             >
               {errorDisplay.severity === 'danger' ? (
@@ -1121,10 +1121,10 @@ const CheckinScan = ({ eventId: propEventId }) => {
             {/* Explanation Card */}
             <div
               className={`rounded-xl p-3.5 text-xs text-left ${errorDisplay.severity === 'danger'
-                  ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
-                  : errorDisplay.severity === 'warning'
-                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                    : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
+                ? 'bg-rose-500/10 border border-rose-500/20 text-rose-200'
+                : errorDisplay.severity === 'warning'
+                  ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                  : 'bg-purple-500/10 border border-purple-500/20 text-purple-200'
                 }`}
             >
               <p className="leading-relaxed">{errorDisplay.explanation}</p>

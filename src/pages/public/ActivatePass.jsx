@@ -228,7 +228,7 @@ const ActivatePass = () => {
       // Check walk-in policy
       if (data.activationMode === 'NO_QR_WALK_IN') {
         setPageState(PAGE_STATES.ERROR);
-        setErrorMessage('This pass category is designated for on-site staff walk-in admission only.');
+        setErrorMessage('This pass category is designated for on-site staff walk-in entry only.');
         return;
       }
 
@@ -610,29 +610,29 @@ const ActivatePass = () => {
           />
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10">
-          <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-            {isAutoActivated ? (
-              <Sparkles className="w-8 h-8 text-white" />
-            ) : isStudent ? (
-              <GraduationCap className="w-8 h-8 text-white" />
-            ) : (
-              <Ticket className="w-8 h-8 text-white" />
-            )}
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isAutoActivated
-              ? 'Pass Validated'
-              : isStudent
-                ? 'Student Pass Registration'
-                : `${passData?.categoryName || 'Event'} Pass Activation`}
-          </h1>
-          <p className="text-purple-100/90 text-xs sm:text-sm mt-1 max-w-md mx-auto">
-            {isAutoActivated
-              ? 'Your event pass is active and ready for gate admission.'
-              : isStudent
-                ? 'Complete your verified student registration to link your badge for official campus/event admission.'
-                : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
-          </p>
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+              {isAutoActivated ? (
+                <Sparkles className="w-8 h-8 text-white" />
+              ) : isStudent ? (
+                <GraduationCap className="w-8 h-8 text-white" />
+              ) : (
+                <Ticket className="w-8 h-8 text-white" />
+              )}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {isAutoActivated
+                ? 'Pass Validated'
+                : isStudent
+                  ? 'Student Pass Registration'
+                  : `${passData?.categoryName || 'Event'} Pass Activation`}
+            </h1>
+            <p className="text-purple-100/90 text-xs sm:text-sm mt-1 max-w-md mx-auto">
+              {isAutoActivated
+                ? 'Your event pass is active and ready for gate entry.'
+                : isStudent
+                  ? 'Complete your verified student registration to link your badge for official event entry.'
+                  : 'Link your attendee profile to your official event badge to enable secure gate check-in.'}
+            </p>
           </div>
         </div>
 
@@ -697,12 +697,12 @@ const ActivatePass = () => {
                 <h2 className="text-2xl font-bold text-gray-900">
                   {isAutoActivated ? 'Pass Validated & Ready!' : 'Pass Activated!'}
                 </h2>
-                <p className="text-xs text-emerald-700 mt-1">Admission Registration Confirmed</p>
+                <p className="text-xs text-emerald-700 mt-1">Registration Confirmed</p>
               </div>
 
               {isAutoActivated ? (
                 <p className="text-xs text-emerald-800 font-medium max-w-sm mx-auto">
-                  This pass has been auto-activated for admission without personal registration. Present your badge at the gate.
+                  This pass has been auto-activated for entry without personal registration. Present your badge at the gate.
                 </p>
               ) : (
                 <p className="text-xs text-gray-600 max-w-sm mx-auto">
@@ -781,10 +781,10 @@ const ActivatePass = () => {
               )}
 
               <p className="text-[11px] text-gray-500 pt-2">
-                Present this pass badge to the gatekeeper on event day for admission scan.
+                Present this pass badge to the gatekeeper on event day for entry scan.
               </p>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={() => {
                   setPageState(PAGE_STATES.INITIAL);
@@ -796,7 +796,7 @@ const ActivatePass = () => {
                 className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 text-xs font-semibold rounded-lg transition"
               >
                 Activate Another Pass
-              </button>
+              </button> */}
             </div>
           )}
 
@@ -842,7 +842,7 @@ const ActivatePass = () => {
                 )}
 
                 <p className="text-xs text-white/90 max-w-sm mx-auto">
-                  If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for admission.
+                  If you are the holder of this badge, you do not need to register again. Simply present this badge at the event entrance for entry.
                 </p>
 
                 <div>
@@ -890,7 +890,7 @@ const ActivatePass = () => {
               )}
 
               <p className="text-xs text-rose-800/80 max-w-sm mx-auto">
-                This pass badge is no longer valid for admission. Please contact event support for assistance.
+                This pass badge is no longer valid for entry. Please contact event support for assistance.
               </p>
 
               <button
@@ -960,549 +960,549 @@ const ActivatePass = () => {
                       : 'border-purple-200/60'
                       }`}
                   >
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider bg-amber-900"
-                      >
-                        Eligible for Activation
-                      </span>
-                      <span
-                        className="px-2 py-0.5 text-[10px] font-bold rounded border bg-amber-100 text-amber-900 border-amber-300"
-                      >
-                        {passData.categoryName || passData.categoryCode || passData.category || 'GENERAL'} CATEGORY
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="px-2 py-0.5 text-white text-[10px] font-black rounded-full uppercase tracking-wider bg-amber-900"
+                        >
+                          Eligible for Activation
+                        </span>
+                        <span
+                          className="px-2 py-0.5 text-[10px] font-bold rounded border bg-amber-100 text-amber-900 border-amber-300"
+                        >
+                          {passData.categoryName || passData.categoryCode || passData.category || 'GENERAL'} CATEGORY
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-amber-900 bg-white px-2 py-0.5 rounded border border-amber-200">
+                        {passData.passNumber}
                       </span>
                     </div>
-                    <span className="font-mono text-xs font-bold text-amber-900 bg-white px-2 py-0.5 rounded border border-amber-200">
-                      {passData.passNumber}
-                    </span>
-                  </div>
 
-                  <h3 className="text-base font-bold text-gray-900">{passData.eventName}</h3>
+                    <h3 className="text-base font-bold text-gray-900">{passData.eventName}</h3>
 
-                  <p className="text-xs text-gray-600 font-medium">
-                    {statusNotice || 'Pass is valid and ready for activation.'}
-                  </p>
+                    <p className="text-xs text-gray-600 font-medium">
+                      {statusNotice || 'Pass is valid and ready for activation.'}
+                    </p>
 
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-600 pt-1">
-                    {passData.venue && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-amber-900" />
-                        <span>{passData.venue}</span>
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-600 pt-1">
+                      {passData.venue && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-amber-900" />
+                          <span>{passData.venue}</span>
+                        </div>
+                      )}
+                      {passData.startsAt && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-amber-900" />
+                          <span>{formatDate(passData.startsAt)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {passData.validDays && passData.validDays.length > 0 && (
+                      <div className="pt-2 border-t border-gray-200/60 text-xs text-gray-600 flex items-center gap-1.5 flex-wrap">
+                        <span className="font-medium">Valid Days:</span>
+                        {passData.validDays.map((d) => (
+                          <span
+                            key={d.id}
+                            className="bg-white border border-gray-200 text-gray-800 font-semibold px-1.5 py-0.5 rounded text-[10px]"
+                          >
+                            {d.label || `Day ${d.dayNumber}`}
+                          </span>
+                        ))}
                       </div>
                     )}
-                    {passData.startsAt && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-amber-900" />
-                        <span>{formatDate(passData.startsAt)}</span>
-                      </div>
-                    )}
                   </div>
 
-                  {passData.validDays && passData.validDays.length > 0 && (
-                    <div className="pt-2 border-t border-gray-200/60 text-xs text-gray-600 flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium">Valid Days:</span>
-                      {passData.validDays.map((d) => (
-                        <span
-                          key={d.id}
-                          className="bg-white border border-gray-200 text-gray-800 font-semibold px-1.5 py-0.5 rounded text-[10px]"
-                        >
-                          {d.label || `Day ${d.dayNumber}`}
-                        </span>
-                      ))}
+                  {/* 2. Submission Error Notice (if any) */}
+                  {submitError && (
+                    <div className="bg-rose-50 border border-rose-300 rounded-xl p-3.5 text-xs text-rose-800 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+                      <div>
+                        <strong className="block font-semibold">Activation Notice</strong>
+                        <span>{submitError}</span>
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* 2. Submission Error Notice (if any) */}
-                {submitError && (
-                  <div className="bg-rose-50 border border-rose-300 rounded-xl p-3.5 text-xs text-rose-800 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-                    <div>
-                      <strong className="block font-semibold">Activation Notice</strong>
-                      <span>{submitError}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Category Registration Form */}
-                <form onSubmit={handleSubmit} className="space-y-4 bg-white/85 backdrop-blur-xs p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
-                  {/* Full Name */}
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Full Name <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleChange}
-                        disabled={pageState === PAGE_STATES.SUBMITTING}
-                        placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
-                        className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.fullName
-                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                          : 'border-gray-300 focus:ring-amber-500'
-                          }`}
-                      />
-                    </div>
-                    {formErrors.fullName && (
-                      <span className="text-[11px] text-rose-500 mt-1 block">
-                        {formErrors.fullName}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Email & Mobile Number */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 3. Category Registration Form */}
+                  <form onSubmit={handleSubmit} className="space-y-4 bg-white/85 backdrop-blur-xs p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
+                    {/* Full Name */}
                     <div>
                       <label className="text-xs font-semibold text-gray-700 block mb-1">
-                        Email Address <span className="text-rose-500">*</span>
+                        Full Name <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                        <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                         <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
                           onChange={handleChange}
                           disabled={pageState === PAGE_STATES.SUBMITTING}
-                          placeholder="you@example.com"
-                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.email
+                          placeholder={isStudent ? 'e.g. Rahul Sharma' : 'e.g. Alice Smith'}
+                          className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.fullName
                             ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
                             : 'border-gray-300 focus:ring-amber-500'
                             }`}
                         />
                       </div>
-                      {formErrors.email && (
+                      {formErrors.fullName && (
                         <span className="text-[11px] text-rose-500 mt-1 block">
-                          {formErrors.email}
+                          {formErrors.fullName}
                         </span>
                       )}
                     </div>
 
-                    <div>
-                      <label className="text-xs font-semibold text-gray-700 block mb-1">
-                        Mobile Number <span className="text-rose-500">*</span>
-                      </label>
-                      <div
-                        className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${formErrors.mobileNumber
-                          ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
-                          : 'border-gray-300 focus-within:ring-purple-500 bg-white'
-                          }`}
-                      >
-                        <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-r border-gray-200 text-gray-700 select-none text-xs sm:text-sm font-semibold shrink-0">
-                          <Phone className="w-3.5 h-3.5 text-gray-400" />
-                          <span>+91</span>
+                    {/* Email & Mobile Number */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Email Address <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            disabled={pageState === PAGE_STATES.SUBMITTING}
+                            placeholder="you@example.com"
+                            className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.email
+                              ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                              : 'border-gray-300 focus:ring-amber-500'
+                              }`}
+                          />
                         </div>
-                        <input
-                          type="tel"
-                          name="mobileNumber"
-                          value={formData.mobileNumber ? formData.mobileNumber.replace(/^\+91/, '') : ''}
-                          onChange={handleChange}
-                          disabled={pageState === PAGE_STATES.SUBMITTING}
-                          placeholder="9876543210"
-                          maxLength={10}
-                          className="w-full px-3 py-2 text-xs sm:text-sm bg-transparent focus:outline-none"
-                        />
+                        {formErrors.email && (
+                          <span className="text-[11px] text-rose-500 mt-1 block">
+                            {formErrors.email}
+                          </span>
+                        )}
                       </div>
-                      {formErrors.mobileNumber && (
-                        <span className="text-[11px] text-rose-500 mt-1 block">
-                          {formErrors.mobileNumber}
-                        </span>
-                      )}
 
-                      {/* WhatsApp OTP Verification Widget */}
-                      {otpRequired && (
-                        <div className="mt-2.5">
-                          {!otpSent && !otpVerified && (
-                            <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs">
-                              <div className="flex items-center gap-2 text-emerald-900 font-medium">
-                                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>WhatsApp phone verification required</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleSendOtp}
-                                disabled={sendingOtp || !formData.mobileNumber.trim()}
-                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5 shrink-0"
-                              >
-                                {sendingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                                <span>Send OTP</span>
-                              </button>
-                            </div>
-                          )}
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 block mb-1">
+                          Mobile Number <span className="text-rose-500">*</span>
+                        </label>
+                        <div
+                          className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${formErrors.mobileNumber
+                            ? 'border-rose-400 focus-within:ring-rose-500 bg-rose-50/20'
+                            : 'border-gray-300 focus-within:ring-purple-500 bg-white'
+                            }`}
+                        >
+                          <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-r border-gray-200 text-gray-700 select-none text-xs sm:text-sm font-semibold shrink-0">
+                            <Phone className="w-3.5 h-3.5 text-gray-400" />
+                            <span>+91</span>
+                          </div>
+                          <input
+                            type="tel"
+                            name="mobileNumber"
+                            value={formData.mobileNumber ? formData.mobileNumber.replace(/^\+91/, '') : ''}
+                            onChange={handleChange}
+                            disabled={pageState === PAGE_STATES.SUBMITTING}
+                            placeholder="9876543210"
+                            maxLength={10}
+                            className="w-full px-3 py-2 text-xs sm:text-sm bg-transparent focus:outline-none"
+                          />
+                        </div>
+                        {formErrors.mobileNumber && (
+                          <span className="text-[11px] text-rose-500 mt-1 block">
+                            {formErrors.mobileNumber}
+                          </span>
+                        )}
 
-                          {otpSent && !otpVerified && (
-                            <div className="p-3.5 bg-emerald-50/90 border border-emerald-300 rounded-xl space-y-2.5 text-xs">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
-                                  <MessageSquare className="w-4 h-4 text-emerald-600" />
-                                  <span>Enter WhatsApp Verification Code</span>
+                        {/* WhatsApp OTP Verification Widget */}
+                        {otpRequired && (
+                          <div className="mt-2.5">
+                            {!otpSent && !otpVerified && (
+                              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-2 text-emerald-900 font-medium">
+                                  <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span>WhatsApp phone verification required</span>
                                 </div>
-                                <span className="text-[10px] text-emerald-700 font-mono">10 min expiry</span>
-                              </div>
-                              <p className="text-[11px] text-emerald-700">
-                                6-digit verification code sent to <strong className="font-mono">{formData.mobileNumber}</strong>.
-                              </p>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <input
-                                  type="text"
-                                  maxLength={6}
-                                  placeholder="000000"
-                                  value={otpCode}
-                                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                                  className="w-32 px-3 py-1.5 text-center font-mono font-bold tracking-widest text-base border border-emerald-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleVerifyOtp}
-                                  disabled={verifyingOtp || otpCode.length !== 6}
-                                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5"
-                                >
-                                  {verifyingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                                  <span>Verify</span>
-                                </button>
                                 <button
                                   type="button"
                                   onClick={handleSendOtp}
-                                  disabled={sendingOtp || otpTimer > 0}
-                                  className="px-2.5 py-1.5 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition disabled:opacity-50 ml-auto"
+                                  disabled={sendingOtp || !formData.mobileNumber.trim()}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5 shrink-0"
                                 >
-                                  {otpTimer > 0 ? `Resend (${otpTimer}s)` : 'Resend OTP'}
+                                  {sendingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                                  <span>Send OTP</span>
                                 </button>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {otpVerified && (
-                            <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2 text-xs text-emerald-800 font-bold">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                              <span>WhatsApp Verified ({formData.mobileNumber})</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Custom Dynamic Form Fields (if published schema exists) */}
-                  {hasCustomSchema ? (
-                    <div className="space-y-4 pt-2 border-t border-gray-100">
-                      <div className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Additional Information
-                      </div>
-                      {passData.formSchema.fields
-                        .filter((f) => {
-                          if (f.visible === false) return false;
-                          const key = (f.fieldKey || '').toLowerCase();
-                          return !['fullname', 'name', 'email', 'mobilenumber', 'phone', 'contactnumber'].includes(key);
-                        })
-                        .map((field) => (
-                          <div key={field.fieldKey} className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-700 block">
-                              {field.label} {field.required && <span className="text-rose-500">*</span>}
-                            </label>
-
-                            {['TEXT', 'EMAIL', 'PHONE', 'NUMBER'].includes(field.fieldType) ? (
-                              <input
-                                type={
-                                  field.fieldType === 'NUMBER'
-                                    ? 'number'
-                                    : field.fieldType === 'EMAIL'
-                                      ? 'email'
-                                      : 'text'
-                                }
-                                placeholder={field.placeholder || ''}
-                                value={dynamicAnswers[field.fieldKey] || ''}
-                                onChange={(e) => {
-                                  setDynamicAnswers({
-                                    ...dynamicAnswers,
-                                    [field.fieldKey]: e.target.value,
-                                  });
-                                  if (formErrors[field.fieldKey]) {
-                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
-                                  }
-                                }}
-                                disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-amber-500'
-                                  }`}
-                              />
-                            ) : field.fieldType === 'TEXTAREA' ? (
-                              <textarea
-                                rows="3"
-                                placeholder={field.placeholder || ''}
-                                value={dynamicAnswers[field.fieldKey] || ''}
-                                onChange={(e) => {
-                                  setDynamicAnswers({
-                                    ...dynamicAnswers,
-                                    [field.fieldKey]: e.target.value,
-                                  });
-                                  if (formErrors[field.fieldKey]) {
-                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
-                                  }
-                                }}
-                                disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-amber-500'
-                                  }`}
-                              />
-                            ) : field.fieldType === 'SELECT' ? (
-                              <select
-                                value={dynamicAnswers[field.fieldKey] || ''}
-                                onChange={(e) => {
-                                  setDynamicAnswers({
-                                    ...dynamicAnswers,
-                                    [field.fieldKey]: e.target.value,
-                                  });
-                                  if (formErrors[field.fieldKey]) {
-                                    setFormErrors({ ...formErrors, [field.fieldKey]: null });
-                                  }
-                                }}
-                                disabled={pageState === PAGE_STATES.SUBMITTING}
-                                className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
-                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                  : 'border-gray-300 focus:ring-amber-500'
-                                  }`}
-                              >
-                                <option value="">{field.placeholder || '-- Select an option --'}</option>
-                                {field.options?.map((opt, oIdx) => (
-                                  <option key={oIdx} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : field.fieldType === 'RADIO' ? (
-                              <div className="space-y-1.5 pt-1">
-                                {field.options?.map((opt, oIdx) => (
-                                  <label
-                                    key={oIdx}
-                                    className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"
+                            {otpSent && !otpVerified && (
+                              <div className="p-3.5 bg-emerald-50/90 border border-emerald-300 rounded-xl space-y-2.5 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                                    <span>Enter WhatsApp Verification Code</span>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-700 font-mono">10 min expiry</span>
+                                </div>
+                                <p className="text-[11px] text-emerald-700">
+                                  6-digit verification code sent to <strong className="font-mono">{formData.mobileNumber}</strong>.
+                                </p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <input
+                                    type="text"
+                                    maxLength={6}
+                                    placeholder="000000"
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                                    className="w-32 px-3 py-1.5 text-center font-mono font-bold tracking-widest text-base border border-emerald-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleVerifyOtp}
+                                    disabled={verifyingOtp || otpCode.length !== 6}
+                                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition shadow-xs disabled:opacity-50 flex items-center gap-1.5"
                                   >
-                                    <input
-                                      type="radio"
-                                      name={field.fieldKey}
-                                      value={opt}
-                                      checked={dynamicAnswers[field.fieldKey] === opt}
-                                      onChange={(e) => {
-                                        setDynamicAnswers({
-                                          ...dynamicAnswers,
-                                          [field.fieldKey]: e.target.value,
-                                        });
-                                        if (formErrors[field.fieldKey]) {
-                                          setFormErrors({ ...formErrors, [field.fieldKey]: null });
-                                        }
-                                      }}
-                                      className="text-amber-700 focus:ring-amber-500"
-                                    />
-                                    <span>{opt}</span>
-                                  </label>
-                                ))}
+                                    {verifyingOtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    <span>Verify</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={sendingOtp || otpTimer > 0}
+                                    className="px-2.5 py-1.5 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition disabled:opacity-50 ml-auto"
+                                  >
+                                    {otpTimer > 0 ? `Resend (${otpTimer}s)` : 'Resend OTP'}
+                                  </button>
+                                </div>
                               </div>
-                            ) : field.fieldType === 'CHECKBOX' ? (
-                              <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer pt-1">
+                            )}
+
+                            {otpVerified && (
+                              <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2 text-xs text-emerald-800 font-bold">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>WhatsApp Verified ({formData.mobileNumber})</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Custom Dynamic Form Fields (if published schema exists) */}
+                    {hasCustomSchema ? (
+                      <div className="space-y-4 pt-2 border-t border-gray-100">
+                        <div className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          Additional Information
+                        </div>
+                        {passData.formSchema.fields
+                          .filter((f) => {
+                            if (f.visible === false) return false;
+                            const key = (f.fieldKey || '').toLowerCase();
+                            return !['fullname', 'name', 'email', 'mobilenumber', 'phone', 'contactnumber'].includes(key);
+                          })
+                          .map((field) => (
+                            <div key={field.fieldKey} className="space-y-1">
+                              <label className="text-xs font-semibold text-gray-700 block">
+                                {field.label} {field.required && <span className="text-rose-500">*</span>}
+                              </label>
+
+                              {['TEXT', 'EMAIL', 'PHONE', 'NUMBER'].includes(field.fieldType) ? (
                                 <input
-                                  type="checkbox"
-                                  checked={!!dynamicAnswers[field.fieldKey]}
+                                  type={
+                                    field.fieldType === 'NUMBER'
+                                      ? 'number'
+                                      : field.fieldType === 'EMAIL'
+                                        ? 'email'
+                                        : 'text'
+                                  }
+                                  placeholder={field.placeholder || ''}
+                                  value={dynamicAnswers[field.fieldKey] || ''}
                                   onChange={(e) => {
                                     setDynamicAnswers({
                                       ...dynamicAnswers,
-                                      [field.fieldKey]: e.target.checked,
+                                      [field.fieldKey]: e.target.value,
                                     });
                                     if (formErrors[field.fieldKey]) {
                                       setFormErrors({ ...formErrors, [field.fieldKey]: null });
                                     }
                                   }}
-                                  className="rounded text-amber-700 focus:ring-amber-500"
+                                  disabled={pageState === PAGE_STATES.SUBMITTING}
+                                  className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-amber-500'
+                                    }`}
                                 />
-                                <span>{field.placeholder || field.label}</span>
-                              </label>
-                            ) : null}
+                              ) : field.fieldType === 'TEXTAREA' ? (
+                                <textarea
+                                  rows="3"
+                                  placeholder={field.placeholder || ''}
+                                  value={dynamicAnswers[field.fieldKey] || ''}
+                                  onChange={(e) => {
+                                    setDynamicAnswers({
+                                      ...dynamicAnswers,
+                                      [field.fieldKey]: e.target.value,
+                                    });
+                                    if (formErrors[field.fieldKey]) {
+                                      setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                    }
+                                  }}
+                                  disabled={pageState === PAGE_STATES.SUBMITTING}
+                                  className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-amber-500'
+                                    }`}
+                                />
+                              ) : field.fieldType === 'SELECT' ? (
+                                <select
+                                  value={dynamicAnswers[field.fieldKey] || ''}
+                                  onChange={(e) => {
+                                    setDynamicAnswers({
+                                      ...dynamicAnswers,
+                                      [field.fieldKey]: e.target.value,
+                                    });
+                                    if (formErrors[field.fieldKey]) {
+                                      setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                    }
+                                  }}
+                                  disabled={pageState === PAGE_STATES.SUBMITTING}
+                                  className={`w-full px-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors[field.fieldKey]
+                                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                    : 'border-gray-300 focus:ring-amber-500'
+                                    }`}
+                                >
+                                  <option value="">{field.placeholder || '-- Select an option --'}</option>
+                                  {field.options?.map((opt, oIdx) => (
+                                    <option key={oIdx} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : field.fieldType === 'RADIO' ? (
+                                <div className="space-y-1.5 pt-1">
+                                  {field.options?.map((opt, oIdx) => (
+                                    <label
+                                      key={oIdx}
+                                      className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={field.fieldKey}
+                                        value={opt}
+                                        checked={dynamicAnswers[field.fieldKey] === opt}
+                                        onChange={(e) => {
+                                          setDynamicAnswers({
+                                            ...dynamicAnswers,
+                                            [field.fieldKey]: e.target.value,
+                                          });
+                                          if (formErrors[field.fieldKey]) {
+                                            setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                          }
+                                        }}
+                                        className="text-amber-700 focus:ring-amber-500"
+                                      />
+                                      <span>{opt}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              ) : field.fieldType === 'CHECKBOX' ? (
+                                <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer pt-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!dynamicAnswers[field.fieldKey]}
+                                    onChange={(e) => {
+                                      setDynamicAnswers({
+                                        ...dynamicAnswers,
+                                        [field.fieldKey]: e.target.checked,
+                                      });
+                                      if (formErrors[field.fieldKey]) {
+                                        setFormErrors({ ...formErrors, [field.fieldKey]: null });
+                                      }
+                                    }}
+                                    className="rounded text-amber-700 focus:ring-amber-500"
+                                  />
+                                  <span>{field.placeholder || field.label}</span>
+                                </label>
+                              ) : null}
 
-                            {field.helpText && (
-                              <p className="text-[11px] text-gray-400">{field.helpText}</p>
-                            )}
+                              {field.helpText && (
+                                <p className="text-[11px] text-gray-400">{field.helpText}</p>
+                              )}
 
-                            {formErrors[field.fieldKey] && (
+                              {formErrors[field.fieldKey] && (
+                                <span className="text-[11px] text-rose-500 mt-1 block">
+                                  {formErrors[field.fieldKey]}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    ) : isStudent ? (
+                      <>
+                        {/* Default Student: College & Course */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              College / Institution <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <School className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                name="college"
+                                value={formData.college}
+                                onChange={handleChange}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                placeholder="e.g. Delhi University / MIT"
+                                className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.college
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-blue-500'
+                                  }`}
+                              />
+                            </div>
+                            {formErrors.college && (
                               <span className="text-[11px] text-rose-500 mt-1 block">
-                                {formErrors[field.fieldKey]}
+                                {formErrors.college}
                               </span>
                             )}
                           </div>
-                        ))}
+
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              Course / Program <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                name="course"
+                                value={formData.course}
+                                onChange={handleChange}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                placeholder="e.g. B.Tech Computer Science"
+                                className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.course
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                                  : 'border-gray-300 focus:ring-blue-500'
+                                  }`}
+                              />
+                            </div>
+                            {formErrors.course && (
+                              <span className="text-[11px] text-rose-500 mt-1 block">
+                                {formErrors.course}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Student Optional Fields: Year/Sem & Student ID */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              Year / Semester <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              name="yearSemester"
+                              value={formData.yearSemester}
+                              onChange={handleChange}
+                              disabled={pageState === PAGE_STATES.SUBMITTING}
+                              placeholder="e.g. 3rd Year / 6th Sem"
+                              className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              Student ID / Roll No <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
+                            </label>
+                            <div className="relative">
+                              <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                name="studentId"
+                                value={formData.studentId}
+                                onChange={handleChange}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                placeholder="e.g. CS2024-042"
+                                className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Default OTHER Category: Organization & Designation */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              Organization / Company <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
+                            </label>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                name="organization"
+                                value={formData.organization}
+                                onChange={handleChange}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                placeholder="e.g. Acme Innovations"
+                                className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">
+                              Designation / Role <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
+                            </label>
+                            <div className="relative">
+                              <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={handleChange}
+                                disabled={pageState === PAGE_STATES.SUBMITTING}
+                                placeholder="e.g. Senior Architect"
+                                className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Submission Button */}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={pageState === PAGE_STATES.SUBMITTING}
+                        className="w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 bg-amber-900 hover:bg-amber-950 focus:ring-2 focus:ring-amber-500"
+                      >
+                        {pageState === PAGE_STATES.SUBMITTING ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Activating My Pass...</span>
+                          </>
+                        ) : (
+                          <>
+                            {isStudent ? (
+                              <GraduationCap className="w-5 h-5" />
+                            ) : (
+                              <Ticket className="w-5 h-5" />
+                            )}
+                            <span>Activate My Pass</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  ) : isStudent ? (
-                    <>
-                      {/* Default Student: College & Course */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            College / Institution <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <School className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              name="college"
-                              value={formData.college}
-                              onChange={handleChange}
-                              disabled={pageState === PAGE_STATES.SUBMITTING}
-                              placeholder="e.g. Delhi University / MIT"
-                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.college
-                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                : 'border-gray-300 focus:ring-blue-500'
-                                }`}
-                            />
-                          </div>
-                          {formErrors.college && (
-                            <span className="text-[11px] text-rose-500 mt-1 block">
-                              {formErrors.college}
-                            </span>
-                          )}
-                        </div>
 
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            Course / Program <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              name="course"
-                              value={formData.course}
-                              onChange={handleChange}
-                              disabled={pageState === PAGE_STATES.SUBMITTING}
-                              placeholder="e.g. B.Tech Computer Science"
-                              className={`w-full pl-9 pr-3.5 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${formErrors.course
-                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                                : 'border-gray-300 focus:ring-blue-500'
-                                }`}
-                            />
-                          </div>
-                          {formErrors.course && (
-                            <span className="text-[11px] text-rose-500 mt-1 block">
-                              {formErrors.course}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Student Optional Fields: Year/Sem & Student ID */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            Year / Semester <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="yearSemester"
-                            value={formData.yearSemester}
-                            onChange={handleChange}
-                            disabled={pageState === PAGE_STATES.SUBMITTING}
-                            placeholder="e.g. 3rd Year / 6th Sem"
-                            className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            Student ID / Roll No <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
-                          </label>
-                          <div className="relative">
-                            <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              name="studentId"
-                              value={formData.studentId}
-                              onChange={handleChange}
-                              disabled={pageState === PAGE_STATES.SUBMITTING}
-                              placeholder="e.g. CS2024-042"
-                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Default OTHER Category: Organization & Designation */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            Organization / Company <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
-                          </label>
-                          <div className="relative">
-                            <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              name="organization"
-                              value={formData.organization}
-                              onChange={handleChange}
-                              disabled={pageState === PAGE_STATES.SUBMITTING}
-                              placeholder="e.g. Acme Innovations"
-                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 block mb-1">
-                            Designation / Role <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>
-                          </label>
-                          <div className="relative">
-                            <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              name="designation"
-                              value={formData.designation}
-                              onChange={handleChange}
-                              disabled={pageState === PAGE_STATES.SUBMITTING}
-                              placeholder="e.g. Senior Architect"
-                              className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Submission Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={pageState === PAGE_STATES.SUBMITTING}
-                      className="w-full py-3 sm:py-3.5 text-white rounded-xl font-bold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 bg-amber-900 hover:bg-amber-950 focus:ring-2 focus:ring-amber-500"
-                    >
-                      {pageState === PAGE_STATES.SUBMITTING ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Activating My Pass...</span>
-                        </>
-                      ) : (
-                        <>
-                          {isStudent ? (
-                            <GraduationCap className="w-5 h-5" />
-                          ) : (
-                            <Ticket className="w-5 h-5" />
-                          )}
-                          <span>Activate My Pass</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <p className="text-[11px] text-center text-gray-400">
-                    By clicking Activate My Pass, this physical event badge will be permanently linked to your profile.
-                  </p>
-                </form>
+                    <p className="text-[11px] text-center text-gray-400">
+                      By clicking Activate My Pass, this physical event badge will be permanently linked to your profile.
+                    </p>
+                  </form>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>
