@@ -18,6 +18,8 @@ import {
   Check,
   RefreshCw,
   Layers,
+  Info,
+  MessageSquare,
 } from 'lucide-react';
 import passService from '../../../Api-Services/passService';
 import { categoryService } from '../../../Api-Services/categoryService';
@@ -167,8 +169,15 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
         toast.error('Please enter both From and To sequence numbers.');
         return;
       }
-      if (parseInt(fromSequence) > parseInt(toSequence)) {
+      const from = parseInt(fromSequence);
+      const to = parseInt(toSequence);
+      if (from > to) {
         toast.error('Starting sequence cannot be greater than ending sequence.');
+        return;
+      }
+      const span = to - from + 1;
+      if (span > 50) {
+        toast.error(`Maximum 50 passes can be activated in a single batch. Selected range has ${span} passes.`);
         return;
       }
     }
@@ -279,6 +288,11 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
           attendeeDesignation: item.attendeeDesignation,
         }));
 
+      if (assignments.length > 50) {
+        toast.error(`Maximum batch size is 50 passes per bulk activation. Found ${assignments.length} eligible passes.`);
+        return;
+      }
+
       const payload = {
         eventId: event.id,
         batchId: previewData.batchId,
@@ -356,7 +370,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                 </span>
               </div>
               <p className="text-xs text-gray-500">
-                Assign attendees to generated passes and trigger activation emails.
+                Assign attendees to generated passes (max 50 per batch) and trigger both activation emails and WhatsApp pass confirmations.
               </p>
             </div>
           </div>
@@ -659,8 +673,19 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                               </div>
 
                               {calculateRangeCount() !== null && (
-                                <div className="col-span-2 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded">
-                                  Selected Series Span: {calculateRangeCount()} total pass positions.
+                                <div
+                                  className={`col-span-2 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center justify-between ${
+                                    calculateRangeCount() > 50
+                                      ? 'bg-red-50 text-red-700 border border-red-200'
+                                      : 'bg-purple-50 text-purple-700 border border-purple-100'
+                                  }`}
+                                >
+                                  <span>Selected Series Span: {calculateRangeCount()} total pass positions.</span>
+                                  {calculateRangeCount() > 50 ? (
+                                    <span className="text-[11px] font-bold text-red-600">Exceeds 50-pass limit!</span>
+                                  ) : (
+                                    <span className="text-[11px] text-purple-600 font-medium">Max 50 passes per batch</span>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -757,10 +782,19 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                       <span className="text-sm text-gray-500"> or drag and drop here</span>
                     </div>
                     <p className="text-xs text-gray-400">
-                      Supports Excel spreadsheet (.xlsx, .xls) up to 5MB (max 500 attendees per batch).
+                      Supports Excel spreadsheet (.xlsx, .xls) up to 5MB (max 50 attendees per batch).
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Batch Limit & Notification Policy Banner */}
+              <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-3 text-xs text-purple-900 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Batch Limit & Automated Delivery: </span>
+                  Bulk activation accepts a maximum of <strong>50 passes per batch</strong>. Upon confirmation, each attendee is automatically issued their entry pass with dynamic QR code via both <strong>Email</strong> and <strong>WhatsApp</strong>.
+                </div>
               </div>
 
               {/* Column Requirements */}
@@ -846,7 +880,7 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                   <CheckCircle className="w-5 h-5 shrink-0 text-green-600" />
                   <div>
                     <span className="font-bold">Ready for Activation: </span>
-                    All {previewData.eligibleCount} assignments are verified and eligible. No conflicts detected.
+                    All {previewData.eligibleCount} assignments are verified and eligible. Activation will link attendees to passes and enqueue both Email & WhatsApp notifications.
                   </div>
                 </div>
               )}
@@ -981,6 +1015,17 @@ const BulkActivationModal = ({ isOpen, onClose, event, categories = [], onActiva
                   <span className="text-gray-500">Confirmation Emails:</span>
                   <div className="font-bold text-purple-700 text-sm">
                     {batchResult.emailsQueued} Enqueued in Outbox
+                  </div>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>WhatsApp Confirmations:</span>
+                  </div>
+                  <div className="font-bold text-emerald-700 text-xs">
+                    {batchResult.whatsAppQueued !== undefined
+                      ? `${batchResult.whatsAppQueued} Enqueued in Outbox`
+                      : `${batchResult.activatedCount} Enqueued in Outbox`}
                   </div>
                 </div>
               </div>

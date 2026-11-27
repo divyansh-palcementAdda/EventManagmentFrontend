@@ -108,6 +108,28 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
     setAddModalOpen(true);
   };
 
+  // Filter out any categories that are already configured / enabled for this event
+  const unconfiguredCategories = useMemo(() => {
+    const configuredCategoryIds = new Set(
+      eventCategories
+        .map((ec) => ec.categoryId || ec.passCategoryId || ec.category?.id)
+        .filter(Boolean)
+        .map((id) => String(id).toLowerCase())
+    );
+    const configuredCategoryCodes = new Set(
+      eventCategories
+        .map((ec) => ec.categoryCode || ec.passCategoryCode || ec.category?.code)
+        .filter(Boolean)
+        .map((code) => String(code).toUpperCase())
+    );
+
+    return availableCategories.filter((c) => {
+      const idMatch = c.id && configuredCategoryIds.has(String(c.id).toLowerCase());
+      const codeMatch = c.code && configuredCategoryCodes.has(String(c.code).toUpperCase());
+      return !idMatch && !codeMatch;
+    });
+  }, [availableCategories, eventCategories]);
+
   const handleOpenEditPolicy = (cat) => {
     setEditingCategory(cat);
     setPolicyForm({
@@ -464,12 +486,17 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">-- Choose Category --</option>
-                  {availableCategories.map((c) => (
+                  {unconfiguredCategories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.code}) - {c.scope}
                     </option>
                   ))}
                 </select>
+                {unconfiguredCategories.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1.5">
+                    All available categories have already been enabled for this event.
+                  </p>
+                )}
               </div>
 
               <div>
