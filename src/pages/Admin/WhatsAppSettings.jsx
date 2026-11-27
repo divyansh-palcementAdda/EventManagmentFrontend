@@ -44,7 +44,7 @@ const WhatsAppSettings = () => {
     displayName: 'Renaissance University',
     otpTemplateName: 'rcf',
     otpTemplateLanguage: 'en',
-    passActivationTemplateName: 'rcf_activation_pass',
+    passActivationTemplateName: 'rcf_activation_01',
     passActivationTemplateLanguage: 'en',
     eventReminderTemplateName: 'reminder_rcf',
     eventReminderTemplateLanguage: 'en',
@@ -93,7 +93,7 @@ const WhatsAppSettings = () => {
           displayName: data.displayName || 'Renaissance University',
           otpTemplateName: data.otpTemplateName || 'rcf',
           otpTemplateLanguage: data.otpTemplateLanguage || 'en',
-          passActivationTemplateName: data.passActivationTemplateName || 'rcf_activation_pass',
+          passActivationTemplateName: data.passActivationTemplateName || 'rcf_activation_01',
           passActivationTemplateLanguage: data.passActivationTemplateLanguage || 'en',
           eventReminderTemplateName: data.eventReminderTemplateName || data.reminderTemplateName || 'reminder_rcf',
           eventReminderTemplateLanguage: data.eventReminderTemplateLanguage || data.reminderTemplateLanguage || 'en',
@@ -520,7 +520,8 @@ const WhatsAppSettings = () => {
                   onChange={(e) => setSettings({ ...settings, passActivationTemplateName: e.target.value })}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 >
-                  <option value="rcf_activation_pass">rcf_activation_pass (Default)</option>
+                  <option value="rcf_activation_01">rcf_activation_01 (Default Utility)</option>
+                  <option value="rcf_activation_pass">rcf_activation_pass (Legacy)</option>
                   <option value="newupdate_veri">newupdate_veri (Verification Update)</option>
                   {templates
                     .filter((t) => t.category !== 'AUTHENTICATION')

@@ -757,6 +757,42 @@ const EventDetail = () => {
     ];
   }, [availableCategories]);
 
+  // Robust lookup for category-specific statistics from passStats
+  const getCategoryStats = (cat) => {
+    if (!passStats) {
+      return { total: 0, available: 0, activated: 0, revoked: 0 };
+    }
+    const map = passStats.categoryStats || {};
+    const code = (cat.code || cat.categoryCode || '').toUpperCase().trim();
+    const id = (cat.id || '').toString().trim();
+    const name = (cat.name || '').toUpperCase().trim();
+    const cleanCode = code.replace(/[^A-Za-z0-9]/g, '');
+
+    const found =
+      map[code] ||
+      map[id] ||
+      map[name] ||
+      (cleanCode ? map[cleanCode] : null) ||
+      (Array.isArray(passStats.categories) &&
+        passStats.categories.find(
+          (c) =>
+            (c.categoryCode && c.categoryCode.toUpperCase().trim() === code) ||
+            (c.categoryId && c.categoryId.toString().trim() === id) ||
+            (c.categoryName && c.categoryName.toUpperCase().trim() === name) ||
+            (cleanCode && c.categoryCode && c.categoryCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase() === cleanCode)
+        ));
+
+    if (found) {
+      const total = Number(found.total ?? found.totalPasses ?? 0);
+      const available = Number(found.available ?? found.availablePasses ?? 0);
+      const activated = Number(found.activated ?? found.activatedPasses ?? 0);
+      const revoked = Number(found.revoked ?? found.revokedPasses ?? 0);
+      return { total, available, activated, revoked };
+    }
+
+    return { total: 0, available: 0, activated: 0, revoked: 0 };
+  };
+
   // Pass action modal (per-row)
   const [passActionModalId, setPassActionModalId] = useState(null);
 
@@ -804,20 +840,6 @@ const EventDetail = () => {
     sortDir,
   ]);
 
-  // Update Live Statistics counters whenever table filters change
-  useEffect(() => {
-    fetchPassStats();
-  }, [
-    eventId,
-    debouncedSearch,
-    statusFilter,
-    checkInFilter,
-    dayFilter,
-    fromSeqFilter,
-    toSeqFilter,
-    categoryFilter,
-  ]);
-
   const fetchEventDetails = async () => {
     setLoading(true);
     try {
@@ -840,23 +862,11 @@ const EventDetail = () => {
     }
   };
 
+  // Top summary statistics and category cards always show complete event-level totals
   const fetchPassStats = async () => {
     setStatsLoading(true);
     try {
-      const params = {};
-      if (debouncedSearch && debouncedSearch.trim()) params.search = debouncedSearch.trim();
-      if (statusFilter && statusFilter !== 'ALL') params.status = statusFilter;
-      if (categoryFilter && categoryFilter !== 'ALL') params.category = categoryFilter;
-      if (checkInFilter && checkInFilter !== 'ALL') params.checkInStatus = checkInFilter;
-      if (dayFilter && dayFilter !== 'ALL') params.eventDayId = dayFilter;
-      if (fromSeqFilter && !isNaN(parseInt(fromSeqFilter, 10))) {
-        params.fromSequence = parseInt(fromSeqFilter, 10);
-      }
-      if (toSeqFilter && !isNaN(parseInt(toSeqFilter, 10))) {
-        params.toSequence = parseInt(toSeqFilter, 10);
-      }
-
-      const response = await passService.getPassStats(eventId, params);
+      const response = await passService.getPassStats(eventId, {});
       setPassStats(response.data);
     } catch (error) {
       console.error('Error fetching pass stats:', error);
@@ -1355,7 +1365,12 @@ const EventDetail = () => {
       </div>
 
       {/* Dynamic Pass Categories & Policies Card */}
-      <EventCategoriesCard eventId={eventId} eventCode={event?.eventCode} onCategoriesUpdated={fetchConfiguredCategories} />
+      <EventCategoriesCard
+        eventId={eventId}
+        eventCode={event?.eventCode}
+        onCategoriesUpdated={fetchConfiguredCategories}
+        configuredCategories={availableCategories}
+      />
 
       {/* Pass Allotment Management Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1731,27 +1746,12 @@ const EventDetail = () => {
             </div>
           </div>
 
-          {/* Live Statistics Counter Badges */}
+          {/* Event-Level Summary Statistics */}
           <div className="space-y-1.5 pt-1">
-            {isPassTableFiltered && (
-              <div className="flex items-center justify-between text-xs px-0.5">
-                <span className="text-[11px] font-semibold text-purple-700 flex items-center gap-1">
-                  <Filter className="w-3 h-3 text-purple-600" />
-                  Showing counts for active table filters
-                </span>
-                <button
-                  type="button"
-                  onClick={resetAllPassFilters}
-                  className="text-[11px] font-bold text-purple-700 hover:text-purple-900 underline cursor-pointer"
-                >
-                  Reset All Filters
-                </button>
-              </div>
-            )}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
               <div className="p-2 sm:p-2.5 bg-white rounded-xl border border-gray-200 text-center shadow-xs">
                 <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">
-                  Total Passes {isPassTableFiltered && <span className="text-purple-600 font-bold">(Filtered)</span>}
+                  Total Passes
                 </span>
                 <div className="text-sm sm:text-base font-black text-gray-900">
                   {statsLoading ? '...' : passStats?.totalPasses ?? totalElements}
@@ -1884,9 +1884,31 @@ const EventDetail = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pt-1.5 border-t border-gray-100 text-[11px]">
+                {/* All Passes Master Mini Stats */}
+                <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-purple-100 text-center w-full">
+                  <div className="bg-white/90 rounded-md py-1 px-0.5 border border-purple-100 shadow-2xs">
+                    <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-gray-500">Total</span>
+                    <span className="block text-xs font-black text-gray-900 leading-tight">
+                      {statsLoading ? '...' : (passStats?.totalPasses ?? totalElements)}
+                    </span>
+                  </div>
+                  <div className="bg-emerald-50/80 rounded-md py-1 px-0.5 border border-emerald-100/70 shadow-2xs">
+                    <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-emerald-700">Avail</span>
+                    <span className="block text-xs font-black text-emerald-800 leading-tight">
+                      {statsLoading ? '...' : (passStats?.availablePasses ?? 0)}
+                    </span>
+                  </div>
+                  <div className="bg-purple-100/70 rounded-md py-1 px-0.5 border border-purple-200/60 shadow-2xs">
+                    <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-purple-700">Active</span>
+                    <span className="block text-xs font-black text-purple-800 leading-tight">
+                      {statsLoading ? '...' : (passStats?.activatedPasses ?? 0)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-[11px] w-full">
                   <span className="text-[10px] text-gray-500 font-medium">
-                    Total: <strong className="text-gray-900">{statsLoading ? '...' : (passStats?.totalPasses ?? totalElements)}</strong>
+                    All Categories
                   </span>
                   <span
                     className={`text-[10px] font-semibold transition-colors ${categoryFilter === 'ALL'
@@ -1903,6 +1925,7 @@ const EventDetail = () => {
               {categoryCardsList.map((cat, idx) => {
                 const isSelected = categoryFilter === cat.code;
                 const style = getCategoryCardStyle(cat.code, idx, isSelected);
+                const cStats = getCategoryStats(cat);
 
                 return (
                   <button
@@ -1983,8 +2006,30 @@ const EventDetail = () => {
                       ) : null}
                     </div>
 
+                    {/* Category Pass Statistics Badge Grid */}
+                    <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-gray-100/90 text-center w-full">
+                      <div className="bg-gray-50/80 rounded py-1 px-0.5 border border-gray-100">
+                        <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-gray-500">Total</span>
+                        <span className="block text-xs font-black text-gray-900 leading-tight">
+                          {statsLoading ? '...' : cStats.total}
+                        </span>
+                      </div>
+                      <div className="bg-emerald-50/70 rounded py-1 px-0.5 border border-emerald-100/60">
+                        <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-emerald-700">Avail</span>
+                        <span className="block text-xs font-black text-emerald-800 leading-tight">
+                          {statsLoading ? '...' : cStats.available}
+                        </span>
+                      </div>
+                      <div className="bg-purple-50/70 rounded py-1 px-0.5 border border-purple-100/60">
+                        <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold text-purple-700">Active</span>
+                        <span className="block text-xs font-black text-purple-800 leading-tight">
+                          {statsLoading ? '...' : cStats.activated}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Card Footer */}
-                    <div className="flex items-center justify-between pt-1.5 border-t border-gray-100 text-[11px]">
+                    <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-[11px] w-full">
                       <span className="text-[10px] text-gray-500 font-medium flex items-center gap-1">
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${cat.enabled ? 'bg-emerald-500' : 'bg-rose-500'

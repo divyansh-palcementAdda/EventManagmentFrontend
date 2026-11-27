@@ -32,7 +32,16 @@ const IDENTITY_POLICIES = [
   { value: 'NO_IDENTITY', label: 'No Identity (Anonymous / Badge Only)' }
 ];
 
-const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
+const parseCategoryList = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  if (Array.isArray(res?.content)) return res.content;
+  return [];
+};
+
+const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated, configuredCategories = [] }) => {
   const [eventCategories, setEventCategories] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,12 +78,14 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
     setLoading(true);
     try {
       const res = await categoryService.getEventCategories(eventId, false);
-      const list = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      const list = parseCategoryList(res);
       setEventCategories(list);
       setCatPage(0);
+      return list;
     } catch (err) {
       console.error('Failed to fetch event categories:', err);
       toast.error(err.message || 'Failed to fetch categories for this event');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -83,10 +94,12 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
   const fetchAvailableCategories = async () => {
     try {
       const res = await categoryService.getAvailableForEvent(eventId);
-      const list = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+      const list = parseCategoryList(res);
       setAvailableCategories(list);
+      return list;
     } catch (err) {
       console.error('Failed to fetch available categories:', err);
+      return [];
     }
   };
 
@@ -97,6 +110,7 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
   }, [eventId]);
 
   const handleOpenAdd = () => {
+    fetchEventCategories();
     fetchAvailableCategories();
     setAddForm({
       categoryId: '',
@@ -110,25 +124,42 @@ const EventCategoriesCard = ({ eventId, eventCode, onCategoriesUpdated }) => {
 
   // Filter out any categories that are already configured / enabled for this event
   const unconfiguredCategories = useMemo(() => {
+    const allConfiguredList = [
+      ...(Array.isArray(eventCategories) ? eventCategories : []),
+      ...(Array.isArray(configuredCategories) ? configuredCategories : [])
+    ];
+
     const configuredCategoryIds = new Set(
-      eventCategories
-        .map((ec) => ec.categoryId || ec.passCategoryId || ec.category?.id)
+      allConfiguredList
+        .map((ec) => ec.categoryId || ec.passCategoryId || ec.category?.id || ec.id)
         .filter(Boolean)
-        .map((id) => String(id).toLowerCase())
+        .map((id) => String(id).toLowerCase().trim())
     );
     const configuredCategoryCodes = new Set(
-      eventCategories
-        .map((ec) => ec.categoryCode || ec.passCategoryCode || ec.category?.code)
+      allConfiguredList
+        .map((ec) => ec.categoryCode || ec.passCategoryCode || ec.category?.code || ec.code)
         .filter(Boolean)
-        .map((code) => String(code).toUpperCase())
+        .map((code) => String(code).toUpperCase().trim())
+    );
+    const configuredCategoryNames = new Set(
+      allConfiguredList
+        .map((ec) => ec.categoryName || ec.passCategoryName || ec.category?.name || ec.name)
+        .filter(Boolean)
+        .map((name) => String(name).toUpperCase().trim())
     );
 
     return availableCategories.filter((c) => {
-      const idMatch = c.id && configuredCategoryIds.has(String(c.id).toLowerCase());
-      const codeMatch = c.code && configuredCategoryCodes.has(String(c.code).toUpperCase());
-      return !idMatch && !codeMatch;
+      const cId = c.id ? String(c.id).toLowerCase().trim() : '';
+      const cCode = (c.code || c.categoryCode || '').toUpperCase().trim();
+      const cName = (c.name || c.categoryName || '').toUpperCase().trim();
+
+      const idMatch = Boolean(cId && configuredCategoryIds.has(cId));
+      const codeMatch = Boolean(cCode && configuredCategoryCodes.has(cCode));
+      const nameMatch = Boolean(cName && configuredCategoryNames.has(cName));
+
+      return !idMatch && !codeMatch && !nameMatch;
     });
-  }, [availableCategories, eventCategories]);
+  }, [availableCategories, eventCategories, configuredCategories]);
 
   const handleOpenEditPolicy = (cat) => {
     setEditingCategory(cat);
